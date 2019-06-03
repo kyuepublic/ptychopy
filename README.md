@@ -1,6 +1,6 @@
 # ptychopy
 
-1 Need to install python3 to run the GUI and ptychopy, other needed library is in requirement.txt
+1 Need to install python3 to run the GUI and ptychopy, other needed library is in requirement.txt.(Tested OS RHEL 6.0, 7.0)
 
 2 Recommend conda virtual environment, for example
 
