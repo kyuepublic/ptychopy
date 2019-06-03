@@ -1,3 +1,5 @@
+PyQt5
+scipy
 matplotlib
 numpy
 ipython
