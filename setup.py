@@ -38,15 +38,16 @@ def customize_compiler(self):
                 postargs = extra_postargs['nvcc']
             except:
                 postargs = [os.path.abspath('.')]
-        # elif os.path.splitext(src)[1] == '.c':
-        #     postargs = extra_postargs['g++']
-        # elif os.path.splitext(src)[1] == '.cpp':
-        #     postargs = extra_postargs['g++']
-        # else:
-        #     postargs = extra_postargs['g++']
-
+        elif os.path.splitext(src)[1] == '.c':
+            postargs = extra_postargs['g++']
+        elif os.path.splitext(src)[1] == '.cpp':
+            self.compiler_so = default_compiler_so
+            postargs = extra_postargs['g++']
         else:
-            postargs = extra_postargs['gcc']
+            postargs = extra_postargs['g++']
+
+        # else:
+        #     postargs = extra_postargs['gcc']
 
         super(obj, src, ext, cc_args, postargs, pp_opts)
 
@@ -245,8 +246,8 @@ extptychopy = Extension(name='ptychopy',
         extra_link_args = ['-lcudart', '-lcurand', '-lcufft', '-lcublas', '-lGL', '-lhdf5', '-lhdf5_cpp', '-lpthread'],
         extra_compile_args={
             'nvcc': ['-Xcompiler', '-fpic', '-O3', '-gencode=arch=compute_{:s},code=sm_{:s}'.format(CUDA['compute'],CUDA['sm'])],
-            'gcc': ['-DEPIE_HDF5', '-fpic', '-DHAVE_HDF5'],
-            'g++': ['-DEPIE_HDF5', '-fpic', '-DHAVE_HDF5']
+            'gcc': ['-DEPIE_HDF5',  '-fpic', '-DHAVE_HDF5'],
+            'g++': ['-DEPIE_HDF5',  '-fpic', '-DHAVE_HDF5']
             })
 
         # extra_link_args = ['-lcudart', '-lcurand', '-lcufft', '-lcublas', '-lSDL2', '-lGLEW', '-lGL', '-lhdf5', '-lhdf5_cpp', '-lz', '-lsz', '-lpthread'],
