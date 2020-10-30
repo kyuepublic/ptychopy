@@ -185,19 +185,6 @@ else:
 
 with open('./requirements.txt','r') as f_requirements:
     requirements = f_requirements.readlines()
-    for requirement in requirements:
-        try:
-            pkg_resources.require(requirement.strip().replace('==', '>='))
-        except pkg_resources.VersionConflict:
-            msg = 'Python package requirement not satisfied: ' + requirement
-            msg += '\nsuggest using this command:'
-            msg += '\n\tpip install -r requirements.txt'
-            raise pkg_resources.VersionConflict(msg)
-        except pkg_resources.DistributionNotFound:
-            msg = 'Python package requirement not satisfied: ' + requirement
-            msg += '\nsuggest using this command:'
-            msg += '\n\tpip install -r requirements.txt'
-            raise pkg_resources.VersionConflict(msg)
 
 # Create ptychopy.so
 extptychopy = Extension(name='ptychopy',
