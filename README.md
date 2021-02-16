@@ -1,34 +1,45 @@
 # ptychopy
 
-1 Need to install python3 to run the GUI and ptychopy, other needed library is in requirement.txt.(Tested OS RHEL 6.0, 7.0)
+1. Need to install python3 to run the GUI and ptychopy, other needed library is
+   in requirement.txt.(Tested OS RHEL 6.0, 7.0)
 
-2 Recommend conda virtual environment, for example
+2. Recommend conda virtual environment, for example
 
-  conda create -n py34 python=3.4
+ ```
+ conda create -n py34 python=3.4
+ ```
 
-3 Activate the virtual environment
+3. Activate the virtual environment
 
-  source activate py34
+ ```
+ source activate py34
+ ```
 
-4 Set the cuda computing based on your GPU, for example
+4. Set the cuda computing based on your GPU. For example the 2080 Ti has
+   compute capability 7.5.
 
-  export CUDACOMPUTE=7.5 (2080ti)
-  The GPU computing capability number can be found on the nvidia website
+ ```
+ export CUDACOMPUTE=7.5
+ ```
 
-5 To install and build the python package, set another two environment varialbe
-  HDF5_BASE and CUDAHOME, which point to the installed path of the CUDA and HDF5
-  library. Then just call the following
-  
-  ./install.sh
+  The GPU computing capability number can be found on the [NVidia website](https://developer.nvidia.com/cuda-gpus)
 
-6 For testing, you can use testPTY.py or testMpty.py
+5. To install and build the python package, set another two environment
+   variable HDF5_BASE and CUDAHOME, which point to the installed path of the
+   CUDA and HDF5 library. Then just call the following
 
-  python testPTY.py
-  
+ ```
+ ./install.sh
+ ```
 
+6. For testing, you can use testPTY.py or testMpty.py
+
+ ```
+ python testPTY.py
+ ```
 
 # parameters
-  
+
   Name | Type | Description | Default
 :------------: | :-------------: | :------------: | :------------:
 jobID | string  | An identifying tag to the reconstruction run | ``

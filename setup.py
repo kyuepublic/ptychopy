@@ -185,19 +185,6 @@ else:
 
 with open('./requirements.txt','r') as f_requirements:
     requirements = f_requirements.readlines()
-    for requirement in requirements:
-        try:
-            pkg_resources.require(requirement.strip().replace('==', '>='))
-        except pkg_resources.VersionConflict:
-            msg = 'Python package requirement not satisfied: ' + requirement
-            msg += '\nsuggest using this command:'
-            msg += '\n\tpip install -r requirements.txt'
-            raise pkg_resources.VersionConflict(msg)
-        except pkg_resources.DistributionNotFound:
-            msg = 'Python package requirement not satisfied: ' + requirement
-            msg += '\nsuggest using this command:'
-            msg += '\n\tpip install -r requirements.txt'
-            raise pkg_resources.VersionConflict(msg)
 
 # Create ptychopy.so
 extptychopy = Extension(name='ptychopy',
@@ -243,7 +230,7 @@ extptychopy = Extension(name='ptychopy',
             HDF5['lib'],
             ],
         runtime_library_dirs=[CUDA['lib']],
-        extra_link_args = ['-lcudart', '-lcurand', '-lcufft', '-lcublas', '-lGL', '-lhdf5', '-lhdf5_cpp', '-lpthread'],
+        extra_link_args = ['-lcudart', '-lcurand', '-lcufft', '-lcublas', '-lhdf5', '-lhdf5_cpp', '-lpthread'],
         extra_compile_args={
             'nvcc': ['-Xcompiler', '-fpic', '-O3', '-gencode=arch=compute_{:s},code=sm_{:s}'.format(CUDA['compute'],CUDA['sm'])],
             'gcc': ['-DEPIE_HDF5',  '-fpic', '-DHAVE_HDF5'],
