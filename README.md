@@ -37,6 +37,11 @@
  ```
  python testPTY.py
  ```
+7. Description
+
+This software package is implemented with ePIE, DM, MLs, reconstruction algorithm. It supports list, spiral, cartesian,
+scan position file. To load a predefined scan position file, object value files, probe value files, use the following 
+parameters to do the reconstruction.
 
 # parameters
 
