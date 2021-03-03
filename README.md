@@ -62,7 +62,7 @@ parameters to do the reconstruction.
   Name | Type | Description | Default
 :------------: | :-------------: | :------------: | :------------:
 jobID | string  | An identifying tag to the reconstruction run | ``
-algorithm | string  | The algorithm to use for reconstruction. Accepted values (`ePIE,DM`) | `ePIE`
+algorithm | string  | The algorithm to use for reconstruction. Accepted values (`ePIE,DM, MLS`) | `ePIE`
 fp | path  | A c-style formatted string for the location of the HDF5 files. For file name string substitution starting at `fs`. Example: `-fp=/data/diff_#03d.h5` for files in the form `diff_000.h5, diff_001.h5, ...` | `N/A`
 fs | integer  | The file index of the file containing the first diffraction pattern (top left corner for Cartesian scans) | `0`
 hdf5path | string | Diffraction data HDF5 dataset name | `/entry/data/data`
@@ -86,6 +86,7 @@ z | real  | Distance between sample and detector in meters | `2.2`
 i | integer  | Number of reconstruction iterations | `100`
 T | integer  | Maximum allowed reconstruction time (in sec). Overrides iterations. | `N/A`
 jitterRadius | integer  | Radius in pixels for random displacement of raster scan positions | `0`
+delta_p | real | LSQ damping constant, used only for MLs method | 0.1
 threshold | integer  | To remove noise from the diffraction patterns. Any count below this number will be set to zero in the diffraction data. | `0`
 rotate90 | (0,1,2,3)  | Number of times to rotate the diffraction patterns by 90 degrees. (Currently only a value of 1 is supported) | `0`
 sqrtData | flag  | Take the sqrt of the loaded diffraction pattern magnitudes | `N/A`
