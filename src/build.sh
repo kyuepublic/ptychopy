@@ -1,10 +1,9 @@
 #!/bin/bash
 
-#HDF5_PATH="~/ptycholib/dependencies/hdf5-1.8.13/hdf5/"
-HDF5_PATH="/local/kyue/hdf5/"
+HDF5_PATH="../dependLib/hdf5-1.8.13/hdf5/"
+#HDF5_PATH="/local/kyue/hdf5/"
 SDL2_PATH=
 DIY_PATH=
-#OPENCV_PATH="/local/kyue/program/opencv/"
 
 rm -rf build
 mkdir build
