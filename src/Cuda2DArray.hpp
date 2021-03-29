@@ -37,6 +37,7 @@
 
 #include "utilities.h"
 #include <fstream>
+#include <iostream>
 
 class CudaSmartPtr;
 
@@ -62,6 +63,7 @@ public:
 		m_dimensions.x = x;
 		m_dimensions.y = y;
 		m_alignedY = GPUQuery::getInstance()->alignToWarp(y);
+//		m_alignedY = y;
 	}
 
 	virtual void set(int val=0) = 0;
@@ -81,6 +83,37 @@ public:
 	template<typename T> T* getHostPtr(T* ptr_h=0, cudaStream_t* stream=0) const;
 	template<typename T> bool save(const char* filename, bool binary=false)	 const;
 	template<typename T> bool load(const char* filename, bool binary=false);
+	template<typename T> bool loadMatlab(const char* filename, bool binary=false);
+
+	template<typename T> bool load2Complex(char* filename1, char* filename2, bool binary=false);
+
+//	bool loadCSVother(const char* filename, bool binary=false)
+//	{
+//		std::ifstream infile(filename, binary?std::ofstream::in|std::ofstream::binary : std::ofstream::in );
+//		if(!infile.is_open())
+//			return false;
+//
+//		complex_t* h_array =  getHostPtr<complex_t>();
+//
+//		if(binary)
+//			infile.read((char*)h_array, getNum()*getUnitSize());
+//		else
+//		{
+//			for(unsigned int x=0; x<getX(); ++x)
+//				for(unsigned int y=0; y<getY(); ++y)
+//					{
+//					infile >> h_array[(x*getY())+y];
+//					std::cout<<h_array[(x*getY())+y];
+//
+//					}
+//
+//		}
+//		infile.close();
+//		setFromHost(h_array, getX(), getY());
+//		delete [] h_array;
+//
+//		return true;
+//	}
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -89,18 +122,8 @@ public:
 template<typename T>
 class Cuda2DArray : public ICuda2DArray
 {
-private:
-	T* m_devicePtr;
-
+public:
 	~Cuda2DArray() {freeDeviceMemory();}
-
-	void allocateDeviceMemory()
-	{
-//		printf("Size before allocation: %d:%d\n", getUnitSize(), getSize());
-		cudaMalloc((void**)&m_devicePtr, getSize());
-		cutilCheckMsg("Device memory allocation failed!");
-		set();
-	}
 
 	void freeDeviceMemory()
 	{
@@ -110,6 +133,17 @@ private:
 			cutilCheckMsg("Device memory deallocation failed!");
 			m_devicePtr = 0;
 		}
+	}
+
+private:
+	T* m_devicePtr;
+
+	void allocateDeviceMemory()
+	{
+//		printf("Size before allocation: %d:%d\n", getUnitSize(), getSize());
+		cudaMalloc((void**)&m_devicePtr, getSize());
+		cutilCheckMsg("Device memory allocation failed!");
+		set();
 	}
 
 	void copyFromDeviceMemory(const T* copy, cudaStream_t* stream=0)
@@ -211,7 +245,8 @@ public:
 	{
 		T* hostPtr = ptr_h;
 		if(hostPtr==0)
-			hostPtr = new T[m_dimensions.x*m_dimensions.y]; //user should delete
+//			hostPtr = new T[m_dimensions.x*m_dimensions.y]; //user should delete
+			hostPtr = new T[m_dimensions.x*m_dimensions.y];
 		if(stream)
 			cudaMemcpy2DAsync(hostPtr, m_dimensions.y*m_unitSize, m_devicePtr, m_alignedY*m_unitSize, m_dimensions.y*m_unitSize, m_dimensions.x, cudaMemcpyDeviceToHost, *stream);
 		else
@@ -328,6 +363,7 @@ template<typename T>
 void ICuda2DArray::setFromDevice(const T* copy, unsigned int x, unsigned int y, cudaStream_t* stream)
 { (dynamic_cast<Cuda2DArray<T>&>(*this)).setFromDevice(copy, x, y, stream); }
 
+
 template<typename T>
 T* ICuda2DArray::getDevicePtr() const
 { return (dynamic_cast<const Cuda2DArray<T>&>(*this)).getDevicePtr(); }
@@ -369,26 +405,180 @@ bool ICuda2DArray::save(const char* filename, bool binary)	 const
 }
 
 template<typename T>
-bool ICuda2DArray::load(const char* filename, bool binary)
+bool ICuda2DArray::load2Complex(char* filename1, char* filename2, bool binary)
 {
-	std::ifstream infile(filename, binary?std::ofstream::in|std::ofstream::binary : std::ofstream::in );
-	if(!infile.is_open())
+
+	std::ifstream infile1(filename1, binary?std::ofstream::in|std::ofstream::binary : std::ofstream::in );
+	std::ifstream infile2(filename2, binary?std::ofstream::in|std::ofstream::binary : std::ofstream::in );
+
+	if(!infile1.is_open())
 		return false;
+	if(!infile2.is_open())
+		return false;
+
 	T* h_array =  getHostPtr<T>();
-	if(binary)
-		infile.read((char*)h_array, getNum()*getUnitSize());
-	else
+
+	std::string line1 = "";
+	std::string line2 = "";
+
+	int rowIdx=0;
+	double val1=0;
+	double val2=0;
+
+	while (std::getline(infile1, line1)&&std::getline(infile2, line2))
 	{
-		for(unsigned int x=0; x<getX(); ++x)
-			for(unsigned int y=0; y<getY(); ++y)
-				infile >> h_array[(x*getY())+y];
+        // Create a stringstream of the current line
+        std::stringstream ss1(line1);
+        std::stringstream ss2(line2);
+
+        // Keep track of the current column index
+        int colIdx = 0;
+
+        // Extract each integer
+        while(ss1 >> val1 && ss2 >> val2)
+        {
+            // Add the current integer to the 'colIdx' column's values vector
+        	h_array[(rowIdx*getY())+colIdx]=make_float2(val1, val2);
+
+            // If the next token is a comma, ignore it and move on
+            if(ss1.peek() == ',') ss1.ignore();
+            if(ss2.peek() == ',') ss2.ignore();
+            // Increment the column index
+            colIdx++;
+        }
+
+        rowIdx++;
+
 	}
-	infile.close();
+	infile1.close();
+	infile2.close();
+
 	setFromHost(h_array, getX(), getY());
 	delete [] h_array;
 
 	return true;
 }
+
+template<typename T>
+bool ICuda2DArray::load(const char* filename, bool binary)
+{
+	std::ifstream infile(filename, binary?std::ofstream::in|std::ofstream::binary : std::ofstream::in );
+		if(!infile.is_open())
+			return false;
+		T* h_array =  getHostPtr<T>();
+		if(binary)
+			infile.read((char*)h_array, getNum()*getUnitSize());
+		else
+		{
+			for(unsigned int x=0; x<getX(); ++x)
+				for(unsigned int y=0; y<getY(); ++y)
+					infile >> h_array[(x*getY())+y];
+		}
+		infile.close();
+		setFromHost(h_array, getX(), getY());
+		delete [] h_array;
+
+		return true;
+}
+
+
+template<typename T>
+bool ICuda2DArray::loadMatlab(const char* filename, bool binary)
+{
+
+	char* filename1="/data2/JunjingData/m1.csv";
+	char* filename2="/data2/JunjingData/m2.csv";
+
+//	std::ifstream infile(filename, binary?std::ofstream::in|std::ofstream::binary : std::ofstream::in );
+	std::ifstream infile1(filename1, binary?std::ofstream::in|std::ofstream::binary : std::ofstream::in );
+	std::ifstream infile2(filename2, binary?std::ofstream::in|std::ofstream::binary : std::ofstream::in );
+
+//	if(!infile.is_open())
+//		return false;
+	if(!infile1.is_open())
+		return false;
+	if(!infile2.is_open())
+		return false;
+//
+//	float temp1=0;
+//	float temp2=0;
+
+	T* h_array =  getHostPtr<T>();
+
+//	std::vector<std::vector<std::string> > dataList;
+
+	std::string line1 = "";
+	std::string line2 = "";
+
+	int rowIdx=0;
+	float val1=0;
+	float val2=0;
+
+	while (std::getline(infile1, line1)&&std::getline(infile2, line2))
+	{
+        // Create a stringstream of the current line
+        std::stringstream ss1(line1);
+        std::stringstream ss2(line2);
+
+        // Keep track of the current column index
+        int colIdx = 0;
+
+        // Extract each integer
+        while(ss1 >> val1 && ss2 >> val2)
+        {
+
+            // Add the current integer to the 'colIdx' column's values vector
+//            result.at(colIdx).second.push_back(val);
+        	h_array[(rowIdx*getY())+colIdx]=make_float2(val1, val2);
+
+            // If the next token is a comma, ignore it and move on
+            if(ss1.peek() == ',') ss1.ignore();
+            if(ss2.peek() == ',') ss2.ignore();
+            // Increment the column index
+            colIdx++;
+        }
+
+        rowIdx++;
+
+	}
+
+//	Close the File
+	infile1.close();
+	infile2.close();
+
+	setFromHost(h_array, getX(), getY());
+	delete [] h_array;
+
+	return true;
+}
+//
+//bool ICuda2DArray::loadCSVothers(const char* filename, bool binary)
+//{
+//	std::ifstream infile(filename, binary?std::ofstream::in|std::ofstream::binary : std::ofstream::in );
+//	if(!infile.is_open())
+//		return false;
+//
+//	complex_t* h_array =  getHostPtr<complex_t>();
+//
+//	if(binary)
+//		infile.read((char*)h_array, getNum()*getUnitSize());
+//	else
+//	{
+//		for(unsigned int x=0; x<getX(); ++x)
+//			for(unsigned int y=0; y<getY(); ++y)
+//				{
+//				infile >> h_array[(x*getY())+y];
+//				std::cout<<h_array[(x*getY())+y];
+//
+//				}
+//
+//	}
+//	infile.close();
+//	setFromHost(h_array, getX(), getY());
+//	delete [] h_array;
+//
+//	return true;
+//}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #endif

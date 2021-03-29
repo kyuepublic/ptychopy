@@ -42,6 +42,8 @@
 
 using namespace std;
 
+#define HAVE_HDF5
+
 #ifdef HAVE_HDF5
 	#ifdef USE_SINGLE_PRECISION
 	#define H5T_real_t H5T_NATIVE_FLOAT

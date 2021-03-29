@@ -31,7 +31,6 @@
 //WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 #include "utilities.h"
 #include "CudaFFTPlan.h"
 #include "CudaSmartPtr.h"
@@ -140,6 +139,7 @@ void CXUtil::applyModulusConstraint(const Cuda3DArray<complex_t>* d_psi, Cuda3DA
 
 	const ExperimentParams* eParams = CXParams::getInstance()->getExperimentParams();
 	real_t saturationValue = (real_t)eParams->pixelSaturation;
+
 	h_adjustFFT(d_output->getPtr()->getDevicePtr<complex_t>(), d_output->getPtr()->getDevicePtr<complex_t>(), d_det_mod.getDevicePtr(), d_beamstopMask,
 				saturationValue, d_psi->checkUseAll()?d_psi->getNum():1, d_det_mod.getX(), d_det_mod.getY(), d_det_mod.getAlignedY());
 
@@ -147,6 +147,38 @@ void CXUtil::applyModulusConstraint(const Cuda3DArray<complex_t>* d_psi, Cuda3DA
 				d_output->getPtr()->getDevicePtr<complex_t>(), d_output->getPtr()->getDevicePtr<complex_t>(), CUFFT_INVERSE);
 	cutilCheckMsg("CXUtil::applyModulusConstraint() FFT execution failed!\n");
 }
+
+void CXUtil::ff2Mat(Cuda3DArray<complex_t>* d_psi, Cuda3DArray<complex_t>* d_output,
+		Cuda3DElement<real_t> d_det_mod, const real_t* d_beamstopMask)
+{
+	COMPLEX2COMPLEX_FFT(FFTPlanner::getInstance()->getC2CPlan(&d_det_mod, d_psi->checkUseAll()?d_psi->getNum():1),
+				d_psi->getPtr()->getDevicePtr<complex_t>(), d_output->getPtr()->getDevicePtr<complex_t>(), CUFFT_FORWARD);
+	cutilCheckMsg("CXUtil::applyModulusConstraint() FFT execution failed!\n");
+}
+
+
+void CXUtil::iff2Mat(Cuda3DArray<complex_t>* d_psi, Cuda3DArray<complex_t>* d_output,
+		Cuda3DElement<real_t> d_det_mod, const real_t* d_beamstopMask)
+{
+	if(COMPLEX2COMPLEX_FFT(FFTPlanner::getInstance()->getC2CPlan(&d_det_mod, d_psi->checkUseAll()?d_psi->getNum():1),
+				d_psi->getPtr()->getDevicePtr<complex_t>(), d_output->getPtr()->getDevicePtr<complex_t>(), CUFFT_INVERSE)!=CUFFT_SUCCESS)
+		fprintf(stderr, "CUFFT error: ExecC2C Inverse failed");
+	cutilCheckMsg("CXUtil::iff2Mat() FFT execution failed!\n");
+
+	if (cudaDeviceSynchronize() != cudaSuccess){
+		fprintf(stderr, "Cuda error: Failed to synchronize\n");
+	}
+}
+
+void CXUtil::applyFFT(const Cuda3DArray<complex_t>* d_psi, Cuda3DArray<complex_t>* d_output,
+					  Cuda3DElement<real_t> d_det_mod, const real_t* d_beamstopMask)
+{
+	COMPLEX2COMPLEX_FFT(FFTPlanner::getInstance()->getC2CPlan(&d_det_mod, 1),
+				d_psi->getPtr()->getDevicePtr<complex_t>(), d_output->getPtr()->getDevicePtr<complex_t>(), CUFFT_FORWARD);
+	cutilCheckMsg("CXUtil::applyModulusConstraint() FFT execution failed!\n");
+
+}
+
 
 real_t CXUtil::calculateER(Cuda3DArray<complex_t>* d_psi, Cuda3DElement<real_t> d_det_mod)
 {
@@ -191,3 +223,20 @@ real_t CXUtil::getModalDoubleSum(const Cuda3DArray<real_t>* d_arr)
 		return h_realSum(m_workingMemory->getDevicePtr<real_t>(), m_workingMemory->getX(), m_workingMemory->getY(), m_workingMemory->getAlignedY());
 	}
 }
+
+//void CXUtil::median(std::vector<double>& vec, double &x)
+//{
+//
+//	size_t size = vec.size();
+//	sort(vec.begin(), vec.end());
+//	if (size % 2 == 0)
+//	{
+//		x=1.0*(scoresx[size / 2 - 1] + scoresx[size / 2]) / 2;
+//	}
+//	else
+//	{
+//		x=scoresx[size / 2];
+//	}
+//
+//}
+

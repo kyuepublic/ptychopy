@@ -3,7 +3,62 @@
   <component name="ChangeListManager">
     <list default="true" id="5d48ff31-8f99-4299-aad7-47dbe466e20b" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/setup.py" beforeDir="false" afterPath="$PROJECT_DIR$/setup.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/CXMath.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/CXMath.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/CartesianScanMesh.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/CartesianScanMesh.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/CartesianScanMesh.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/CartesianScanMesh.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Cuda2DArray.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Cuda2DArray.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Cuda2DArray.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Cuda2DArray.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/CudaSmartPtr.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/CudaSmartPtr.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/CudaSmartPtr.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/CudaSmartPtr.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/CudaSmartPtr.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/CudaSmartPtr.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/DM.cu" beforeDir="false" afterPath="$PROJECT_DIR$/src/DM.cu" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/DM.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/DM.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/DiffractionLoader.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/DiffractionLoader.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/DiffractionLoader.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/DiffractionLoader.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Diffractions.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Diffractions.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Diffractions.cuh" beforeDir="false" afterPath="$PROJECT_DIR$/src/Diffractions.cuh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Diffractions.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Diffractions.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/DiffractionsKernels.cu" beforeDir="false" afterPath="$PROJECT_DIR$/src/DiffractionsKernels.cu" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/FileManager.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/FileManager.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/FileManager.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/FileManager.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/IPhaser.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/IPhaser.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/IPhaser.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/IPhaser.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/IPhasingMethod.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/IPhasingMethod.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/IPtychoScanMesh.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/IPtychoScanMesh.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/IPtychoScanMesh.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/IPtychoScanMesh.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ListScanMesh.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/ListScanMesh.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ListScanMesh.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/ListScanMesh.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/MPIPhaser.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/MPIPhaser.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/MPIPhaser.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/MPIPhaser.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Parameters.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Parameters.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Parameters.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Parameters.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Probe.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Probe.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Probe.cuh" beforeDir="false" afterPath="$PROJECT_DIR$/src/Probe.cuh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Probe.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Probe.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ProbeKernels.cu" beforeDir="false" afterPath="$PROJECT_DIR$/src/ProbeKernels.cu" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/RenderServer.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/RenderServer.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/RenderServer.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/RenderServer.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Sample.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Sample.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Sample.cuh" beforeDir="false" afterPath="$PROJECT_DIR$/src/Sample.cuh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Sample.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Sample.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/SampleKernels.cu" beforeDir="false" afterPath="$PROJECT_DIR$/src/SampleKernels.cu" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ScanMesh.cuh" beforeDir="false" afterPath="$PROJECT_DIR$/src/ScanMesh.cuh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ScanMeshKernels.cu" beforeDir="false" afterPath="$PROJECT_DIR$/src/ScanMeshKernels.cu" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/SpiralScanMesh.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/SpiralScanMesh.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/SpiralScanMesh.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/SpiralScanMesh.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ThreadPool.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/ThreadPool.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ThreadPool.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/ThreadPool.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Timer.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Timer.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Timer.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Timer.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/datatypes.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/datatypes.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ePIE.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/ePIE.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ePIE.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/ePIE.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ptychopy.c" beforeDir="false" afterPath="$PROJECT_DIR$/src/ptychopy.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utilities.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/utilities.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utilities.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/utilities.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utilitiesKernels.cu" beforeDir="false" afterPath="$PROJECT_DIR$/src/utilitiesKernels.cu" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testPTY.py" beforeDir="false" afterPath="$PROJECT_DIR$/testPTY.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -24,9 +79,9 @@
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="full.screen.before.presentation.mode" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
-    <property name="settings.editor.selected.configurable" value="reference.idesettings.debugger.python" />
-    <property name="settings.editor.splitter.proportion" value="0.2" />
+    <property name="settings.editor.selected.configurable" value="preferences.lookFeel" />
   </component>
   <component name="SvnConfiguration">
     <configuration />
@@ -48,5 +103,23 @@
     <option name="RECENTLY_FILTERED_BRANCH_GROUPS">
       <collection />
     </option>
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="743" y="355" width="424" height="491" key="FileChooserDialogImpl" timestamp="1616021181742">
+      <screen x="0" y="27" width="1920" height="1140" />
+    </state>
+    <state x="743" y="355" width="424" height="491" key="FileChooserDialogImpl/0.27.1920.1140/1920.0.1920.1200@0.27.1920.1140" timestamp="1616021181742" />
+    <state x="456" y="232" width="1007" height="737" key="SettingsEditor" timestamp="1616604739797">
+      <screen x="0" y="27" width="1920" height="1140" />
+    </state>
+    <state x="456" y="232" width="1007" height="737" key="SettingsEditor/0.27.1920.1140/1920.0.1920.1200@0.27.1920.1140" timestamp="1616604739797" />
+    <state x="655" y="174" width="929" height="846" key="find.popup" timestamp="1617059350068">
+      <screen x="0" y="27" width="1920" height="1140" />
+    </state>
+    <state x="655" y="174" width="929" height="846" key="find.popup/0.27.1920.1140/1920.0.1920.1200@0.27.1920.1140" timestamp="1617059350068" />
+    <state x="623" y="281" width="672" height="678" key="search.everywhere.popup" timestamp="1617058963967">
+      <screen x="0" y="27" width="1920" height="1140" />
+    </state>
+    <state x="623" y="281" width="672" height="678" key="search.everywhere.popup/0.27.1920.1140/1920.0.1920.1200@0.27.1920.1140" timestamp="1617058963967" />
   </component>
 </project>

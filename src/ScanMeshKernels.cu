@@ -31,7 +31,6 @@
 //WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 #ifndef SCANMESHKERNELS_CU_
 #define SCANMESHKERNELS_CU_
 
@@ -79,7 +78,58 @@ __global__ void d_generateMesh(float2* d_positions, unsigned int meshY, real_t s
 		initialValues.y += threadIdx.x*driftCoeff.y;
 
 		d_positions[posIndex] = make_float2((initialValues.x*one_over_dxs)+ jitter.x,
-											(initialValues.y*one_over_dxs)+ jitter.y );
+											(initialValues.y*one_over_dxs)+ jitter.y);
+//		d_positions[posIndex] = make_float2(initialValues.x+ jitter.x,
+//											initialValues.y+ jitter.y );
+	}
+
+	if(jitterRadius>0)
+		randStates[posIndex] = localState;
+}
+
+template<int type>
+__global__ void d_generateMeshCar(float2* d_positions, unsigned int meshY, real_t stepSizeX, real_t stepSizeY, real_t one_over_dxs,
+								unsigned int jitterRadius, bool mirrorX, bool mirrorY, curandState* randStates, float2 driftCoeff, int2 ceilvar)
+{
+	unsigned int posIndex = (blockIdx.x * blockDim.x) + threadIdx.x;
+	curandState localState;
+
+	if(jitterRadius>0)
+		localState = randStates[posIndex];
+
+	if(threadIdx.x < meshY)
+	{
+		float2 jitter;
+		jitter.x = (jitterRadius>0) ? jitterRadius - (curand_uniform(&localState) * 2.0f * jitterRadius) : 0;
+		jitter.y = (jitterRadius>0) ? jitterRadius - (curand_uniform(&localState) * 2.0f * jitterRadius) : 0;
+
+		float2 initialValues;
+		if(type == 1) //Cartesian Grid
+		{
+			float meshIndex = uint2float(blockIdx.x);
+			float meshDim 	= uint2float(gridDim.x-1)*0.5f;
+			initialValues.x = ( (mirrorX?(meshDim-meshIndex):(meshIndex-meshDim)) * stepSizeX );
+
+			meshIndex 		= uint2float(threadIdx.x);
+			meshDim 		= uint2float(meshY-1)*0.5f;
+			initialValues.y = ( (mirrorY?(meshDim-meshIndex):(meshIndex-meshDim)) * stepSizeY );
+		}
+		else if(type == 2) //List
+			initialValues = d_positions[posIndex];
+		else if(type == 3) //Spiral
+		{
+			real_t sqrtIndex = sqrt_real_t((real_t)posIndex);
+			initialValues.x = sqrtIndex * cos_real_t(4.0*sqrtIndex) * stepSizeX;
+			initialValues.y = sqrtIndex * sin_real_t(4.0*sqrtIndex) * stepSizeY;
+		}
+
+		initialValues.x += blockIdx.x*driftCoeff.x;
+		initialValues.y += threadIdx.x*driftCoeff.y;
+
+		d_positions[posIndex] = make_float2(((initialValues.x*one_over_dxs)+ jitter.x + ceilvar.x),
+											((initialValues.y*one_over_dxs)+ jitter.y + ceilvar.y));
+//		d_positions[posIndex] = make_float2(initialValues.x+ jitter.x,
+//											initialValues.y+ jitter.y );
 	}
 
 	if(jitterRadius>0)
@@ -100,6 +150,10 @@ __host__ void h_generateCartesianMesh(float2* d_positions, unsigned int meshX, u
 										real_t stepSizeX, real_t stepSizeY, real_t dx_s, unsigned int jitterRadius,
 										bool mirrorX, bool mirrorY, curandState* randStates, float2 driftCoeff)
 {
+//	int2 ceilvar;
+//	ceilvar.x = ceil((1e5-rawFileSize.x)/2);
+//	ceilvar.y = ceil((1e5-rawFileSize.y)/2);
+
 	d_generateMesh<1><<<meshX, alignedY>>>(d_positions, meshY, stepSizeX, stepSizeY, 1.0/dx_s, jitterRadius, mirrorX, mirrorY, randStates, driftCoeff);
 	cutilCheckMsg("h_generateCartesianMesh() execution failed!\n");
 }
@@ -107,6 +161,8 @@ __host__ void h_generateCartesianMesh(float2* d_positions, unsigned int meshX, u
 __host__ void h_generateListMesh(float2* d_positions, unsigned int meshX, unsigned int meshY, unsigned int alignedY,
 										real_t stepSize, real_t dx_s, unsigned int jitterRadius, curandState* randStates, float2 driftCoeff)
 {
+
+
 	d_generateMesh<2><<<meshX, alignedY>>>(d_positions, meshY, stepSize, 0, 1.0/dx_s, jitterRadius, false, false, randStates, driftCoeff);
 	cutilCheckMsg("h_generateListMesh() execution failed!\n");
 }

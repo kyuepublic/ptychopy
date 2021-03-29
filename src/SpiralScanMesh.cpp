@@ -31,7 +31,6 @@
 //WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 #include "SpiralScanMesh.h"
 #include "Parameters.h"
 #include "Cuda2DArray.hpp"
@@ -72,3 +71,22 @@ void SpiralScanMesh::generateMesh(const int* bounds)
 		delete[] h_scanPositions;
 	}
 }
+
+void SpiralScanMesh::generateMeshML(const int* bounds)
+{
+
+}
+
+//void SpiralScanMesh::get_close_indices()
+//{
+////	const PreprocessingParams* pParams = CXParams::getInstance()->getPreprocessingParams();
+////	unsigned int grouping = pParams->projectionsNum/100;
+////	unsigned int Ngroups=ceil((m_gridDimensions.x*m_gridDimensions.y)/grouping);
+//
+//}
+//
+//void SpiralScanMesh::get_nonoverlapping_indices()
+//{
+//
+//
+//}

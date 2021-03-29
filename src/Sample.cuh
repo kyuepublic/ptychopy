@@ -31,11 +31,16 @@
 //WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 #ifndef SAMPLE_CUH_
 #define SAMPLE_CUH_
 
 #include "CudaFFTPlan.h"
+#include <curand.h>
+#include <curand_kernel.h>
+
+
+__host__ void h_initRandomStatesSample(unsigned int, unsigned int, curandState*);
+
 
 __host__ void h_bindObjArrayToTex(complex_t* d_objectArray, unsigned int objectArrayX, unsigned int objectArrayY, unsigned int alignedObjectArrayY);
 __host__ void h_unbindObjArrayTex();
@@ -66,6 +71,10 @@ __host__ void h_postprocess(complex_t* d_objectArray, real_t thresholdFactor, un
 __host__ void h_setObjectArray(complex_t* d_objectArray, const complex_t* d_roi,  unsigned int roiX, unsigned int roiY, unsigned int alignedROIY,
 								unsigned int objectArrayX, unsigned int objectArrayY, unsigned int alignedObjectArrayY,
 								unsigned int roiOffsetX=0, unsigned int roiOffsetY=0);
+
+__host__ void h_initRandObjectArray(complex_t* d_array, real_t* d_randarr1, real_t* d_randarr2, unsigned int sampleX,
+		unsigned int sampleY, unsigned int alignedSampleY);
+
 __host__ void h_updateStencils(char* d_myStencil, const uint2* d_nOffset, const uint2* d_nDims,
 								uint2 myOffset, unsigned int neighborNum, unsigned int objectArrayX,
 								unsigned int objectArrayY, unsigned int alignedObjectArrayY);

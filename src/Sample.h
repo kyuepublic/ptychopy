@@ -31,20 +31,28 @@
 //WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 #ifndef SAMPLE_H_
 #define SAMPLE_H_
 
 #include "CudaSmartPtr.h"
-//#include "IRenderable.h"
+#include "IRenderable.h"
 #include "datatypes.h"
 #include <vector_types.h>
 
 template<typename T> class Cuda3DArray;
 template<typename T> class Cuda3DElement;
+struct curandGenerator_st;
 
-class Sample
+class Sample : public IRenderable
 {
+
+public:
+	//beta_objectvec=cache.beta_object
+	std::vector <complex_t> beta_objectvec;
+
+
+    curandGenerator_st* m_randomGenerator;
+
 private:
 	uint2 m_objectArrayShape;
 	CudaSmartPtr m_objectArray;
@@ -52,12 +60,17 @@ private:
 	CudaSmartPtr m_objectPhases;
 	real_t m_maxObjectIntensity;
 
+	CudaSmartPtr m_randStates;
+
 	const CudaSmartPtr& updateRenderable(const char*);
 
 public:
 	Sample();
 	Sample(unsigned int arrayShapeX, unsigned int arrayShapeY);
 	~Sample();
+
+	void initObject();
+	CudaSmartPtr generatepureRandKernel(unsigned int x, unsigned int y);
 
 	bool loadFromFile(const char*, const char* p=0, real_t normalize=1.0);
 	void loadGuess(const char*);
@@ -75,6 +88,10 @@ public:
 	void updateObjectEstimate(	const Cuda3DArray<complex_t>* probeModes, const Cuda3DArray<complex_t>* psi,
 								const Cuda3DArray<complex_t>* psi_old, unsigned int qx, unsigned int qy,
 								real_t probeMaxIntensity, bool phaseConstraint=false);
+
+	void update_object(CudaSmartPtr object_upd_sum, int llo, std::vector<int> g_ind_vec, std::vector<int> scan_idsvec,
+			CudaSmartPtr illum_sum_0t, real_t MAX_ILLUM);
+
 	void updateIntensities(bool useSum=false);
 	void updateMaxIntensity(bool useSum=false);
 	void addNeighborSubsamples(const Cuda3DArray<complex_t>*, CudaSmartPtr, CudaSmartPtr, uint2);

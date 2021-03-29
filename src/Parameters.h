@@ -31,7 +31,6 @@
 //WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 #ifndef PARAMETERS_H_
 #define PARAMETERS_H_
 
@@ -74,21 +73,23 @@ struct PreprocessingParams
 		symmetric_array_center.y = 128;
 		rawFileSize.x = 256;
 		rawFileSize.y = 256;
-		hdf5DatasetName = "/entry/instrument/detector/data"; //for backward compatability
+		hdf5DatasetName = "/entry/data/data"; //for backward compatability
 	}
 };
 
 struct ExperimentParams
 {
-	real_t beamSize, lambda, dx_d, dx_s, z_d;
+	double lambda;
+	double beamSize, dx_d, dx, dx_s, z_d;
 	uint2 scanDims;
 	float2 stepSize;
 	float2 drift;
 	bool spiralScan;
 	int bit_depth;
-	size_t pixelSaturation;
+//	size_t pixelSaturation;
+	unsigned long long pixelSaturation;
 
-	ExperimentParams() :beamSize(1e-7), lambda(2.48e-10), dx_d(172e-6), dx_s(5.631549e-09), z_d(1.0), spiralScan(false),
+	ExperimentParams() :beamSize(1e-7), lambda(2.48e-10), dx_d(172e-6), dx(1.4089e-8), dx_s(5.631549e-09), z_d(1.0), spiralScan(false),
 						bit_depth(32), pixelSaturation( (1<<bit_depth)-1 )
 	{
 		scanDims.x = 12; scanDims.y=12;
@@ -102,6 +103,7 @@ struct ReconstructionParams
 	std::string reconstructionID;
 	std::string algorithm;
 	unsigned int iterations;
+	unsigned int save;
 	double time;
 	unsigned int desiredShape;
 	unsigned int probeModes;
@@ -112,6 +114,25 @@ struct ReconstructionParams
 	unsigned int updateProbeModes;
 	unsigned int updateVis;
 	unsigned int phaseConstraint;
+
+	unsigned int nProbes;
+	int Niter;
+	int variable_probe_modes;
+	int variable_intensity;
+	int variable_probe;
+	double beta_LSQ;
+	int beta_object;
+	int beta_probe;
+	int probe_pos_search;
+	int probe_reconstruct;
+	int apply_subpix_shift;
+	int apply_multimodal_update;
+	int object_reconstruct;
+	unsigned int Nobjects;
+	double delta_p;
+	std::string method;
+	int Nrec;
+
 	bool blind;
 	bool simulated;
 	bool flipScanAxis;
@@ -125,9 +146,12 @@ struct ReconstructionParams
 	std::string wsServerUrl;
 
 	ReconstructionParams() :
-		algorithm("ePIE"), iterations(100), time(-1.0), desiredShape(256), probeModes(1), jitterRadius(0), halo(0), shareFrequency(10),
+		algorithm("ePIE"), iterations(100), save(999999), time(-1.0), desiredShape(256), probeModes(5), jitterRadius(0), halo(0), shareFrequency(10),
 		updateProbe(10), updateProbeModes(20), updateVis(10), phaseConstraint(1),
-		blind(true), simulated(false), flipScanAxis(false), mirrorX(false), mirrorY(false), calculateRMS(false), binaryOutput(false)
+		blind(true), simulated(false), flipScanAxis(false), mirrorX(false), mirrorY(false), calculateRMS(false), binaryOutput(false), nProbes(5),
+		Niter(100), variable_probe_modes(1), beta_LSQ(0.9),beta_object(1), beta_probe(1), probe_pos_search(5), variable_intensity(1),
+		variable_probe(1), apply_subpix_shift(1), apply_multimodal_update(0), object_reconstruct(1), probe_reconstruct(1), Nobjects(1), delta_p(0.1),
+		method("MLs"), Nrec(1)
 	{}
 };
 
@@ -154,6 +178,14 @@ public:
 	const PreprocessingParams* 	getPreprocessingParams()const {return &m_pParams;}
 	const ReconstructionParams* getReconstructionParams()const {return &m_rParams;}
 	bool renderResults() const {return !m_rParams.blind;}
+
+	/////ptychpy function
+
+	void parseFromCPython(char *jobID, char *fp, int fs, char *hdf5path, int dpf, double beamSize, char *probeGuess, char *objectGuess, \
+                int size, int qx, int qy, int nx, int ny, int scanDimsx, int scanDimsy, int spiralScan, int flipScanAxis, int mirror1stScanAxis, \
+                int mirror2ndScanAxis, double stepx, double stepy, int probeModes, double lambda, double dx_d, double z, int iter, int T, int jitterRadius, \
+                double delta_p,  int threshold, int rotate90, int sqrtData, int fftShiftData, int binaryOutput, int simulate, \
+                int phaseConstraint, int updateProbe, int updateModes, int beamstopMask, char *lf);
 };
 
 typedef Singleton<Parameters> CXParams;

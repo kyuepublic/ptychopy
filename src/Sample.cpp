@@ -31,22 +31,57 @@
 //WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 #include "Sample.h"
 #include "CudaSmartPtr.hpp"
 #include "Sample.cuh"
 #include "CudaFFTPlan.h"
+#include "Parameters.h"
+
+#include <limits>
+#include <cstddef>
 
 using namespace std;
 
-Sample::Sample() : m_maxObjectIntensity(0)
-{}
+Sample::Sample() : m_maxObjectIntensity(0),
+				   m_randomGenerator(0)
+{
+}
 
-Sample::Sample(unsigned int arrayShapeX, unsigned int arrayShapeY) : m_maxObjectIntensity(0)
-{setObjectArrayShape(make_uint2(arrayShapeX, arrayShapeY));}
+Sample::Sample(unsigned int arrayShapeX, unsigned int arrayShapeY) : m_maxObjectIntensity(0), m_randomGenerator(0)
+{
+
+//	m_randStates = new Cuda2DArray<curandState>(arrayShapeX, arrayShapeY);
+//	h_initRandomStatesSample(arrayShapeX, m_randStates->getAlignedY(), m_randStates->getDevicePtr<curandState>());
+	setObjectArrayShape(make_uint2(arrayShapeX, arrayShapeY));
+}
 
 Sample::~Sample()
-{h_unbindObjArrayTex();}
+{
+	h_unbindObjArrayTex();
+
+if(m_randomGenerator)
+	curandDestroyGenerator(m_randomGenerator);
+}
+
+CudaSmartPtr Sample::generatepureRandKernel(unsigned int x, unsigned int y)
+{
+	CudaSmartPtr randArray(new Cuda2DArray<real_t>(x, y));
+
+	if(!m_randomGenerator)
+	{
+		curandCreateGenerator(&m_randomGenerator, CURAND_RNG_PSEUDO_DEFAULT);
+		curandSetPseudoRandomGeneratorSeed(m_randomGenerator, time(NULL));
+	}
+
+	for(unsigned int x=0; x<randArray->getX(); ++x)
+#ifdef USE_SINGLE_PRECISION
+		curandGenerateUniform(m_randomGenerator, randArray->getDevicePtr<real_t>()+(x*randArray->getAlignedY()), randArray->getY());
+#else
+		curandGenerateUniformDouble(m_randomGenerator, randArray->getDevicePtr<real_t>()+(x*randArray->getAlignedY()), randArray->getY());
+#endif
+
+	return randArray;
+}
 
 void Sample::setObjectArrayShape(uint2 xy)
 {
@@ -108,7 +143,6 @@ bool Sample::loadFromFile(const char* filename, const char* phaseFile, real_t no
 
 		delete[] h_dataf;
 		free(h_data);
-
 		h_applyHammingToSample(m_objectArray->getDevicePtr<complex_t>(), mag->getDevicePtr<real_t>(), arg->getDevicePtr<real_t>(),
 								mag->getX(), mag->getY(), mag->getAlignedY(), m_objectArray->getX(), m_objectArray->getY(),
 								m_objectArray->getAlignedY());
@@ -130,12 +164,34 @@ void Sample::loadGuess(const char* filename)
 		fprintf(stderr, "Failed to load object guess from file: %s!\n", filename);
 		return;
 	}
+
+	////////////////////// test with matlab
 	guess->load<complex_t>(filename);
+//	guess->loadMatlab<complex_t>(filename);
+	//////////////////////
+
+//	guess->loadCSV(filename);
 	h_setObjectArray(m_objectArray->getDevicePtr<complex_t>(), guess->getDevicePtr<complex_t>(), guess->getX(),
 						guess->getY(), guess->getAlignedY(), m_objectArray->getX(), m_objectArray->getY(),
 						m_objectArray->getAlignedY());
 }
 
+void Sample::initObject()
+{
+	CudaSmartPtr guess;
+	CudaSmartPtr randarr1 = generatepureRandKernel(m_objectArray->getX(), m_objectArray->getY());
+	CudaSmartPtr randarr2 = generatepureRandKernel(m_objectArray->getX(), m_objectArray->getY());
+
+	guess = new Cuda2DArray<complex_t>(m_objectArray->getX(), m_objectArray->getY());
+
+	h_initRandObjectArray(guess->getDevicePtr<complex_t>(), randarr1->getDevicePtr<real_t>(), randarr2->getDevicePtr<real_t>(),
+			guess->getX(), guess->getY(), guess->getAlignedY());
+
+	h_setObjectArray(m_objectArray->getDevicePtr<complex_t>(), guess->getDevicePtr<complex_t>(), guess->getX(),
+						guess->getY(), guess->getAlignedY(), m_objectArray->getX(), m_objectArray->getY(),
+						m_objectArray->getAlignedY());
+
+}
 void Sample::clearObjectArray()
 {
 	m_objectArray->set(0);
@@ -162,14 +218,14 @@ const CudaSmartPtr& Sample::updateRenderable(const char* name)
 
 void Sample::toRGBA(float4* out, const char* name, float tf, float ts)
 {
-//	h_realToRGBA(updateRenderable(name)->getDevicePtr<real_t>(), out, m_objectIntensities->getX(), m_objectIntensities->getY(),
-//					m_objectIntensities->getAlignedY(), (isPhaseName(name)?1.0:1.0/m_maxObjectIntensity), tf, ts);
+	h_realToRGBA(updateRenderable(name)->getDevicePtr<real_t>(), out, m_objectIntensities->getX(), m_objectIntensities->getY(),
+					m_objectIntensities->getAlignedY(), (isPhaseName(name)?1.0:1.0/m_maxObjectIntensity), tf, ts);
 }
 
 void Sample::toGray(float* out, const char* name, bool outAligned)
 {
-//	h_realToGray(updateRenderable(name)->getDevicePtr<real_t>(), out, m_objectIntensities->getX(), m_objectIntensities->getY(),
-//					m_objectIntensities->getAlignedY(), (isPhaseName(name)?1.0:1.0/m_maxObjectIntensity), outAligned);
+	h_realToGray(updateRenderable(name)->getDevicePtr<real_t>(), out, m_objectIntensities->getX(), m_objectIntensities->getY(),
+					m_objectIntensities->getAlignedY(), (isPhaseName(name)?1.0:1.0/m_maxObjectIntensity), outAligned);
 }
 
 void Sample::extractROI(Cuda3DElement<complex_t> roi, float qx, float qy) const
@@ -197,6 +253,56 @@ void Sample::updateObjectEstimate(	const Cuda3DArray<complex_t>* probeModes, con
 	updateMaxIntensity();
 }
 
+void Sample::update_object(CudaSmartPtr object_upd_sum, int llo, std::vector<int> g_ind_vec, std::vector<int> scan_idsvec,
+		CudaSmartPtr illum_sum_0t, real_t MAX_ILLUM)
+{
+	const ReconstructionParams* rParams = CXParams::getInstance()->getReconstructionParams();
+
+	std::vector<int> scan_ids(scan_idsvec);
+
+	// sort the group and get the unique
+	std::sort(scan_ids.begin(), scan_ids.end());
+
+	// Delete duplicate element in the array
+	std::vector<int>::iterator it;
+	it = std::unique (scan_ids.begin(), scan_ids.end());
+	scan_ids.resize( std::distance(scan_ids.begin(),it) );
+
+	float OjbMagMin=std::numeric_limits<float>::max();
+	int minIndex=0;
+	complex_t beta_object_avg;
+	for(int i=0; i<scan_ids.size(); i++)
+	{
+		int kk=scan_ids[i];
+		complex_t objMean=make_complex_t(0, 0);
+		int kkNo=0;
+
+		for(int j=0; j<scan_idsvec.size(); j++)
+		{
+			if(scan_idsvec[j]==kk)
+			{
+				objMean=add_complex_t(objMean, beta_objectvec[g_ind_vec[j]]);
+				kkNo++;
+			}
+		}
+
+		complex_t tmpResMean=div_complex_t(objMean, make_complex_t(kkNo, 0));
+		double OjbMag=pow(real_complex_t(tmpResMean), 2.0)+pow(imag_complex_t(tmpResMean), 2.0);
+		if(OjbMag<OjbMagMin)
+		{
+			OjbMagMin=OjbMag;
+			beta_object_avg=tmpResMean;
+		}
+	}
+
+	CudaSmartPtr tmpResult=new Cuda2DArray<complex_t>(object_upd_sum->getX(), object_upd_sum->getY());
+	h_multiply(object_upd_sum->getDevicePtr<complex_t>(), beta_object_avg, tmpResult->getDevicePtr<complex_t>(),
+			object_upd_sum->getX(), object_upd_sum->getY(), object_upd_sum->getAlignedY());
+	h_complexSum(m_objectArray->getDevicePtr<complex_t>(), tmpResult->getDevicePtr<complex_t>(), m_objectArray->getDevicePtr<complex_t>(), 1, 1,
+			tmpResult->getX(), tmpResult->getY(), tmpResult->getAlignedY());
+	tmpResult->set();
+}
+
 void Sample::updateIntensities(bool useSum)
 {
 	h_realComplexAbs(m_objectArray->getDevicePtr<complex_t>(), m_objectIntensities->getDevicePtr<real_t>(),
@@ -208,7 +314,7 @@ void Sample::updateMaxIntensity(bool useSum)
 {
 	m_maxObjectIntensity = useSum ? h_realSum(m_objectIntensities->getDevicePtr<real_t>(), m_objectIntensities->getX(), m_objectIntensities->getY(), m_objectIntensities->getAlignedY()):
 									h_realMax(m_objectIntensities->getDevicePtr<real_t>(), m_objectIntensities->getX(), m_objectIntensities->getY(), m_objectIntensities->getAlignedY());
-//	m_renderableUpdated = true;
+	m_renderableUpdated = true;
 }
 
 void Sample::addNeighborSubsamples(const Cuda3DArray<complex_t>* ns, CudaSmartPtr no, CudaSmartPtr nd, uint2 myOffset)
@@ -278,7 +384,7 @@ const CudaSmartPtr& Sample::stitchSubsamples(const ICuda2DArray* s1, const ICuda
 
 void Sample::fillResources()
 {
-//	m_myResources.push_back(Resource("|O|", GRAYS, this));
-//	m_myResources.push_back(Resource("arg(O)", RAINBOW, this));
-//	m_objectPhases = new Cuda2DArray<real_t>(m_objectArrayShape.x, m_objectArrayShape.y);
+	m_myResources.push_back(Resource("|O|", GRAYS, this));
+	m_myResources.push_back(Resource("arg(O)", RAINBOW, this));
+	m_objectPhases = new Cuda2DArray<real_t>(m_objectArrayShape.x, m_objectArrayShape.y);
 }

@@ -45,7 +45,7 @@ class Diffractions;
 class Probe;
 class Sample;
 class IPtychoScanMesh;
-//class IRenderer;
+class IRenderer;
 
 struct CXPhasing
 {
@@ -63,13 +63,17 @@ protected:
 	Probe* m_probe;
 	Sample* m_sample;
 	IPtychoScanMesh* m_scanMesh;
-//	IRenderer* m_renderer;
+	IRenderer* m_renderer;
 	std::vector<CXPhasing> m_phasingMethods;
 	std::vector<real_t> m_errors;
+
+	std::vector< std::vector<real_t> > m_fourierErrors;
 
 	//timers
 	Timer m_ioTimer;
 	Timer m_phasingTimer;
+
+	Timer m_stepTimer;
 
 	virtual const int* getBounds() {return 0;}
 
@@ -80,11 +84,7 @@ protected:
 
 	virtual void prePhase();
 	virtual void phaseLoop();
-
-	virtual void phaseLoopVisStep();
-
-
-	virtual real_t phaseStep(IPhasingMethod* m, unsigned int i);
+    virtual real_t phaseStep(IPhasingMethod* m, unsigned int i);
 	virtual void postPhase();
 
 public:
@@ -93,17 +93,16 @@ public:
 
 	virtual bool init();
 	virtual void addPhasingMethod(const char*, unsigned int);
-
 	virtual void phase();
-	virtual void phaseinit();
-	virtual void phasepost();
-	virtual void phasestepvis(unsigned int i);
-
-	virtual void phaseVisStep();
-
 	virtual void writeResultsToDisk(int r=0);
 	virtual const std::vector<real_t>& getPhaseErrors() const {return m_errors;}
 
+	/////////Start ptychopy function
+    virtual void phaseLoopVisStep();
+	virtual void phaseinit();
+	virtual void phasepost();
+	virtual void phasestepvis(unsigned int i);
+	virtual void phaseVisStep();
 	Sample* getSample();
 	Probe* getProbe();
 };

@@ -32,6 +32,7 @@
 //OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
 #ifndef DIFFRACTIONS_CUH_
 #define DIFFRACTIONS_CUH_
 
@@ -49,5 +50,9 @@ __host__ void h_symmetrizeDiffraction(const real_t* d_intensities, real_t* d_out
 __host__ void h_preprocessDiffractions(real_t* d_intensities, bool squareRoot, real_t threshold,
 				unsigned int intensitiesNum, unsigned int intensitiesX, unsigned int intensitiesY, unsigned int intensitiesAlignedY);
 
+__host__ void h_squareRootDiffractions(real_t* d_intensities,
+					unsigned int intensitiesNum, unsigned int intensitiesX, unsigned int intensitiesY, unsigned int intensitiesAlignedY);
+
+__host__ void h_modulus_amplitude(real_t* modF, real_t* aPsi, real_t* result, real_t R_offset, unsigned int x, unsigned int y, unsigned int alignedY);
 
 #endif /* DIFFRACTIONS_CUH_ */

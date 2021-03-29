@@ -82,12 +82,26 @@ __global__ void d_calculateSTXM(const real_t* d_intensities, real_t* d_output,
 	}*/
 }
 
-__global__ void d_symmetrizeDiffraction(const real_t* d_intensities,real_t* d_output, 
-										unsigned int dataOffsetX, unsigned int dataOffsetY, unsigned int dataAlignedY, 
+//__global__ void d_symmetrizeDiffraction(const real_t* d_intensities,real_t* d_output,
+//										unsigned int dataOffsetX, unsigned int dataOffsetY, unsigned int dataAlignedY,
+//										unsigned int outOffsetX, unsigned int outOffsetY, unsigned int outAlignedY)
+//{
+//	unsigned int diffIndex	= ((dataOffsetX+blockIdx.x) * dataAlignedY) + threadIdx.x + dataOffsetY;
+//	unsigned int outputIndex= ((outOffsetX+blockIdx.x) * outAlignedY) + threadIdx.x + outOffsetY;
+////	real_t temp=d_intensities[diffIndex];
+//	d_output[outputIndex] = d_intensities[diffIndex];
+//}
+
+__global__ void d_symmetrizeDiffraction(const real_t* d_intensities,real_t* d_output,
+										unsigned int dataOffsetX, unsigned int dataOffsetY, unsigned int dataAlignedY,
 										unsigned int outOffsetX, unsigned int outOffsetY, unsigned int outAlignedY)
 {
 	unsigned int diffIndex	= ((dataOffsetX+blockIdx.x) * dataAlignedY) + threadIdx.x + dataOffsetY;
 	unsigned int outputIndex= ((outOffsetX+blockIdx.x) * outAlignedY) + threadIdx.x + outOffsetY;
+//	real_t temp=d_intensities[diffIndex];
+//	real_t temp1=sqrt_real_t(d_intensities[diffIndex]);
+
+//	d_output[outputIndex] = sqrt_real_t(d_intensities[diffIndex]);
 	d_output[outputIndex] = d_intensities[diffIndex];
 }
 
@@ -101,8 +115,28 @@ __global__ void d_preprocessDiffractions(real_t* d_intensities, bool squareRoot,
 	value = (value<threshold)? 0 : value-threshold;
 	d_intensities[intensityIndex] = squareRoot? sqrt_real_t(value) : value;
 }
+__global__ void d_squareRootDiffractions(real_t* d_intensities, unsigned int intensitiesX, unsigned int intensitiesY)
+{
+	unsigned int intensityIndex = (blockIdx.x * intensitiesX) + ((blockIdx.y*blockDim.y) + threadIdx.y);
+	intensityIndex = (intensityIndex * blockDim.x) + threadIdx.x;
+	real_t value = d_intensities[intensityIndex];
+	d_intensities[intensityIndex] = sqrt_real_t(value);
+}
 
-//
+__global__ void d_modulus_amplitude(real_t* modF, real_t* aPsi, real_t* result, real_t R_offset, unsigned int x, unsigned int y, unsigned int alignedY)
+{
+	unsigned int row = (blockIdx.x*blockDim.y) + threadIdx.y;
+	unsigned int col = threadIdx.x;
+	unsigned int index = (row * alignedY) + col;
+
+	if(threadIdx.x < y)
+	{
+		result[index]=modF[index]/(aPsi[index]+1e-9)- R_offset;
+	}
+}
+
+/////////////////////////////////////
+
 __host__ void h_calculateSTXM(const real_t* d_intensities, real_t* d_output,
 								unsigned int scansX, unsigned int scansY, unsigned int scansAlignedY,
 								unsigned int intensitiesX, unsigned int intensitiesY, unsigned int intensitiesAlignedY)
@@ -150,6 +184,26 @@ __host__ void h_preprocessDiffractions(real_t* d_intensities, bool squareRoot, r
 	dim3 block(intensitiesAlignedY, sliceNum, 1);
 	d_preprocessDiffractions<<<grid, block>>>(d_intensities, squareRoot, threshold, intensitiesX, intensitiesY);
 	cutilCheckMsg("d_preprocessDiffractions() execution failed!\n");	
+}
+
+__host__ void h_squareRootDiffractions(real_t* d_intensities,
+					unsigned int intensitiesNum, unsigned int intensitiesX, unsigned int intensitiesY, unsigned int intensitiesAlignedY)
+{
+	unsigned int sliceNum = gh_iDivDown(GPUQuery::getInstance()->getGPUMaxThreads(), intensitiesAlignedY);
+	dim3 grid(intensitiesNum, gh_iDivUp(intensitiesX,sliceNum), 1);
+	dim3 block(intensitiesAlignedY, sliceNum, 1);
+	d_squareRootDiffractions<<<grid, block>>>(d_intensities, intensitiesX, intensitiesY);
+	cutilCheckMsg("d_preprocessDiffractions() execution failed!\n");
+}
+
+__host__ void h_modulus_amplitude(real_t* modF, real_t* aPsi, real_t* result, real_t R_offset, unsigned int x, unsigned int y, unsigned int alignedY)
+{
+	unsigned int sliceNum = gh_iDivDown(GPUQuery::getInstance()->getGPUMaxThreads(), alignedY);
+	dim3 grid(gh_iDivUp(x,sliceNum), 1, 1);
+	dim3 block(alignedY, sliceNum, 1);
+
+	d_modulus_amplitude<<<grid, block>>>(modF, aPsi, result, R_offset, x, y, alignedY);
+	cutilCheckMsg("modulus_amplitude() execution failed!\n");
 }
 
 #endif /* DIFFRACTIONSERNELS_CU_ */

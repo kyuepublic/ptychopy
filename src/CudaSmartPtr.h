@@ -35,7 +35,10 @@
 #ifndef __CUDASMARTPTR_H
 #define __CUDASMARTPTR_H
 
+//#include "Cuda2DArray.hpp"
+
 class ICuda2DArray;
+//class Cuda2DArray;
 
 class CudaSmartPtr
 {
@@ -43,6 +46,7 @@ private:
 	ICuda2DArray* m_ptr;
 
 public:
+
     CudaSmartPtr(ICuda2DArray* p = 0)
     {acquire(p);}
 
@@ -70,6 +74,9 @@ public:
 
     template<typename T>
     bool initFromFile(const char*);
+
+//	template<typename T>
+//	bool loadCSV(const char* filename, bool binary=false);
 
     void acquire(ICuda2DArray* ptr);
     void release();

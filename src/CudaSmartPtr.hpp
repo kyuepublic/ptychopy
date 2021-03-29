@@ -73,6 +73,33 @@ bool CudaSmartPtr::initFromFile(const char* fname)
 	return true;
 }
 
+//template<typename T>
+//bool CudaSmartPtr::loadCSV(const char* filename, bool binary)
+//{
+//	std::ifstream infile(filename, binary?std::ofstream::in|std::ofstream::binary : std::ofstream::in );
+//	if(!infile.is_open())
+//		return false;
+//	T* h_array =  getHostPtr<T>();
+//	if(binary)
+//		infile.read((char*)h_array, getNum()*getUnitSize());
+//	else
+//	{
+//		for(unsigned int x=0; x<getX(); ++x)
+//			for(unsigned int y=0; y<getY(); ++y)
+//				{
+//				infile >> h_array[(x*getY())+y];
+//				std::cout<<h_array[(x*getY())+y];
+//
+//				}
+//
+//	}
+//	infile.close();
+//	setFromHost(h_array, getX(), getY());
+//	delete [] h_array;
+//
+//	return true;
+//}
+
 
 
 #endif /* CUDASMARTPTR_HPP_ */

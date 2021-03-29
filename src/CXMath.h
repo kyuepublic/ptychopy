@@ -52,6 +52,24 @@ public:
 			multiply(a->getAt(0), b->getAt(0), c->getAt(0), axOffset, ayOffset, bxOffset, byOffset);
 	}
 
+//	template<typename T, typename P>
+//	static void multiply(const Cuda3DArray<T>*a, const Cuda3DArray<P>*b, Cuda3DArray<T>*c, bool firstAElementOnly=false,
+//						unsigned int axOffset=0, unsigned int ayOffset=0, unsigned int bxOffset=0, unsigned int byOffset=0)
+//	{
+//		if(a->checkUseAll())
+//			for(int m=a->getNum()-1; m>=0; --m)
+//				multiply(a->getAt(firstAElementOnly?0:m), b->getAt(m), c->getAt(m), axOffset, ayOffset, bxOffset, byOffset);
+//		else
+//			multiply(a->getAt(0), b->getAt(0), c->getAt(0), axOffset, ayOffset, bxOffset, byOffset);
+//	}
+//
+//	template<typename T, typename P>
+//	static void multiply(Cuda3DElement<T> a, Cuda3DElement<P> b, Cuda3DElement<T> c,
+//						unsigned int axOffset=0, unsigned int ayOffset=0, unsigned int bxOffset=0, unsigned int byOffset=0)
+//	{
+//		h_multiply( a.getDevicePtr(), b.getDevicePtr(), c.getDevicePtr(),
+//					a.getX(), a.getY(), a.getAlignedY(), false, axOffset, ayOffset, bxOffset, byOffset);
+//	}
 	
 	template<typename T>
 	static void multiply(Cuda3DElement<T> a, Cuda3DElement<T> b, Cuda3DElement<T> c,
@@ -99,7 +117,7 @@ public:
 		if(b->checkUseAll())
 			for(unsigned int m=0; m<b->getNum(); ++m)
 				h_multiply( a.getDevicePtr(), b->getAt(m).getDevicePtr(), c->getAt(m).getDevicePtr(),
-							a->getX(), a->getY(), a->getAlignedY(), false, axOffset, ayOffset, bxOffset, byOffset);
+							a.getX(), a.getY(), a.getAlignedY(), false, axOffset, ayOffset, bxOffset, byOffset);
 		else
 			h_multiply(a.getDevicePtr(), b->getAt(0).getDevicePtr(), c->getAt(0).getDevicePtr(),
 							a.getX(), a.getY(), a.getAlignedY(), false, axOffset, ayOffset, bxOffset, byOffset);

@@ -54,9 +54,10 @@ static char module_docstring[] = "This module provides an interface to ptycholib
 
 static char helloworld_docstring[] = "This function exists for debugging and testing purposes.";
 
-static char epie_docstring[] = "This function performs iterative phase retrieval using the ePIE algorithm.";
+static char epie_docstring[] = "This function performs iterative phase retrieval using the ePIE algorithm with keyword.";
 
-static char epiecmdstr_docstring[] = "This function performs iterative phase retrieval using the ePIE algorithm.";
+static char epiecmdstr_docstring[] = "This function performs iterative phase retrieval using the ePIE algorithm \
+            with a whole command line.";
 
 static char epieinit_docstring[] = "This function performs the init.";
 
@@ -112,7 +113,6 @@ PyMODINIT_FUNC PyInit_ptychopy(void)
 
     if (m==NULL)
         return NULL;
-
     /* Load numpy functionality */
     import_array();
 
@@ -122,6 +122,7 @@ PyMODINIT_FUNC PyInit_ptychopy(void)
 /* Function definitions */
 static PyObject *ptycholib_helloworld(PyObject *self, PyObject *args)
 {
+
     if (!PyArg_ParseTuple(args, ""))
         return NULL;
     printf("Hello, World!");
@@ -131,129 +132,112 @@ static PyObject *ptycholib_helloworld(PyObject *self, PyObject *args)
 
 static PyObject *ptycholib_epie(PyObject *self, PyObject *args, PyObject *keywds)
 {
-    /* io */
-    int io_threads=100;
-    char *filename_pattern = "/data/id2data/scan060/scan060_#06d.h5";
-    int start_file_number = 1501;
 
-    /* preprocessing */
-    int size = 512;
-    int threshhold = 0;
-    int rotate_90 = 0;
-    int sqrt_data = 0;
-    int fftshift_data = 0;
-    int flip_scan_axis = 0;
-
-    /* experiment */
-    float beam_size=400e-9;
-    float energy=5.0;
-    float lambda=1.24e-9/energy;
-    float dx=172e-6;
-    float z=1.0;
-    int simulate=1;
-
-    /* cartesian scan */
-    int scan_dims_0=55;
-    int scan_dims_1=75;
-    float step_0=40e-9;
-    float step_1=40e-9;
-
-    /* probe guess */
-    char *probeGuess = "";
-
-    /* phase retrieval */
-    int object_array=2048;
-    int i=10;
-    char *job_id="gentest101";
-    int qx0 = 243;
-    int qy0 = 153;
-    int probe_modes = 1;
-    int position_jitter_radius=0;
-    int share_frequency = 0;
-
+    char *jobID="";
+    char *fp="";
+    int fs=0;
+    char* hdf5path="";
     int dpf = 1;
+    double beamSize=400e-9;
+    char *probeGuess="";
+    char *objectGuess="";
+    int size=512;
+    int qx=128;
+    int qy=128;
+    int nx=256;
+    int ny=256;
+    int scanDimsx=26;
+    int scanDimsy=26;
+    int spiralScan=0;
+    int flipScanAxis=0;
+    int mirror1stScanAxis=0;
+    int mirror2ndScanAxis=0;
+    double stepx=40e-9;
+    double stepy=40e-9;
+    int probeModes=1;
+    double lambda=2.3843e-10;
+    double dx_d=172e-6;
+    double z=2.2;
+    int iter=100;
+    int T=0;
+    int jitterRadius=0;
+    double delta_p=0.1;
+    int threshold=0;
+    int rotate90=0;
+    int sqrtData=0;
+    int fftShiftData=0;
+    int binaryOutput=0;
+    int simulate=0;
+    int phaseConstraint=1;
+    int updateProbe=10;
+    int updateModes=20;
+    int beamstopMask=0;
+    char *lf="";
 
-    static char *kwlist[] = {"io_threads", "filename_pattern", "start_file_number", "size", "threshhold", "rotate_90", \
-    "sqrt_data", "fftshift_data", "flip_scan_axis", "beam_size", "energy", "dx", "z", "simulate", "scan_dims", "step", \
-    "probeGuess", "object_array", "i", "job_id", "qy0qx0", "probe_modes", "position_jitter_radius", \
-    "share_frequency", "dpf", NULL};
+    static char *kwlist[] = {"jobID", "fp", "fs", "hdf5path", "dpf", "beamSize", "probeGuess", "objectGuess", \
+    "size", "qx", "qy", "nx", "ny", "scanDimsx", "scanDimsy", "spiralScan", "flipScanAxis", "mirror1stScanAxis", \
+    "mirror2ndScanAxis", "stepx", "stepy", "probeModes", "lambda", "dx_d", "z", "iter", "T", "jitterRadius", \
+    "delta_p",  "threshold", "rotate90", "sqrtData", "fftShiftData", "binaryOutput", "simulate", \
+    "phaseConstraint", "updateProbe", "updateModes", "beamstopMask", "lf", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "|isiiiiiiiffffi(ii)(ff)siis(ii)iiii", kwlist,
-                &io_threads, &filename_pattern, &start_file_number, &size, &threshhold, &rotate_90, &sqrt_data, \
-                &fftshift_data, &flip_scan_axis, &beam_size, &energy, &dx, &z, &simulate, &scan_dims_0, \
-                &scan_dims_1, &step_0, &step_1, &probeGuess, &object_array, &i, &job_id, &qy0, &qx0, \
-                &probe_modes, &position_jitter_radius, &share_frequency, &dpf))
-        return NULL;
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "|ssisidssiiiiiiiiiiississsiiisiiiiiiiiiis", kwlist,
+                &jobID, &fp, &fs, &hdf5path, &dpf, &beamSize, &probeGuess, &objectGuess, \
+                &size, &qx, &qy, &nx, &ny, &scanDimsx, &scanDimsy, &spiralScan, &flipScanAxis, &mirror1stScanAxis, \
+                &mirror2ndScanAxis, &stepx, &stepy, &probeModes, &lambda, &dx_d, &z, &iter, &T, &jitterRadius, \
+                &delta_p,  &threshold, &rotate90, &sqrtData, &fftShiftData, &binaryOutput, &simulate, \
+                &phaseConstraint, &updateProbe, &updateModes, &beamstopMask, &lf))
+    return NULL;
 
     printf("Running ePIE.\n");
-    printf("Io Threads: %d\n", io_threads);
-    printf("Filename Pattern: %s\n", filename_pattern);
-    printf("Start Filenumber: %d\n", start_file_number);
-    printf("Size: %d\n", size);
-    printf("Threshhold: %d\n", threshhold);
-    printf("Rotate 90: %d\n", rotate_90);
-    printf("Square Root Data: %d\n", sqrt_data);
-    printf("FFT Shift Data: %d\n", fftshift_data);
-    printf("Flip Scan Axis: %d\n", flip_scan_axis);
-    printf("Beam Size: %f [nm]\n", 1e9*beam_size);
-    printf("Energy: %f\n", energy);
-    printf("dx: %f\n", dx);
-    printf("z: %f\n", z);
-    printf("Simulate: %d\n", simulate);
-    printf("Scan Dims: %d, %d\n", scan_dims_0,scan_dims_1);
-    printf("Step: %f, %f\n", step_0,step_1);
-    printf("List Scan Filename: %s\n", probeGuess);
-    printf("Object Array: %d\n", object_array);
-    printf("Iterations: %d\n", i);
-    printf("Job ID: %s\n", job_id);
-    printf("Qx0Qy0: %d, %d\n", qx0,qy0);
-    printf("Probe Modes: %d\n", probe_modes);
-    printf("Position Jitter Radius: %d\n", position_jitter_radius);
-    printf("Share Frequency: %d\n", share_frequency);
-    printf("dpf: %d\n", dpf);
+    printf("the jobID is %s \n", jobID);
+//    printf("the fp is %s \n", fp);
+//    printf("the iter is %d \n", iter);
 
-    lambda = 1.24e-9/energy;
+    CXParams::getInstance()->parseFromCPython(jobID, fp, fs, hdf5path, dpf, beamSize, probeGuess, objectGuess, \
+                size, qx, qy, nx, ny, scanDimsx, scanDimsy, spiralScan, flipScanAxis, mirror1stScanAxis, \
+                mirror2ndScanAxis, stepx, stepy, probeModes, lambda, dx_d, z, iter, T, jitterRadius, \
+                delta_p,  threshold, rotate90, sqrtData, fftShiftData, binaryOutput, simulate, \
+                phaseConstraint, updateProbe, updateModes, beamstopMask, lf);
 
-    char str[1000];
-    sprintf(str, "./ePIE -i=%d -jobID=%s -beamSize=%e -scanDims=%d,%d -step=%e,%e -size=%d \
-    -objectArray=%d -lambda=%e -dx_d=%e -z=%f -simulate=%d -blind=0 -fp=%s -fs=%d \
-    -flipScanAxis=%d -probeModes=%d -jitterRadius=%d -threshold=%d -rotate90=%d \
-    -sqrtData=%d -fftShiftData=%d -shareFrequency=%d -dpf=%d -probeGuess=%s -qxy=%d,%d", i,
-     job_id, beam_size, scan_dims_0, scan_dims_1, step_0, step_1, size,
-     object_array, lambda, dx, z, simulate, filename_pattern, start_file_number, flip_scan_axis,
-     probe_modes, position_jitter_radius, threshhold, rotate_90, sqrt_data, fftshift_data, share_frequency, dpf, probeGuess, qy0, qx0);
+//    char str[1000];
+//    sprintf(str, "./ePIE -i=%d -jobID=%s -beamSize=%e -scanDims=%d,%d -step=%e,%e -size=%d \
+//    -objectArray=%d -lambda=%e -dx_d=%e -z=%f -simulate=%d -blind=0 -fp=%s -fs=%d \
+//    -flipScanAxis=%d -probeModes=%d -jitterRadius=%d -threshold=%d -rotate90=%d \
+//    -sqrtData=%d -fftShiftData=%d -shareFrequency=%d -dpf=%d -probeGuess=%s -qxy=%d,%d", i,
+//    job_id, beam_size, scan_dims_0, scan_dims_1, step_0, step_1, size,
+//    object_array, lambda, dx, z, simulate, filename_pattern, start_file_number, flip_scan_axis,
+//    probe_modes, position_jitter_radius, threshhold, rotate_90, sqrt_data, fftshift_data, share_frequency, dpf, probeGuess, qy0, qx0);
 
-    printf("the string is %s \n", str);
+//    printf("the string is %s \n", str);
 
 //    sprintf(str, "./ePIE -jobID=sim512 -beamSize=110e-9 -scanDims=30,30 -step=50e-9,50e-9 -i=200 -size=512 -lambda=2.4796837508399954e-10 -dx_d=172e-6 -z=1 -simulate=1 -blind=0");
-
 //    sprintf(str, "/local/kyue/anlproject/ptography/ptycholib/src/ePIE -jobID=gentest100 -fp=/data/id2data/scan060/scan060_#06d.h5 -fs=1501 -beamSize=400e-9 -qxy=153,243 -scanDims=55,75 -step=200e-9,200e-9 -probeModes=3 -rotate90=0 -sqrtData -fftShiftData -threshold=1 -size=256 -objectArray=1600 -lambda=1.21e-10 -dx_d=172e-6 -z=4.2 -i=50 -blind=0");
 
 
 
-    char *agv[25];//The number is the total number of the parameters
-    char *tokens = strtok(str, " ");
-    int j=0;
-    while (tokens != NULL) {
-//        printf ("%s\n", tokens);
-        agv[j++] = tokens;
-        tokens = strtok(NULL, " ");
-    }
+//    char *agv[25];//The number is the total number of the parameters
+//    char *tokens = strtok(str, " ");
+//    int j=0;
+//    while (tokens != NULL) {
+////        printf ("%s\n", tokens);
+//        agv[j++] = tokens;
+//        tokens = strtok(NULL, " ");
+//    }
 
 //    printf("error here \n");
-    CXParams::getInstance()->parseFromCommandLine(25, agv);
-
-    IPhaser* phaser = new IPhaser;
+//    CXParams::getInstance()->parseFromCommandLine(25, agv);
+//
+//    IPhaser* phaser = new IPhaser;
 
 //    IPhaser* phaser = new SimplePhaser;
 
-    if(phaser->init())
-    {
-        phaser->addPhasingMethod("ePIE", CXParams::getInstance()->getReconstructionParams()->iterations);
-        phaser->phase();
-    }
-
-    phaser->writeResultsToDisk();
+//    if(phaser->init())
+//    {
+//        phaser->addPhasingMethod("ePIE", CXParams::getInstance()->getReconstructionParams()->iterations);
+//        phaser->phase();
+//    }
+//
+//    phaser->writeResultsToDisk();
 
 //    printf("error here \n");
 //    complex_t* h_objectArray = phaser->getSample()->getObjectArray()->getHostPtr<complex_t>();
@@ -274,12 +258,10 @@ static PyObject *ptycholib_epie(PyObject *self, PyObject *args, PyObject *keywds
     return Py_False;
 }
 
-size_t makeargs(char **ap, size_t n, char *s)
+static size_t makeargs(char **ap, size_t n, char *s)
 {
     int c, inarg = 0;
     size_t save;
-
-
     for (save = n--; (c = (unsigned char) *s) && n; s++)
         if (inarg && isspace(c))
         {
@@ -295,7 +277,7 @@ size_t makeargs(char **ap, size_t n, char *s)
     return save - n;
 }
 
-size_t countargs(const char *s)
+static size_t countargs(const char *s)
 {
     int inarg = 0, c;
     size_t n = 0;
@@ -357,33 +339,23 @@ static PyObject *ptycholib_epiecmdstr(PyObject *self, PyObject *args, PyObject *
 
     char *cmdstr = "";
 //    char cmdstr[1000];
-
     static char *kwlist[] = {"cmdstr", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "|s", kwlist,&cmdstr))
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "|s", kwlist, &cmdstr))
         return NULL;
 
-
     lambda = 1.24e-9/energy;
-
     char str[1000];
-
-
     printf("the command line string is %s \n", cmdstr);
 
 // Make the command line parameters
     size_t len = countargs(cmdstr) + 1;
     char **r;
-
     if (!(r = (char **)malloc(len * sizeof *r)))
         return 0;
-
     makeargs(r, len, cmdstr);
-
     CXParams::getInstance()->parseFromCommandLine(len-1, r);
-
     IPhaser* phaser = new IPhaser;
-
     if(phaser->init())
     {
         phaser->addPhasingMethod("ePIE", CXParams::getInstance()->getReconstructionParams()->iterations);
@@ -392,9 +364,7 @@ static PyObject *ptycholib_epiecmdstr(PyObject *self, PyObject *args, PyObject *
     }
 
     phaser->writeResultsToDisk();
-
     complex_t* h_objectArray = phaser->getSample()->getObjectArray()->getHostPtr<complex_t>();
-
     int x = phaser->getSample()->getObjectArray()->getX();
     int y = phaser->getSample()->getObjectArray()->getY();
 

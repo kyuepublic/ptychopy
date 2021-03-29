@@ -35,21 +35,25 @@
 #include "IPhaser.h"
 #include "ePIE.h"
 #include "DM.h"
+#include "MLS.h"
 #include "CartesianScanMesh.h"
 #include "ListScanMesh.h"
 #include "SpiralScanMesh.h"
 #include "Sample.h"
 #include "Probe.h"
 #include "Diffractions.h"
-//#include "GLResourceManager.h"
-//#include "RenderServer.h"
+#include "GLResourceManager.h"
+#include "RenderServer.h"
 #include "Cuda2DArray.hpp"
 #include <string>
 #include <stdio.h>
 
+#include <Eigen/Eigenvalues>
+#include <Eigen/Dense>
+
 using namespace std;
 
-IPhaser::IPhaser() : m_diffractions(0), m_probe(0), m_sample(0), m_scanMesh(0)
+IPhaser::IPhaser() : m_diffractions(0), m_probe(0), m_sample(0), m_scanMesh(0), m_renderer(0)
 {}
 
 IPhaser::~IPhaser()
@@ -58,21 +62,11 @@ IPhaser::~IPhaser()
 	if(m_probe) delete m_probe;
 	if(m_sample) delete m_sample;
 	if(m_scanMesh) delete m_scanMesh;
-//	if(m_renderer) delete m_renderer;
+	if(m_renderer) delete m_renderer;
 
 	for(size_t mIndex=0; mIndex<m_phasingMethods.size(); ++mIndex)
 		delete m_phasingMethods[mIndex].method;
 	m_phasingMethods.clear();
-}
-
-Sample* IPhaser::getSample()
-{
-	return m_sample;
-}
-
-Probe* IPhaser::getProbe()
-{
-	return m_probe;
 }
 
 bool IPhaser::initSample(uint2 meshDimensions)
@@ -80,6 +74,16 @@ bool IPhaser::initSample(uint2 meshDimensions)
 	if(m_sample==0)
 	{
 		const ReconstructionParams* rParams = CXParams::getInstance()->getReconstructionParams();
+
+		if(rParams->method.compare("MLs")==0)
+		{
+			meshDimensions=m_scanMesh->getNPONEW();
+		}
+		else
+		{
+			meshDimensions=m_scanMesh->getMeshDimensions();
+		}
+
 		m_sample = new Sample(meshDimensions.x, meshDimensions.y);
 		if(rParams->simulated)
 		{
@@ -106,6 +110,12 @@ bool IPhaser::initProbe()
 				m_probe->simulate(eParams->beamSize, eParams->dx_s);
 			else
 				m_probe->init(0, eParams->beamSize, eParams->dx_s, rParams->probeGuess.c_str());
+
+		if(rParams->method.compare("MLs")==0)
+		{
+			m_probe->initVarModes();
+		}
+
 	}
 	return true;
 }
@@ -114,6 +124,7 @@ bool IPhaser::initScanMesh()
 {
 	if(m_scanMesh==0)
 	{
+
 		const ExperimentParams* eParams = CXParams::getInstance()->getExperimentParams();
 		const ReconstructionParams* rParams = CXParams::getInstance()->getReconstructionParams();
 		if(!rParams->positionsFilename.empty())
@@ -126,7 +137,22 @@ bool IPhaser::initScanMesh()
 			m_scanMesh = new CartesianScanMesh(eParams->scanDims.x, eParams->scanDims.y, eParams->stepSize.x,
 											eParams->stepSize.y, rParams->jitterRadius);
 
-		m_scanMesh->generateMesh(this->getBounds());
+		if(rParams->method.compare("MLs")==0)
+		{
+//			std::cout<<rParams->method<<rParams->method.compare("MLs")<<std::endl;
+			m_scanMesh->generateMeshML(this->getBounds());
+	//		m_scanMesh->get_close_indices(); //MLC
+			m_scanMesh->get_nonoverlapping_indices(); // MLs
+			m_scanMesh->initoROIvec();
+			m_scanMesh->precalculate_ROI();
+		}
+		else
+		{
+			m_scanMesh->generateMesh(this->getBounds());
+		}
+
+
+
 	}
 	return true;
 }
@@ -174,9 +200,10 @@ bool IPhaser::init()
 
 	if(!this->initScanMesh())								return false;
 	#ifdef DEBUG_MSGS
-		fprintf(stderr,"ScanMesh(%d,%d) initialized...\n", m_scanMesh->getMeshDimensions().x, m_scanMesh->getMeshDimensions().y);
+//		fprintf(stderr,"ScanMesh(%d,%d) initialized...\n", m_scanMesh->getMeshDimensions().x, m_scanMesh->getMeshDimensions().y);
+		fprintf(stderr,"ScanMesh(%d,%d) initialized...\n", m_scanMesh->getNPONEW().x, m_scanMesh->getNPONEW().y);
 	#endif
-	if(!this->initSample(m_scanMesh->getMeshDimensions()))	return false;
+	if(!this->initSample(m_scanMesh->getNPONEW()))	return false;
 	#ifdef DEBUG_MSGS
 		fprintf(stderr,"Sample initialized...\n");
 	#endif
@@ -211,6 +238,8 @@ void IPhaser::addPhasingMethod(const char* mName, unsigned int i)
 		m_phasingMethods.push_back(CXPhasing(mName, new ePIE, i));
 	else if(string(mName) == "DM")
 		m_phasingMethods.push_back(CXPhasing(mName, new DM, i));
+	else if(string(mName) == "MLs")
+		m_phasingMethods.push_back(CXPhasing(mName, new MLS, i));
 	else
 		fprintf(stderr,"Erorr! Reconstruction algorithm [%s] not implemented.\n", mName);
 }
@@ -220,22 +249,108 @@ void IPhaser::prePhase()
 	//Clear objects for a new phasing round
 	const ExperimentParams* eParams = CXParams::getInstance()->getExperimentParams();
 	const ReconstructionParams* rParams = CXParams::getInstance()->getReconstructionParams();
+	double dx_recon = eParams->dx_s / rParams->desiredShape * rParams->desiredShape;
 
-	if(!m_probe->init(m_diffractions->getPatterns(), eParams->beamSize, eParams->dx_s, (rParams->probeGuess.empty())?0:rParams->probeGuess.c_str()))
+	if(rParams->method.compare("MLs")==0)
 	{
-		fprintf(stderr,"WARNING! Failed to initialize probe\n");
-		return;
+		// initMLH generate the new probe value
+		if(!m_probe->initMLH(rParams->desiredShape, eParams->lambda, dx_recon, eParams->beamSize, rParams->nProbes, (rParams->probeGuess.empty())?0:rParams->probeGuess.c_str()))
+		{
+			fprintf(stderr,"WARNING! Failed to initialize probe\n");
+			return;
+		}
+		m_sample->setObjectArrayShape(m_scanMesh->getNPONEW());
+		m_sample->clearObjectArray();
 	}
-	m_sample->setObjectArrayShape(m_scanMesh->getMeshDimensions());
-	m_sample->clearObjectArray();
+	else
+	{
+		if(!m_probe->init(m_diffractions->getPatterns(), eParams->beamSize, eParams->dx_s, (rParams->probeGuess.empty())?0:rParams->probeGuess.c_str()))
+		{
+			fprintf(stderr,"WARNING! Failed to initialize probe\n");
+			return;
+		}
+		m_sample->setObjectArrayShape(m_scanMesh->getMeshDimensions());
+		m_sample->clearObjectArray();
+	}
+
+//	m_scanMesh->get_close_indices();
+
+	// non mls
+//	m_sample->setObjectArrayShape(m_scanMesh->getMeshDimensions());
+	//MLS
+//	m_sample->setObjectArrayShape(m_scanMesh->getNPONEW());
+//	m_sample->clearObjectArray();
+
+	////////////////////// test with matlab
 	if(!rParams->objectGuess.empty())
 		m_sample->loadGuess(rParams->objectGuess.c_str());
-	if(rParams->calculateRMS)
-		m_diffractions->fillSquaredSums();
+	else if(rParams->method.compare("MLs")==0)
+		m_sample->initObject();
+    //////////////////////////
 
-	m_scanMesh->generateMesh(this->getBounds());
-	m_errors.resize(rParams->iterations, 0);
+	//	if(rParams->calculateRMS)
+	//		m_diffractions->fillSquaredSums();
+
+	if(rParams->method.compare("MLs")!=0)
+	{
+		if(rParams->calculateRMS)
+			m_diffractions->fillSquaredSums();
+
+		m_scanMesh->generateMesh(this->getBounds());
+		m_errors.resize(rParams->iterations, 0);
+
+	}
+	else
+	{
+		m_diffractions->fillSquaredSums();
+		m_diffractions->squaredRoot();
+		m_probe->initEvo(m_scanMesh->getScanPositionsNum(), rParams->variable_probe_modes, m_scanMesh->m_oROI1, m_scanMesh->m_oROI2,
+				m_scanMesh->m_Np_o_new, m_sample->getObjectArray(), m_diffractions->getPatterns(), m_diffractions->getTotalSquaredSum());
+		m_errors.resize(rParams->iterations, 0);
+		m_fourierErrors.resize(rParams->iterations);
+		size_t betasize= m_scanMesh->getScanPositionsNum();
+
+		complex_t initVal=make_complex_t(1, 0);
+		if(rParams->beta_LSQ>0)
+		{
+			m_sample->beta_objectvec.resize(betasize, initVal);
+			m_probe->beta_probevec.resize(betasize, initVal);
+		}
+		else
+		{
+
+		}
+	}
+
+//	m_scanMesh->generateMesh(this->getBounds());
 }
+
+//void IPhaser::phaseLoop()
+//{
+//	const ReconstructionParams* rParams = CXParams::getInstance()->getReconstructionParams();
+//
+//	for(size_t mIndex=0; mIndex<m_phasingMethods.size(); ++mIndex)
+//		for(unsigned int i=1; i<=m_phasingMethods[mIndex].iterations; ++i)
+//		{
+//			m_errors[i-1] += phaseStep(m_phasingMethods[mIndex].method, i);
+////			if(i%rParams->updateVis==0 && m_renderer)
+////				m_renderer->renderResources();
+//			#ifdef DEBUG_MSGS
+//			fprintf(stderr,"%s Iteration [%05d] --- RMS= %e\n", m_phasingMethods[mIndex].name.c_str(), i, m_errors[i-1]);
+//			#endif
+//			if(i%rParams->save == 0)
+//				writeResultsToDisk(i/rParams->save);
+//			if(rParams->time>=0 && m_phasingTimer.getElapsedTimeInSec()>=rParams->time)
+//				break;
+//		}
+//}
+//
+//real_t IPhaser::phaseStep(IPhasingMethod* m, unsigned int i)
+//{
+//	const ReconstructionParams* rParams = CXParams::getInstance()->getReconstructionParams();
+//	return m->iteration(m_diffractions, m_probe, m_sample, m_scanMesh->getScanPositions(), i<=rParams->phaseConstraint,
+//						i>=rParams->updateProbe, i>=rParams->updateProbeModes, rParams->calculateRMS);
+//}
 
 void IPhaser::phaseLoop()
 {
@@ -244,12 +359,21 @@ void IPhaser::phaseLoop()
 	for(size_t mIndex=0; mIndex<m_phasingMethods.size(); ++mIndex)
 		for(unsigned int i=1; i<=m_phasingMethods[mIndex].iterations; ++i)
 		{
+			m_stepTimer.start();
+
 			m_errors[i-1] += phaseStep(m_phasingMethods[mIndex].method, i);
+
+			m_stepTimer.stop();
+
+			fprintf(stderr,"%s Iteration [%05d] --- step time= %fs\n", m_phasingMethods[mIndex].name.c_str(), i, m_stepTimer.getElapsedTimeInSec());
+
 //			if(i%rParams->updateVis==0 && m_renderer)
 //				m_renderer->renderResources();
 			#ifdef DEBUG_MSGS
 			fprintf(stderr,"%s Iteration [%05d] --- RMS= %e\n", m_phasingMethods[mIndex].name.c_str(), i, m_errors[i-1]);
 			#endif
+			if(i%rParams->save == 0)
+				writeResultsToDisk(i/rParams->save);
 			if(rParams->time>=0 && m_phasingTimer.getElapsedTimeInSec()>=rParams->time)
 				break;
 		}
@@ -258,8 +382,10 @@ void IPhaser::phaseLoop()
 real_t IPhaser::phaseStep(IPhasingMethod* m, unsigned int i)
 {
 	const ReconstructionParams* rParams = CXParams::getInstance()->getReconstructionParams();
-	return m->iteration(m_diffractions, m_probe, m_sample, m_scanMesh->getScanPositions(), i<=rParams->phaseConstraint,
-						i>=rParams->updateProbe, i>=rParams->updateProbeModes, rParams->calculateRMS);
+	return m->iteration(m_diffractions, m_probe, m_sample, m_scanMesh, m_fourierErrors, m_scanMesh->getScanPositions(), i<=rParams->phaseConstraint,
+						i>=rParams->updateProbe, i>=rParams->updateProbeModes, i, rParams->calculateRMS);
+
+
 }
 
 void IPhaser::postPhase()
@@ -271,7 +397,9 @@ void IPhaser::postPhase()
 
 void IPhaser::writeResultsToDisk(int r)
 {
+	#ifdef DEBUG_MSGS
 	printf("Writing final reconstruction (%u,%u) to disk...\n", m_sample->getObjectArray()->getX(), m_sample->getObjectArray()->getY());
+	#endif
 	const ReconstructionParams* rParams = CXParams::getInstance()->getReconstructionParams();
 	char filename[255];
 	sprintf(filename, "data/%s_probes_%d.%s", rParams->reconstructionID.c_str(), r, rParams->binaryOutput?"bin":"csv");
@@ -295,6 +423,18 @@ void IPhaser::phase()
 	this->phaseLoop();
 	m_phasingTimer.stop();
 	this->postPhase();
+}
+
+/////////////////////////////////////////////////////////////////////////// Start ptychopy wrapper functions
+
+Sample* IPhaser::getSample()
+{
+	return m_sample;
+}
+
+Probe* IPhaser::getProbe()
+{
+	return m_probe;
 }
 
 void IPhaser::phaseinit()
@@ -383,6 +523,3 @@ void IPhaser::phaseLoopVisStep()
 				break;
 		}
 }
-
-
-

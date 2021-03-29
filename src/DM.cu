@@ -67,8 +67,8 @@ void DM::checkCache(real_t objMax, real_t probeMax,
 }
 
 real_t DM::iteration(Diffractions* diffs, Probe* probe,
-						Sample* object, const std::vector<float2>& scanPositions,
-						bool phaseConstraint, bool updateProbe, bool updateProbeModes, bool RMS)
+						Sample* object, IPtychoScanMesh* scanMesh, std::vector< std::vector<real_t> >& fourierErrors, const std::vector<float2>& scanPositions,
+						bool phaseConstraint, bool updateProbe, bool updateProbeModes, unsigned int iter, bool RMS)
 {
 	CudaSmartPtr objectArray = object->getObjectArray();
 	Cuda3DArray<complex_t>* probeModes = probe->getModes();

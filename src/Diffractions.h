@@ -32,6 +32,7 @@
 //OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
 #ifndef DIFFRACTIONS_H_
 #define DIFFRACTIONS_H_
 
@@ -64,6 +65,14 @@ public:
 	const Cuda3DArray<real_t>* getPatterns()	const {return m_patterns;}
 	const real_t* getBeamstopMask();
 	real_t getSquaredSum(unsigned int i)	const {return i<m_squaredSums.size()?m_squaredSums[i]:1;}
+	std::vector<real_t> getTotalSquaredSum() {return m_squaredSums;}
+
+	void get_fourier_error(Cuda3DArray<real_t>* apsi, std::vector<int> ind_read, std::vector<real_t>& fourierErrors);
+
+	void modulus_constraint(Cuda3DArray<real_t>* apsi, std::vector<int> ind_read, std::vector < Cuda3DArray<complex_t>* > psivec,
+			 int W=0, int R_offset=1);
+
+	void squaredRoot();
 };
 
 #endif /* DIFFRACTIONS_H_ */

@@ -32,6 +32,7 @@
 //OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
 #include "Diffractions.h"
 #include "Diffractions.cuh"
 #include "Sample.cuh"
@@ -40,6 +41,7 @@
 #include "ThreadPool.h"
 #include "Parameters.h"
 #include "FileManager.h"
+#include "CXMath.h"
 
 #include <vector>
 
@@ -131,10 +133,15 @@ int Diffractions::load(const char* filePattern, const vector<unsigned int>& inde
 	}
 	IO::getInstance()->loadData();
 
+//	const real_t* h_diffData = m_patterns->getPtr()->getHostPtr<real_t>();
+//
+//	for(unsigned int i=0; i<20; ++i)
+//		printf("the %d data is %f \n", i, h_diffData[i]);
+
 	//4- Apply thresholding and square root to all the diffraction patterns at once
-	h_preprocessDiffractions(m_patterns->getPtr()->getDevicePtr<real_t>(), params->flags & SQUARE_ROOT,
-							params->threshold_raw_data, m_patterns->getNum(), m_patterns->getDimensions().x,
-							m_patterns->getDimensions().y, m_patterns->getPtr()->getAlignedY());
+//	h_preprocessDiffractions(m_patterns->getPtr()->getDevicePtr<real_t>(), params->flags & SQUARE_ROOT,
+//							params->threshold_raw_data, m_patterns->getNum(), m_patterns->getDimensions().x,
+//							m_patterns->getDimensions().y, m_patterns->getPtr()->getAlignedY());
 
 	return 0;
 }
@@ -149,6 +156,12 @@ void Diffractions::fillSquaredSums()
 	}
 }
 
+void Diffractions::squaredRoot()
+{
+		h_squareRootDiffractions(m_patterns->getPtr()->getDevicePtr<real_t>(),
+				m_patterns->getNum(), m_patterns->getDimensions().x, m_patterns->getDimensions().y, m_patterns->getPtr()->getAlignedY());
+}
+
 const real_t* Diffractions::getBeamstopMask()
 {return m_beamstopMask.isValid()?m_beamstopMask->getDevicePtr<real_t>():0;}
 
@@ -159,3 +172,74 @@ void Diffractions::dumpSTXM(const ICuda2DArray* scans, const char* filename) con
 					scans->getX(), scans->getY(), scans->getAlignedY(),
 					m_patterns->getDimensions().x, m_patterns->getDimensions().y, m_patterns->getPtr()->getAlignedY());
 }
+
+void Diffractions::get_fourier_error(Cuda3DArray<real_t>* apsi, std::vector<int> ind_read, std::vector<real_t>& fourierErrors)
+{
+	Cuda3DArray<real_t>* tmpgrid=new Cuda3DArray<real_t>(apsi->getNum(), apsi->getDimensions());
+
+	for(unsigned int i=0; i<ind_read.size(); ++i)
+	{
+		h_subtract(m_patterns->getAt(ind_read[i]).getDevicePtr(), apsi->getAt(i).getDevicePtr(), tmpgrid->getAt(i).getDevicePtr(),
+				tmpgrid->getDimensions().x, tmpgrid->getDimensions().y, tmpgrid->getPtr()->getAlignedY());
+	    h_square(tmpgrid->getAt(i).getDevicePtr(), tmpgrid->getAt(i).getDevicePtr(), tmpgrid->getDimensions().x, tmpgrid->getDimensions().y, tmpgrid->getPtr()->getAlignedY());
+	    h_normalize(tmpgrid->getAt(i).getDevicePtr(), 0.5*0.5, tmpgrid->getDimensions().x, tmpgrid->getDimensions().y, tmpgrid->getPtr()->getAlignedY());
+
+		real_t result=h_realSum(tmpgrid->getAt(i).getDevicePtr(), tmpgrid->getDimensions().x, tmpgrid->getDimensions().y, tmpgrid->getPtr()->getAlignedY());
+		real_t err=sqrt_real_t(result/(tmpgrid->getDimensions().x*tmpgrid->getDimensions().y));
+
+		fourierErrors[ind_read[i]]=err;
+	}
+
+	delete tmpgrid;
+}
+
+void Diffractions::modulus_constraint(Cuda3DArray<real_t>* apsi, std::vector<int> ind_read, std::vector < Cuda3DArray<complex_t>* > psivec,
+		 int W, int R_offset)
+{//R = W + (1-W)*modF./(aPsi+1e-9)- R_offset;
+	Cuda3DArray<real_t>* tmpgrid=new Cuda3DArray<real_t>(apsi->getNum(), apsi->getDimensions());
+	for(unsigned int i=0; i<ind_read.size(); ++i)
+	{
+		int index=ind_read[i];
+
+		h_modulus_amplitude(m_patterns->getAt(ind_read[i]).getDevicePtr(), apsi->getAt(i).getDevicePtr(), tmpgrid->getAt(i).getDevicePtr(),
+				R_offset, tmpgrid->getDimensions().x, tmpgrid->getDimensions().y, tmpgrid->getPtr()->getAlignedY());
+
+	}
+
+	Cuda3DElement<real_t> avdata=tmpgrid->getAt(0);
+	unsigned int Npx=tmpgrid->getDimensions().x;
+	for(int i=0; i<psivec.size(); i++)
+	{
+		h_multiply((tmpgrid->getPtr())->getDevicePtr<real_t>(), psivec[i]->getPtr()->getDevicePtr<complex_t>(), psivec[i]->getPtr()->getDevicePtr<complex_t>(),
+				tmpgrid->getPtr()->getX(), tmpgrid->getDimensions().y, tmpgrid->getPtr()->getAlignedY());
+
+		// ifft2 psivec
+		PhaserUtil::getInstance()->iff2Mat(psivec[i], psivec[i], avdata);
+		h_normalize(psivec[i]->getPtr()->getDevicePtr<complex_t>(), psivec[i]->getPtr()->getX(),
+				psivec[i]->getPtr()->getY(), psivec[i]->getPtr()->getAlignedY(), 1.0/(Npx*Npx));
+
+
+//		complex_t* pobjectHost=psivec[i]->getPtr()->getHostPtr<complex_t>();
+//		for(int j=165; j<Npx; j++)
+//		{
+//			int offset=161*Npx;
+//			printf("%d %lf %lf ", j, pobjectHost[offset+j].x, pobjectHost[offset+j].y);
+//
+//		}
+//		printf("\n");
+//		for(int j=165; j<Npx; j++)
+//		{
+//			int offset=3*Npx*Npx+161*Npx;
+//			printf("%d %lf %lf ", j, pobjectHost[offset+j].x, pobjectHost[offset+j].y);
+//		}
+//		printf("\n");
+//		delete pobjectHost;
+	}
+
+
+	delete tmpgrid;
+}
+
+
+
+

@@ -37,12 +37,16 @@
 
 #include "IPtychoScanMesh.h"
 #include <vector_types.h>
+#include <vector>
 
 
 class CartesianScanMesh: public IPtychoScanMesh
 {
 private:
-	uint2 m_gridDimensions;
+
+
+//	std::vector< std::vector< std::vector<int> > > m_all_sparseindices_out;
+//	std::vector< std::vector< std::vector<int> > > m_all_sparsescan_ids_out;
 
 public:
 	CartesianScanMesh(unsigned int xDim, unsigned int yDim, real_t sZx, real_t sZy, unsigned int jitterRadius=0);
@@ -50,9 +54,9 @@ public:
 
 	void generateMesh(const int* bounds=0);
 
-	uint2 getGridDimensions()					 const {return m_gridDimensions;}
-	unsigned int getGridXDimension()			 const {return m_gridDimensions.x;}
-	unsigned int getGridYDimension()			 const {return m_gridDimensions.y;}
+	void generateMeshML(const int* bounds=0);
+
+	void find_reconstruction_ROI();
 };
 
 #endif /* CARTESIANSCANMESH_H_ */

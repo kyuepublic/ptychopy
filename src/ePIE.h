@@ -57,9 +57,9 @@ public:
 	ePIE();
 	virtual ~ePIE();
 
-	virtual real_t iteration(Diffractions*, Probe*, Sample*, const std::vector<float2>&,
+	virtual real_t iteration(Diffractions*, Probe*, Sample*, IPtychoScanMesh*, std::vector< std::vector<real_t> >& fourierErrors, const std::vector<float2>&,
 								bool phaseConstraint,bool updateProbe,
-								bool updateProbeModes, bool RMS=false);
+								bool updateProbeModes, unsigned int iter, bool RMS=false);
 	virtual void endPhasing();
 };
 

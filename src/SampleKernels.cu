@@ -31,7 +31,6 @@
 //WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 #ifndef SAMPLEKERNELS_CU_
 #define SAMPLEKERNELS_CU_
 
@@ -42,6 +41,39 @@
 
 size_t g_texOffset = 0;
 texture<complex_t, cudaTextureType2D, cudaReadModeElementType> g_objArrayTex;
+
+__global__ void d_initRandomStatesSample(curandState *state, unsigned long seed)
+{
+	unsigned int posIndex = (blockIdx.x * blockDim.x) + threadIdx.x;
+	/* Each thread gets same seed, a different sequence number,
+	no offset */
+	curand_init(seed, posIndex, 0, &state[posIndex]);
+}
+
+__global__ void d_check1(curandState* randStates)
+{
+	unsigned int posIndex = (blockIdx.x * blockDim.x) + threadIdx.x;
+	curandState localState;
+	localState = randStates[posIndex];
+
+
+	float sw=curand_uniform(&localState);
+
+
+	unsigned int sq1=1;
+}
+
+__host__ void h_initRandomStatesSample(unsigned int meshX, unsigned int alignedY, curandState* devStates)
+{
+    d_initRandomStatesSample<<<meshX, alignedY>>>(devStates, time(NULL));
+
+    d_check1<<<meshX, alignedY>>>(devStates);
+
+	cutilCheckMsg("h_initRandomStates() execution failed!\n");
+}
+
+
+
 
 __global__ void d_applyHammingToSample(complex_t* d_objectArray, real_t* d_sampleR, real_t* d_sampleI, unsigned int sampleY,
 										unsigned int xOffset, unsigned int yOffset, unsigned int alignedObjectArrayY)
@@ -281,9 +313,26 @@ __global__ void d_setObjectArray(complex_t* d_objectArray, const complex_t* d_ro
 	unsigned int roiIndex 	= ((roiOffsetX+row) * alignedRoiY)		+ col + roiOffsetY;
 	unsigned int objectIndex= ((offsetX+row) * alignedObjectArrayY)	+ col + offsetY;
 
+	complex_t temp=d_roi[roiIndex];
+
 	if(row<roiX && col<roiY)
 		d_objectArray[objectIndex] = d_roi[roiIndex];
+
 }
+
+__global__ void d_initRandObjectArray(complex_t* d_array, real_t* d_randarr1, real_t* d_randarr2, unsigned int sampleX,
+		unsigned int sampleY, unsigned int alignedSampleY)
+{
+	unsigned int index = (blockIdx.x * blockDim.x) + threadIdx.x;
+	if(threadIdx.x < sampleY)
+	{
+		real_t expright=2*CUDART_PI*d_randarr2[index]*0.1;
+		real_t expleft=d_randarr1[index];
+		complex_t expTo=make_complex_t((expleft*cos_real_t(expright)), (expleft*sin_real_t(expright)));
+		d_array[index]=expTo;
+	}
+}
+
 
 template<bool enoughThreads>
 __global__ void d_addSubsamples(complex_t* d_objectArray, const complex_t* d_neighbors,
@@ -583,6 +632,13 @@ __host__ void h_setObjectArray(complex_t* d_objectArray, const complex_t* d_roi,
 											(objectArrayX/2)-(roiX/2), (objectArrayY/2)-(roiY/2),
 											alignedObjectArrayY, roiOffsetX, roiOffsetY);
 	cutilCheckMsg("h_setObjectArray() execution failed!\n");
+}
+
+__host__ void h_initRandObjectArray(complex_t* d_array, real_t* d_randarr1, real_t* d_randarr2, unsigned int sampleX,
+		unsigned int sampleY, unsigned int alignedSampleY)
+{
+	d_initRandObjectArray<<<sampleX, alignedSampleY>>>(d_array, d_randarr1, d_randarr2, sampleX,
+			sampleY, alignedSampleY);
 }
 
 __host__ void h_addSubsamples(complex_t* d_objectArray, const complex_t* d_neighbors, const uint2* d_nOffset, const uint2* d_nDims,

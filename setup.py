@@ -12,6 +12,7 @@ import pkg_resources
 import os
 from os.path import join as pjoin
 import platform
+import sys
 
 
 os.environ['CC'] = 'g++'
@@ -19,6 +20,10 @@ os.environ['CPP'] = 'g++'
 os.environ['PTYCHOPY_BASE'] = os.getcwd()
 
 # print("Setting env var PTYCHOPY_BASE to {:s}.".format(os.getcwd()))
+# print(os.path.dirname(os.path.dirname(sys.executable)))
+
+# virPythonPath = pjoin(os.path.dirname(os.path.dirname(sys.executable)), 'include')
+virPythonPath = os.path.dirname(os.path.dirname(sys.executable))
 
 def customize_compiler(self):
 
@@ -197,6 +202,8 @@ extptychopy = Extension(name='ptychopy',
             './src/CartesianScanMesh.cpp',
             './src/CudaSmartPtr.cpp',
             './src/Cuda2DArray.cpp',
+            # './src/GLResourceManager.cpp',
+            # './src/RenderServer.cpp',
             './src/IPtychoScanMesh.cpp',
             './src/DiffractionLoader.cpp',
             './src/ThreadPool.cpp',
@@ -207,13 +214,15 @@ extptychopy = Extension(name='ptychopy',
             './src/CudaFFTPlan.cpp',
             './src/utilities.cpp',
             './src/IPhaser.cpp',
-            './src/MPIPhaser.cpp',
+            # './src/MPIPhaser.cpp',
             './src/ePIE.cpp',
+            './src/MLS.cpp',
             './src/Parameters.cpp',
             './src/FileManager.cpp',
             './src/Timer.cpp',
             './src/SpiralScanMesh.cpp',
             './src/DM.cu',
+            # './src/WS/easywsclient.cpp',
             './src/ptychopy.c',
             ],
         language='c++',
@@ -222,12 +231,17 @@ extptychopy = Extension(name='ptychopy',
             numpy.distutils.misc_util.get_numpy_include_dirs(),
             CUDA['include'],
             CUDA['sdk']+'/common/inc',
-            HDF5['include'],
+            # '/local/kyue/program/anaconda/envs/py36/include',
+            virPythonPath + '/include',
+            './src',
+            # HDF5['include'],
+            # '/local/kyue/anlproject/ptography/githubptychopy/ptychopy/src',
             ],
         library_dirs=[
             CUDA['lib'],
             CUDA['sdk']+'/common/lib',
-            HDF5['lib'],
+            # HDF5['lib'],
+            # './src/Eigen/src',
             ],
         runtime_library_dirs=[CUDA['lib']],
         extra_link_args = ['-lcudart', '-lcurand', '-lcufft', '-lcublas', '-lhdf5', '-lhdf5_cpp', '-lpthread'],

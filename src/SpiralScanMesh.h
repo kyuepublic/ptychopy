@@ -31,7 +31,6 @@
 //WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 #ifndef SPIRALSCANMESH_H_
 #define SPIRALSCANMESH_H_
 
@@ -47,6 +46,11 @@ public:
 	virtual ~SpiralScanMesh();
 
 	void generateMesh(const int* bounds=0);
+
+	void generateMeshML(const int* bounds=0);
+
+//	void get_close_indices();
+//	void get_nonoverlapping_indices();
 };
 
 #endif /* SPIRALSCANMESH_H_ */

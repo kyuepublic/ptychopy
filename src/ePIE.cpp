@@ -53,8 +53,8 @@ ePIE::~ePIE()
 }
 
 real_t ePIE::iteration(Diffractions* diffs, Probe* probe,
-						Sample* object, const std::vector<float2>& scanPositions,
-						bool phaseConstraint, bool updateProbe, bool updateProbeModes, bool RMS)
+						Sample* object, IPtychoScanMesh* scanMesh, std::vector< std::vector<real_t> >& fourierErrors, const std::vector<float2>& scanPositions,
+						bool phaseConstraint, bool updateProbe, bool updateProbeModes, unsigned int iter, bool RMS)
 {
 	uint2 probeSize = probe->getModes()->getDimensions();
 	if (!m_psi)

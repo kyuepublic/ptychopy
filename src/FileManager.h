@@ -74,6 +74,7 @@ public:
 	virtual real_t* readSection(unsigned int,unsigned int&,unsigned int&)	= 0;
 
 };
+#define HAVE_HDF5
 
 #ifdef HAVE_HDF5
 class H5File : public IOFile

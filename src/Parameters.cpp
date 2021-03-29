@@ -31,7 +31,6 @@
 //WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 //OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 #include "Parameters.h"
 #include "utilities.h"
 
@@ -45,26 +44,13 @@ Parameters::~Parameters()
 
 void Parameters::updatePixelSaturation()
 {
-	/*m_eParams.pixelSaturation = (1<<m_eParams.bit_depth)-1;*/
-	if (m_eParams.bit_depth==32)
-	{
-		m_eParams.pixelSaturation =4294967295;
-	}
-	else if (m_eParams.bit_depth==16)
-	{
-		m_eParams.pixelSaturation =65535;
-	}
-	else
-	{
-		m_eParams.pixelSaturation =4294967295;
-	}
-
-//	printf("the pixel value is %u \n", m_eParams.pixelSaturation);
+//	printf("the bitdepth is %d \n", m_eParams.bit_depth);
+	m_eParams.pixelSaturation = pow(2,m_eParams.bit_depth)-1;
+//	printf("the pixel value is lu %lu \n", m_eParams.pixelSaturation);
 	m_eParams.pixelSaturation -= m_pParams.threshold_raw_data;
 	if(m_pParams.flags & SQUARE_ROOT)
-		m_eParams.pixelSaturation = sqrt(m_eParams.pixelSaturation)-1;
-//		printf("inside if the pixel value is %u \n", m_eParams.pixelSaturation);
-//	printf("FINAL if the pixel value is %u \n", m_eParams.pixelSaturation);
+		m_eParams.pixelSaturation = sqrt(m_eParams.pixelSaturation);
+//	printf("The saturation value is set to %u \n", m_eParams.pixelSaturation);
 }
 
 
@@ -81,6 +67,11 @@ void Parameters::parseFromCommandLine(int argc, char *argv[])
 	}
 	if (_CHECK_CMDLINE (argc, (const char**)argv, "fftShiftData"))
 		m_pParams.flags |= FFT_SHIFT;
+	if (_CHECK_CMDLINE (argc, (const char**)argv, "beamstopMask"))
+	{
+		cutGetCmdLineArgumenti(argc, (const char**) argv, "beamstopMask", &value);
+		m_pParams.beamstopMask = value>0;
+	}
 	if (_CHECK_CMDLINE (argc, (const char**)argv, "blind"))
 	{
 		cutGetCmdLineArgumenti(argc, (const char**) argv, "blind", &value);
@@ -142,6 +133,12 @@ void Parameters::parseFromCommandLine(int argc, char *argv[])
 		if(value>=0)
 			m_rParams.iterations = value;
 	}
+	if (_CHECK_CMDLINE (argc, (const char**)argv, "save"))
+	{
+		cutGetCmdLineArgumenti(argc, (const char**) argv, "save", &value);
+		if(value>0)
+			m_rParams.save = value;
+	}
 	if (_CHECK_CMDLINE (argc, (const char**)argv, "T"))
 	{
 		cutGetCmdLineArgumentstr(argc, (const char**) argv, "T", &strValue);
@@ -157,7 +154,11 @@ void Parameters::parseFromCommandLine(int argc, char *argv[])
 	{
 		cutGetCmdLineArgumenti(argc, (const char**) argv, "probeModes", &value);
 		if(value>=1)
+		{
 			m_rParams.probeModes = value;
+			m_rParams.nProbes = value;
+		}
+
 	}
 	if (_CHECK_CMDLINE (argc, (const char**)argv, "fs"))
 	{
@@ -305,12 +306,18 @@ void Parameters::parseFromCommandLine(int argc, char *argv[])
 	if (_CHECK_CMDLINE (argc, (const char**)argv, "lambda"))
 	{
 		cutGetCmdLineArgumentstr(argc, (const char**) argv, "lambda", &strValue);
+//		sscanf(strValue, "%lf", &m_eParams.lambda);
 		m_eParams.lambda = atof(strValue);
 	}
 	if (_CHECK_CMDLINE (argc, (const char**)argv, "dx_d"))
 	{
 		cutGetCmdLineArgumentstr(argc, (const char**) argv, "dx_d", &strValue);
 		m_eParams.dx_d = atof(strValue);
+	}
+	if (_CHECK_CMDLINE (argc, (const char**)argv, "dx"))
+	{
+		cutGetCmdLineArgumentstr(argc, (const char**) argv, "dx", &strValue);
+		m_eParams.dx = atof(strValue);
 	}
 	if (_CHECK_CMDLINE (argc, (const char**)argv, "z"))
 	{
@@ -326,6 +333,7 @@ void Parameters::parseFromCommandLine(int argc, char *argv[])
 	{
 		cutGetCmdLineArgumentstr(argc, (const char**) argv, "algorithm", &strValue);
 		m_rParams.algorithm = string(strValue);
+		m_rParams.method = string(strValue);
 	}
 	if (_CHECK_CMDLINE (argc, (const char**)argv, "lf"))
 	{
@@ -348,7 +356,247 @@ void Parameters::parseFromCommandLine(int argc, char *argv[])
 		m_rParams.wsServerUrl = string(strValue);
 	}
 
-
 	m_pParams.symmetric_array_size = m_rParams.desiredShape;
 	m_eParams.dx_s = samplePlanePixelSize();
+
+}
+
+void Parameters::parseFromCPython(char *jobID, char *fp, int fs, char *hdf5path, int dpf, double beamSize, char *probeGuess, char *objectGuess, \
+                int size, int qx, int qy, int nx, int ny, int scanDimsx, int scanDimsy, int spiralScan, int flipScanAxis, int mirror1stScanAxis, \
+                int mirror2ndScanAxis, double stepx, double stepy, int probeModes, double lambda, double dx_d, double z, int iter, int T, int jitterRadius, \
+                double delta_p,  int threshold, int rotate90, int sqrtData, int fftShiftData, int binaryOutput, int simulate, \
+                int phaseConstraint, int updateProbe, int updateModes, int beamstopMask, char *lf)
+{
+	int value;
+	char* strValue;
+	string temp;
+	if (sqrtData==1)
+	{
+		m_pParams.flags |= SQUARE_ROOT;
+		updatePixelSaturation();
+	}
+	if (fftShiftData==1)
+	{
+	    m_pParams.flags |= FFT_SHIFT;
+	}
+	if(beamstopMask==1)
+	{
+	    m_pParams.beamstopMask = true;
+	}
+	if(simulate==1)
+	{
+	    m_rParams.simulated = true;
+	}
+    if(spiralScan==1)
+    {
+        m_eParams.spiralScan = true;
+    }
+//	if (_CHECK_CMDLINE (argc, (const char**)argv, "bitDepth"))
+//	{
+//		cutGetCmdLineArgumenti(argc, (const char**) argv, "bitDepth", &value);
+//		if(value>=1)
+//		{
+//			m_eParams.bit_depth = value;
+//			updatePixelSaturation();
+//		}
+//	}
+    if(flipScanAxis==1)
+    {
+        m_rParams.flipScanAxis = true;
+    }
+    if(mirror1stScanAxis==1)
+    {
+        m_rParams.mirrorX = true;
+    }
+    if(mirror2ndScanAxis==1)
+    {
+        m_rParams.mirrorY = true;
+    }
+//	if (_CHECK_CMDLINE (argc, (const char**)argv, "RMS"))
+//	{
+//		cutGetCmdLineArgumenti(argc, (const char**) argv, "RMS", &value);
+//		m_rParams.calculateRMS = value>0;
+//	}
+    if(binaryOutput==1)
+    {
+        m_rParams.binaryOutput = true;
+    }
+//	if (_CHECK_CMDLINE (argc, (const char**)argv, "threads"))
+//	{
+//		cutGetCmdLineArgumenti(argc, (const char**) argv, "threads", &value);
+//		if(value>=1)
+//			m_pParams.io_threads = value;
+//	}
+    if(iter >= 0)
+    {
+        m_rParams.iterations = iter;
+    }
+//	if (_CHECK_CMDLINE (argc, (const char**)argv, "save"))
+//	{
+//		cutGetCmdLineArgumenti(argc, (const char**) argv, "save", &value);
+//		if(value>0)
+//			m_rParams.save = value;
+//	}
+    if(T>0)
+    {
+        m_rParams.time = T;
+    }
+//	if (_CHECK_CMDLINE (argc, (const char**)argv, "T"))
+//	{
+//		cutGetCmdLineArgumentstr(argc, (const char**) argv, "T", &strValue);
+//		m_rParams.time = atof(strValue);
+//	}
+    if(size >= 32)
+    {
+        m_rParams.desiredShape = size;
+    }
+    if(probeModes>=1)
+    {
+        m_rParams.probeModes = probeModes;
+        m_rParams.nProbes = probeModes;
+    }
+    if(fs >= 0)
+    {
+        m_pParams.fileStartIndex = fs;
+    }
+    if(dpf > 1)
+    {
+        m_pParams.diffsPerFile = dpf;
+    }
+//	if (_CHECK_CMDLINE (argc, (const char**)argv, "angles"))
+//	{
+//		cutGetCmdLineArgumenti(argc, (const char**) argv, "angles", &value);
+//		if(value>=0)
+//			m_pParams.projectionsNum = value;
+//	}
+    if (threshold > 0)
+    {
+        m_pParams.threshold_raw_data = threshold;
+        updatePixelSaturation();
+    }
+    if (jitterRadius > 0)
+    {
+        m_rParams.jitterRadius = jitterRadius;
+    }
+    if (rotate90 >= 0)
+    {
+        m_pParams.rotate_90_times = rotate90;
+    }
+//	if (_CHECK_CMDLINE (argc, (const char**)argv, "overlap"))
+//	{
+//		cutGetCmdLineArgumenti(argc, (const char**) argv, "overlap", &value);
+//		if(value>=0)
+//			m_rParams.halo = value;
+//	}
+//	if (_CHECK_CMDLINE (argc, (const char**)argv, "shareFrequency"))
+//	{
+//		cutGetCmdLineArgumenti(argc, (const char**) argv, "shareFrequency", &value);
+//		if(value>0)
+//			m_rParams.shareFrequency = value;
+//	}
+    if (updateProbe >= 0)
+    {
+        m_rParams.updateProbe = updateProbe;
+    }
+    if (updateModes >= 0)
+    {
+        m_rParams.updateProbeModes = updateModes;
+    }
+    if (phaseConstraint >= 0)
+    {
+        m_rParams.phaseConstraint = phaseConstraint;
+    }
+    if((fp != NULL) && (fp[0] != '\0'))
+    {
+        m_pParams.dataFilePattern = string(fp);
+    }
+    if((hdf5path != NULL) && (hdf5path[0] != '\0'))
+    {
+        m_pParams.hdf5DatasetName = string(hdf5path);
+    }
+    if(scanDimsx > 0 && scanDimsy >0)
+    {
+        m_eParams.scanDims.x = scanDimsx;
+        m_eParams.scanDims.y = scanDimsy;
+    }
+//	if (_CHECK_CMDLINE (argc, (const char**)argv, "drift"))
+//	{
+//		cutGetCmdLineArgumentstr(argc, (const char**) argv, "drift", &strValue);
+//		temp = string(strValue);
+//		size_t commaPos = temp.find(',');
+//		m_eParams.drift.x=atof(temp.substr(0,commaPos).c_str());
+//		m_eParams.drift.y=atof(temp.substr(commaPos+1, temp.length()-commaPos).c_str());
+//	}
+    if(qx > 0 && qy >0)
+    {
+        m_pParams.symmetric_array_center.x = qx;
+        m_pParams.symmetric_array_center.y = qy;
+    }
+    if(nx > 0 && ny >0)
+    {
+        m_pParams.rawFileSize.x = nx;
+        m_pParams.rawFileSize.y = ny;
+    }
+    if(stepx > 0 && stepy >0)
+    {
+        m_eParams.stepSize.x = nx;
+        m_eParams.stepSize.y = ny;
+    }
+    if (beamSize > 0)
+    {
+        m_eParams.beamSize = beamSize;
+    }
+    if (lambda > 0)
+    {
+        m_eParams.lambda = lambda;
+    }
+    if (dx_d > 0)
+    {
+        m_eParams.dx_d = dx_d;
+    }
+
+//	if (_CHECK_CMDLINE (argc, (const char**)argv, "dx"))
+//	{
+//		cutGetCmdLineArgumentstr(argc, (const char**) argv, "dx", &strValue);
+//		m_eParams.dx = atof(strValue);
+//	}
+
+    if (z > 0)
+    {
+        m_eParams.z_d = z;
+    }
+    if((jobID != NULL) && (jobID[0] != '\0'))
+    {
+        m_rParams.reconstructionID = string(jobID);
+    }
+
+//	if (_CHECK_CMDLINE (argc, (const char**)argv, "algorithm"))
+//	{
+//		cutGetCmdLineArgumentstr(argc, (const char**) argv, "algorithm", &strValue);
+//		m_rParams.algorithm = string(strValue);
+//		m_rParams.method = string(strValue);
+//	}
+    if((lf != NULL) && (lf[0] != '\0'))
+    {
+        m_rParams.positionsFilename = string(lf);
+    }
+    if((probeGuess != NULL) && (probeGuess[0] != '\0'))
+    {
+        m_rParams.probeGuess = string(probeGuess);
+    }
+    if((objectGuess != NULL) && (objectGuess[0] != '\0'))
+    {
+        m_rParams.objectGuess = string(objectGuess);
+    }
+
+//	if (_CHECK_CMDLINE (argc, (const char**)argv, "wsServerUrl"))
+//	{
+//		cutGetCmdLineArgumentstr(argc, (const char**) argv, "wsServerUrl", &strValue);
+//		m_rParams.wsServerUrl = string(strValue);
+//	}
+//
+//
+	m_pParams.symmetric_array_size = m_rParams.desiredShape;
+	m_eParams.dx_s = samplePlanePixelSize();
+
 }
