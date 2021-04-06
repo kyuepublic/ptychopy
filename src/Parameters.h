@@ -181,7 +181,7 @@ public:
 
 	/////ptychpy function
 
-	void parseFromCPython(char *jobID, char *fp, int fs, char *hdf5path, int dpf, double beamSize, char *probeGuess, char *objectGuess, \
+	void parseFromCPython(char *jobID, char *algorithm, char *fp, int fs, char *hdf5path, int dpf, double beamSize, char *probeGuess, char *objectGuess, \
                 int size, int qx, int qy, int nx, int ny, int scanDimsx, int scanDimsy, int spiralScan, int flipScanAxis, int mirror1stScanAxis, \
                 int mirror2ndScanAxis, double stepx, double stepy, int probeModes, double lambda, double dx_d, double z, int iter, int T, int jitterRadius, \
                 double delta_p,  int threshold, int rotate90, int sqrtData, int fftShiftData, int binaryOutput, int simulate, \
