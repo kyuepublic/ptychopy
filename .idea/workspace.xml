@@ -3,7 +3,16 @@
   <component name="ChangeListManager">
     <list default="true" id="5d48ff31-8f99-4299-aad7-47dbe466e20b" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testPTY.py" beforeDir="false" afterPath="$PROJECT_DIR$/testPTY.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/CMakeFiles/Makefile2" beforeDir="false" afterPath="$PROJECT_DIR$/src/CMakeFiles/Makefile2" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/IPhaser.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/IPhaser.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/IPtychoScanMesh.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/IPtychoScanMesh.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/MLS.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/MLS.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Parameters.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Parameters.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Parameters.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Parameters.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Probe.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Probe.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Sample.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Sample.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ptychopy.c" beforeDir="false" afterPath="$PROJECT_DIR$/src/ptychopy.c" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

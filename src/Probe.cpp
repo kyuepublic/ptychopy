@@ -170,17 +170,17 @@ void Probe::ortho_modes()
 							m_modes->getDimensions().x, m_modes->getDimensions().y, m_modes->getPtr()->getAlignedY());
 		}
 
-//				complex_t* pobjectHost=m_modes->getAt(i-1).getHostPtr();
-//				int Npx=m_modes->getPtr()->getY();
-//				for(int j=165; j<Npx; j++)
-//				{
-//					int offset=161*Npx;
-//					printf("%d %.10e %.10e ", j, pobjectHost[offset+j].x, pobjectHost[offset+j].y);
-//
-//				}
-//				printf("\n");
+				complex_t* pobjectHost=m_modes->getAt(i-1).getHostPtr();
+				int Npx=m_modes->getPtr()->getY();
+				for(int j=165; j<Npx; j++)
+				{
+					int offset=161*Npx;
+					printf("%d %.10e %.10e ", j, pobjectHost[offset+j].x, pobjectHost[offset+j].y);
 
-//				int temp=1;
+				}
+				printf("\n");
+
+				int temp=1;
 
     }
 
@@ -310,16 +310,16 @@ bool Probe::initMLH(unsigned int desiredShape, double lambda, double dx_recon, d
 	tempProbe = new Cuda2DArray<complex_t>(m_modes->getDimensions().x,m_modes->getDimensions().y);
 
 	/////////////////////////////// test with matlab code, uncomment h_initVarProbe
-    float randna[]={0, 0.3362, 0.0803, 1.1553, 0.5397};
-    float randnb[]={0, -0.3993, -1.2279, -1.3133, 0.2743};
+//    float randna[]={0, 0.3362, 0.0803, 1.1553, 0.5397};
+//    float randnb[]={0, -0.3993, -1.2279, -1.3133, 0.2743};
 	////////////////////////////////////
 
     for(unsigned int i=1; i<m_modes->getNum(); ++i)
 	{
-		h_initVarProbe(m_modes->getAt(i).getDevicePtr(), tempProbe->getDevicePtr<complex_t>(), m_modes->getAt(0).getDevicePtr(),
-				m_modes->getDimensions().x, m_modes->getDimensions().y, m_modes->getPtr()->getAlignedY(), randna[i], randnb[i]);
 //		h_initVarProbe(m_modes->getAt(i).getDevicePtr(), tempProbe->getDevicePtr<complex_t>(), m_modes->getAt(0).getDevicePtr(),
-//				m_modes->getDimensions().x, m_modes->getDimensions().y, m_modes->getPtr()->getAlignedY(), normalRandom(), normalRandom());
+//				m_modes->getDimensions().x, m_modes->getDimensions().y, m_modes->getPtr()->getAlignedY(), randna[i], randnb[i]);
+		h_initVarProbe(m_modes->getAt(i).getDevicePtr(), tempProbe->getDevicePtr<complex_t>(), m_modes->getAt(0).getDevicePtr(),
+				m_modes->getDimensions().x, m_modes->getDimensions().y, m_modes->getPtr()->getAlignedY(), normalRandom(), normalRandom());
 
 	}
 

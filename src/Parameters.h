@@ -185,7 +185,7 @@ public:
                 int size, int qx, int qy, int nx, int ny, int scanDimsx, int scanDimsy, int spiralScan, int flipScanAxis, int mirror1stScanAxis, \
                 int mirror2ndScanAxis, double stepx, double stepy, int probeModes, double lambda, double dx_d, double z, int iter, int T, int jitterRadius, \
                 double delta_p,  int threshold, int rotate90, int sqrtData, int fftShiftData, int binaryOutput, int simulate, \
-                int phaseConstraint, int updateProbe, int updateModes, int beamstopMask, char *lf);
+                int phaseConstraint, int updateProbe, int updateModes, int beamstopMask, char *lf, int PPS);
 };
 
 typedef Singleton<Parameters> CXParams;

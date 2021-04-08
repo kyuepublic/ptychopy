@@ -170,16 +170,16 @@ bool IPhaser::initDiffractions()
 		m_diffractions = new Diffractions;
 		if(rParams->simulated)
 		{
-		if(rParams->algorithm.compare("MLs")==0)
-		{
-			m_diffractions->simulateMLs(m_scanMesh->getScanPositions(), m_scanMesh->getMeshOffsets(),
-												m_probe->getModes()->getAt(0), m_sample->getObjectArray(), m_scanMesh->getMinima());
-		}
-		else
-		{
-			m_diffractions->simulate(m_scanMesh->getScanPositions(), m_scanMesh->getMeshOffsets(),
-													m_probe->getModes()->getAt(0), m_sample->getObjectArray());
-		}
+			if(rParams->algorithm.compare("MLs")==0)
+			{
+				m_diffractions->simulateMLs(m_scanMesh->getScanPositions(), m_scanMesh->getMeshOffsets(),
+													m_probe->getModes()->getAt(0), m_sample->getObjectArray(), m_scanMesh->getMinima());
+			}
+			else
+			{
+				m_diffractions->simulate(m_scanMesh->getScanPositions(), m_scanMesh->getMeshOffsets(),
+														m_probe->getModes()->getAt(0), m_sample->getObjectArray());
+			}
 
 		}
 		else
@@ -295,6 +295,8 @@ void IPhaser::prePhase()
 	else if(rParams->algorithm.compare("MLs")==0&&rParams->simulated==0)
 		m_sample->initObject();
     //////////////////////////
+
+
 
 	//	if(rParams->calculateRMS)
 	//		m_diffractions->fillSquaredSums();

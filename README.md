@@ -48,9 +48,16 @@ parameters to do the reconstruction.
  
  8. API
   ```
-There are two sets API for doing the reonstrunction, one set is for the whole mode and the other set is for step mode.  
-The step mode is used mostly for debug purpose, so the result for each reconstruction step could be checked. And the whole
-mode would be finishing the whole reconstruction process and write the result to the disk.
+There are two sets API for doing the reonstrunction, one set is for the whole mode and the other 
+set is for step mode.  The step mode is used mostly for debug purpose, so the result for each 
+reconstruction step could be checked. And the whole mode would finish the whole reconstruction 
+process and write the result to the disk. The step mode would be slower than the whole mode, 
+since each step would need to transfer data back from GPU to CPU side.
+
+The following example is based on the simulation data. For real data, the -fp parameter
+has to be specified. The file format must be a bunch of HDF5 files and the file path would be 
+like filename_data_#06d.h5. The library will go though all the HDF5 files and load the diffraction
+pattern into the library.
 
 Whole mode API example:
 
@@ -119,3 +126,4 @@ updateModes | integer  | The number of iterations after which to start updating 
 updateVis | integer  | The number of iterations after which to start updating the visualization. Only has an effect when the library is built with SDL support or running from the GUI | `10`
 beamstopMask | (0,1)  | Determine whether the beamstop area (0 values, set by a binary array "beamstopMask.h5" which is put in the data directory) is applied with Fourier modulus constraint or not  | `0`
 lf | path  | The location of a CSV complex valued file for positions (The file can be saved with python using np.savetxt(numpyProbe, delimiter=',') and it has to be arranged with position y, x in each row, the unit is m  | `N/A`
+PPS | integer  | The number of iterations after which to start probe position search, only work for MLs method | `20`

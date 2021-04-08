@@ -143,7 +143,7 @@ static PyObject *ptycholib_helloworld(PyObject *self, PyObject *args)
 
 static void ptychopy_algorithm(PyObject *args, PyObject *keywds, char *algorithm)
 {
-
+    // Default value for the algorithm parameters
     char *jobID="";
     char *fp="";
     int fs=0;
@@ -184,19 +184,20 @@ static void ptychopy_algorithm(PyObject *args, PyObject *keywds, char *algorithm
     int updateModes=20;
     int beamstopMask=0;
     char *lf="";
+    int PPS=20;
 
     static char *kwlist[] = {"jobID", "fp", "fs", "hdf5path", "dpf", "beamSize", "probeGuess", "objectGuess", \
     "size", "qx", "qy", "nx", "ny", "scanDimsx", "scanDimsy", "spiralScan", "flipScanAxis", "mirror1stScanAxis", \
     "mirror2ndScanAxis", "stepx", "stepy", "probeModes", "lambd", "dx_d", "z", "iter", "T", "jitterRadius", \
     "delta_p",  "threshold", "rotate90", "sqrtData", "fftShiftData", "binaryOutput", "simulate", \
-    "phaseConstraint", "updateProbe", "updateModes", "beamstopMask", "lf", NULL};
+    "phaseConstraint", "updateProbe", "updateModes", "beamstopMask", "lf", "PPS", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "|ssisidssiiiiiiiiiiiddidddiiidiiiiiiiiiis", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "|ssisidssiiiiiiiiiiiddidddiiidiiiiiiiiiisi", kwlist,
                 &jobID, &fp, &fs, &hdf5path, &dpf, &beamSize, &probeGuess, &objectGuess, \
                 &size, &qx, &qy, &nx, &ny, &scanDimsx, &scanDimsy, &spiralScan, &flipScanAxis, &mirror1stScanAxis, \
                 &mirror2ndScanAxis, &stepx, &stepy, &probeModes, &lambd, &dx_d, &z, &iter, &T, &jitterRadius, \
                 &delta_p,  &threshold, &rotate90, &sqrtData, &fftShiftData, &binaryOutput, &simulate, \
-                &phaseConstraint, &updateProbe, &updateModes, &beamstopMask, &lf))
+                &phaseConstraint, &updateProbe, &updateModes, &beamstopMask, &lf, &PPS))
 
     printf("Running ePIE.\n");
 //    printf("the jobID is %s \n", jobID);
@@ -211,7 +212,7 @@ static void ptychopy_algorithm(PyObject *args, PyObject *keywds, char *algorithm
                 size, qx, qy, nx, ny, scanDimsx, scanDimsy, spiralScan, flipScanAxis, mirror1stScanAxis, \
                 mirror2ndScanAxis, stepx, stepy, probeModes, lambd, dx_d, z, iter, T, jitterRadius, \
                 delta_p,  threshold, rotate90, sqrtData, fftShiftData, binaryOutput, simulate, \
-                phaseConstraint, updateProbe, updateModes, beamstopMask, lf);
+                phaseConstraint, updateProbe, updateModes, beamstopMask, lf, PPS);
 
     IPhaser* phaser = new IPhaser;
     if(phaser->init())
@@ -445,7 +446,6 @@ static PyObject *ptycholib_dmcmdstr(PyObject *self, PyObject *args, PyObject *ke
     int y = phaser->getSample()->getObjectArray()->getY();
 
 //    delete phaser;
-
     npy_intp dims[2] = {x,y};
     PyArrayObject *recon_ob = (PyArrayObject*)PyArray_SimpleNewFromData(2, dims, NPY_CFLOAT, h_objectArray);
     Py_INCREF(recon_ob);
@@ -540,16 +540,12 @@ static PyObject *ptycholib_epieinit(PyObject *self, PyObject *args, PyObject *ke
 //        delete phaser;
 //
     phaser = new IPhaser;
-
     istep = 0;
-
     static char *kwlist[] = {"cmdstr", NULL};
-
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "|s", kwlist,&cmdstr))
         return NULL;
 
-
-    char str[1000];
+//    char str[1000];
 //    printf("the command line string is %s \n", cmdstr);
 
 // Make the command line parameters
@@ -574,9 +570,7 @@ static PyObject *ptycholib_epieinit(PyObject *self, PyObject *args, PyObject *ke
     }
 
     makeargs(r+1, len, strcpy(*r, cmdstr));
-
     CXParams::getInstance()->parseFromCommandLine(len-1, r+1);
-
     if(phaser->init())
     {
         phaser->addPhasingMethod("ePIE", CXParams::getInstance()->getReconstructionParams()->iterations);
@@ -585,7 +579,6 @@ static PyObject *ptycholib_epieinit(PyObject *self, PyObject *args, PyObject *ke
 
     free(*r);
     free(r);
-
     return Py_True;
 
 }
@@ -594,12 +587,9 @@ static PyObject *ptycholib_epiepost(PyObject *self, PyObject *args, PyObject *ke
 {
 
     phaser->phasepost();
-
     phaser->writeResultsToDisk();
-
     if(phaser != NULL)
         delete phaser;
-
     return Py_True;
 
 }
@@ -609,7 +599,6 @@ static PyObject *ptycholib_epiestep(PyObject *self, PyObject *args, PyObject *ke
 
     istep++;
     phaser->phasestepvis(istep);
-
     return Py_True;
 
 }
@@ -618,13 +607,11 @@ static PyObject *ptycholib_epieresobj(PyObject *self, PyObject *args, PyObject *
 {
 
     complex_t* h_objectArray = phaser->getSample()->getObjectArray()->getHostPtr<complex_t>();
-
     int x = phaser->getSample()->getObjectArray()->getX();
     int y = phaser->getSample()->getObjectArray()->getY();
 
     npy_intp dims[2] = {x,y};
     PyArrayObject *recon_ob = (PyArrayObject*)PyArray_SimpleNewFromData(2, dims, NPY_CFLOAT, h_objectArray);
-
     Py_INCREF(recon_ob);
     return PyArray_Return(recon_ob);
 
@@ -634,13 +621,11 @@ static PyObject *ptycholib_epieresprobe(PyObject *self, PyObject *args, PyObject
 {
 
     complex_t* h_probeArray = phaser->getProbe()->getModes()->getPtr()->getHostPtr<complex_t>();
-
     int x = phaser->getProbe()->getModes()->getPtr()->getX();
     int y = phaser->getProbe()->getModes()->getPtr()->getY();
 
     npy_intp dims[2] = {x,y};
     PyArrayObject *recon_ob = (PyArrayObject*)PyArray_SimpleNewFromData(2, dims, NPY_CFLOAT, h_probeArray);
-
     Py_INCREF(recon_ob);
     return PyArray_Return(recon_ob);
 

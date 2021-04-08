@@ -852,10 +852,10 @@ void IPtychoScanMesh::get_nonoverlapping_indices()
 		std::random_shuffle ( indices_0.begin(), indices_0.end() );
 
 		// Testing with matlab
-//		char* filename="/data2/JunjingData/indices.csv";
-//		std::vector<int> vecFile;
-//		loadTestIGroup(filename, vecFile);
-//		indices_0=vecFile;
+		char* filename="/data2/JunjingData/indices.csv";
+		std::vector<int> vecFile;
+		loadTestIGroup(filename, vecFile);
+		indices_0=vecFile;
 
 		std::vector< std::vector<int> > indices (maxNpos, std::vector<int>() ); //indices_out
 

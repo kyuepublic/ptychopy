@@ -150,6 +150,12 @@ void Parameters::parseFromCommandLine(int argc, char *argv[])
 		if(value>=32)
 			m_rParams.desiredShape = value;
 	}
+	if (_CHECK_CMDLINE (argc, (const char**)argv, "PPS"))
+	{
+		cutGetCmdLineArgumenti(argc, (const char**) argv, "PPS", &value);
+		if(value>=1)
+			m_rParams.probe_pos_search = value;
+	}
 	if (_CHECK_CMDLINE (argc, (const char**)argv, "probeModes"))
 	{
 		cutGetCmdLineArgumenti(argc, (const char**) argv, "probeModes", &value);
@@ -366,7 +372,7 @@ void Parameters::parseFromCPython(char *jobID, char *algorithm, char *fp, int fs
                 int size, int qx, int qy, int nx, int ny, int scanDimsx, int scanDimsy, int spiralScan, int flipScanAxis, int mirror1stScanAxis, \
                 int mirror2ndScanAxis, double stepx, double stepy, int probeModes, double lambda, double dx_d, double z, int iter, int T, int jitterRadius, \
                 double delta_p,  int threshold, int rotate90, int sqrtData, int fftShiftData, int binaryOutput, int simulate, \
-                int phaseConstraint, int updateProbe, int updateModes, int beamstopMask, char *lf)
+                int phaseConstraint, int updateProbe, int updateModes, int beamstopMask, char *lf, int PPS)
 {
 	int value;
 	char* strValue;
@@ -565,7 +571,10 @@ void Parameters::parseFromCPython(char *jobID, char *algorithm, char *fp, int fs
 //		cutGetCmdLineArgumentstr(argc, (const char**) argv, "dx", &strValue);
 //		m_eParams.dx = atof(strValue);
 //	}
-
+	if (PPS >=1)
+	{
+		m_rParams.probe_pos_search = PPS;
+	}
     if (z > 0)
     {
         m_eParams.z_d = z;
