@@ -14,12 +14,15 @@ from matplotlib import animation
 # ptychopy.dmcmdstr(str)
 # ptychopy.mlscmdstr(realstr)
 
+# Whole mode with keyworkd
 # ptychopy.epie(jobID="ePIEsimu1", beamSize=110e-9, scanDimsx=30, scanDimsy=30, stepx=50e-9, \
 #               stepy=50e-9, lambd=2.4796837508399954e-10, iter=3, size=512, dx_d=172e-6, z=1, simulate=1);
 ptychopy.dm(jobID="ePIEsimu1", beamSize=110e-9, scanDimsx=30, scanDimsy=30, stepx=50e-9, \
               stepy=50e-9, lambd=2.4796837508399954e-10, iter=3, size=512, dx_d=172e-6, z=1, simulate=1);
 # ptychopy.mls(jobID="ePIEsimu1", beamSize=110e-9, scanDimsx=30, scanDimsy=30, stepx=50e-9, \
 #               stepy=50e-9, lambd=2.4796837508399954e-10, iter=3, size=512, dx_d=172e-6, z=1, simulate=0);
+
+# Step mode with command string
 # fig = plt.figure()
 # ax = fig.add_subplot(1,1,1)
 #
