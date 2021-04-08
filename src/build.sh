@@ -1,9 +1,9 @@
 #!/bin/bash
 
-HDF5_PATH=
+HDF5_PATH=/local/kyue/anlproject/ptography/pushPtychopy/ptychopy/dependLib/hdf5-1.8.13/hdf5
 SDL2_PATH=
-DIY_PATH=
-
+#DIY_PATH=/local/kyue/anlproject/ptography/pushPtychopy/ptychopy/dependLib/diy2
+#DIY_PATH=
 
 rm -rf build
 mkdir build
@@ -17,7 +17,7 @@ if [ "$1" = "debug" ]; then
 	cmakeVars="-Ddebug=ON -Doptimize=OFF $cmakeVars"
 fi
 
-cmake  $cmakeVars -G "Unix Makefiles" ..
+/local/kyue/program/cmake/cmake/bin/cmake  $cmakeVars -G "Unix Makefiles" ..
 
 make
 cd ..

@@ -285,7 +285,7 @@ real_t MLS::iteration(Diffractions* diffs, Probe* probe,
 
                     	}
 
-                    	if(rParams->method.compare("MLs")==0)
+                    	if(rParams->algorithm.compare("MLs")==0)
                     	{
                     		object_upd_sum->setFromDevice<complex_t>(object_upd_precond->getDevicePtr<complex_t>(), object_upd_sum->getX(), object_upd_sum->getY());
                     	}
@@ -405,7 +405,7 @@ real_t MLS::iteration(Diffractions* diffs, Probe* probe,
                 cache.beta_object(g_ind) =  (par.beta_object*par.beta_LSQ)*cache.beta_object(g_ind); */
 			}
 
-			if(object_reconstruct && (rParams->method.compare("MLs")==0))
+			if(object_reconstruct && (rParams->algorithm.compare("MLs")==0))
 			{
 				object->update_object(object_upd_sum, llo, g_ind_vec, scan_idsvec, probe->p_object, probe->MAX_ILLUM);
 			}

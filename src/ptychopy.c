@@ -51,10 +51,11 @@ using namespace std;
 
 /* Define module and function docstrings */
 static char module_docstring[] = "This module provides an interface to ptycholib GPU-accelerated phase retrieval.";
-
 static char helloworld_docstring[] = "This function exists for debugging and testing purposes.";
 
 static char epie_docstring[] = "This function performs iterative phase retrieval using the ePIE algorithm with keyword.";
+static char dm_docstring[] = "This function performs iterative phase retrieval using the dm algorithm with keyword.";
+static char mls_docstring[] = "This function performs iterative phase retrieval using the mls algorithm with keyword.";
 
 static char epiecmdstr_docstring[] = "This function performs iterative phase retrieval using the ePIE algorithm \
             with a whole string.";
@@ -64,18 +65,17 @@ static char mlscmdstr_docstring[] = "This function performs iterative phase retr
             with a whole string.";
 
 static char epieinit_docstring[] = "This function performs the init.";
-
 static char epiepost_docstring[] = "This function performs the post.";
-
 static char epiestep_docstring[] = "This function performs the step.";
-
 static char epieresobj_docstring[] = "This function returns the object of the reconstruction.";
-
 static char epieresprobe_docstring[] = "This function returns the probe of the reconstruction.";
 
 /* Define function headers */
 static PyObject *ptycholib_helloworld(PyObject *self, PyObject *args);
 static PyObject *ptycholib_epie(PyObject *self, PyObject *args, PyObject *keywds);
+static PyObject *ptycholib_dm(PyObject *self, PyObject *args, PyObject *keywds);
+static PyObject *ptycholib_mls(PyObject *self, PyObject *args, PyObject *keywds);
+
 
 static PyObject *ptycholib_epiecmdstr(PyObject *self, PyObject *args, PyObject *keywds);
 static PyObject *ptycholib_dmcmdstr(PyObject *self, PyObject *args, PyObject *keywds);
@@ -95,6 +95,8 @@ static unsigned int istep = 0;
 static PyMethodDef module_methods[] = {
     {"helloworld", (PyCFunction)ptycholib_helloworld, METH_VARARGS, helloworld_docstring},
     {"epie", (PyCFunction)ptycholib_epie, METH_VARARGS|METH_KEYWORDS, epie_docstring},
+    {"dm", (PyCFunction)ptycholib_dm, METH_VARARGS|METH_KEYWORDS, dm_docstring},
+    {"mls", (PyCFunction)ptycholib_mls, METH_VARARGS|METH_KEYWORDS, mls_docstring},
     {"epiecmdstr", (PyCFunction)ptycholib_epiecmdstr, METH_VARARGS|METH_KEYWORDS, epiecmdstr_docstring},
     {"dmcmdstr", (PyCFunction)ptycholib_dmcmdstr, METH_VARARGS|METH_KEYWORDS, dmcmdstr_docstring},
     {"mlscmdstr", (PyCFunction)ptycholib_mlscmdstr, METH_VARARGS|METH_KEYWORDS, mlscmdstr_docstring},
@@ -199,10 +201,11 @@ static void ptychopy_algorithm(PyObject *args, PyObject *keywds, char *algorithm
     printf("Running ePIE.\n");
 //    printf("the jobID is %s \n", jobID);
 ////    printf("the fp is %s \n", fp);
+//    printf("the beamSize is %.8e \n", beamSize);
 //    printf("the iter is %d \n", iter);
-//    printf("the lambd is %.15f \n", lambd);
-//    printf("the dx_d is %.15f \n", dx_d);
-    printf("the algorithm is %s \n", algorithm);
+//    printf("the scanDims is %d, %d, stepx is %.8e, stepy is %.8e, size is %d, dx_d is %.8e, z is %.8e  \n", scanDimsx, scanDimsy, stepx, stepy, size, dx_d, z);
+//    printf("the lambd is %.8e \n", lambd);
+//    printf("the algorithm is %s, the simulate is %d \n", algorithm, simulate);
 
     CXParams::getInstance()->parseFromCPython(jobID, algorithm, fp, fs, hdf5path, dpf, beamSize, probeGuess, objectGuess, \
                 size, qx, qy, nx, ny, scanDimsx, scanDimsy, spiralScan, flipScanAxis, mirror1stScanAxis, \
@@ -210,6 +213,15 @@ static void ptychopy_algorithm(PyObject *args, PyObject *keywds, char *algorithm
                 delta_p,  threshold, rotate90, sqrtData, fftShiftData, binaryOutput, simulate, \
                 phaseConstraint, updateProbe, updateModes, beamstopMask, lf);
 
+    IPhaser* phaser = new IPhaser;
+    if(phaser->init())
+	{
+		phaser->addPhasingMethod( 	CXParams::getInstance()->getReconstructionParams()->algorithm.c_str(),
+									CXParams::getInstance()->getReconstructionParams()->iterations);
+		phaser->phase();
+		phaser->writeResultsToDisk();
+	}
+	delete phaser;
 }
 
 static PyObject *ptycholib_epie(PyObject *self, PyObject *args, PyObject *keywds)
@@ -217,19 +229,6 @@ static PyObject *ptycholib_epie(PyObject *self, PyObject *args, PyObject *keywds
 
     ptychopy_algorithm(args, keywds, "ePIE");
 
-//    IPhaser* phaser = new IPhaser;
-
-//    IPhaser* phaser = new SimplePhaser;
-
-//    if(phaser->init())
-//    {
-//        phaser->addPhasingMethod("ePIE", CXParams::getInstance()->getReconstructionParams()->iterations);
-//        phaser->phase();
-//    }
-//
-//    phaser->writeResultsToDisk();
-
-//    printf("error here \n");
 //    complex_t* h_objectArray = phaser->getSample()->getObjectArray()->getHostPtr<complex_t>();
 //    delete phaser;
 //
@@ -245,6 +244,21 @@ static PyObject *ptycholib_epie(PyObject *self, PyObject *args, PyObject *keywds
 //
 //    Py_INCREF(recon_ob);
 //    return PyArray_Return(recon_ob);
+    return Py_True;
+}
+static PyObject *ptycholib_dm(PyObject *self, PyObject *args, PyObject *keywds)
+{
+
+    ptychopy_algorithm(args, keywds, "DM");
+
+    return Py_True;
+}
+
+static PyObject *ptycholib_mls(PyObject *self, PyObject *args, PyObject *keywds)
+{
+
+    ptychopy_algorithm(args, keywds, "MLs");
+
     return Py_True;
 }
 

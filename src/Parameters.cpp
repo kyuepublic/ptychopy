@@ -314,11 +314,11 @@ void Parameters::parseFromCommandLine(int argc, char *argv[])
 		cutGetCmdLineArgumentstr(argc, (const char**) argv, "dx_d", &strValue);
 		m_eParams.dx_d = atof(strValue);
 	}
-	if (_CHECK_CMDLINE (argc, (const char**)argv, "dx"))
-	{
-		cutGetCmdLineArgumentstr(argc, (const char**) argv, "dx", &strValue);
-		m_eParams.dx = atof(strValue);
-	}
+//	if (_CHECK_CMDLINE (argc, (const char**)argv, "dx"))
+//	{
+//		cutGetCmdLineArgumentstr(argc, (const char**) argv, "dx", &strValue);
+//		m_eParams.dx = atof(strValue);
+//	}
 	if (_CHECK_CMDLINE (argc, (const char**)argv, "z"))
 	{
 		cutGetCmdLineArgumentstr(argc, (const char**) argv, "z", &strValue);
@@ -333,7 +333,7 @@ void Parameters::parseFromCommandLine(int argc, char *argv[])
 	{
 		cutGetCmdLineArgumentstr(argc, (const char**) argv, "algorithm", &strValue);
 		m_rParams.algorithm = string(strValue);
-		m_rParams.method = string(strValue);
+//		m_rParams.method = string(strValue);
 	}
 	if (_CHECK_CMDLINE (argc, (const char**)argv, "lf"))
 	{
@@ -358,6 +358,7 @@ void Parameters::parseFromCommandLine(int argc, char *argv[])
 
 	m_pParams.symmetric_array_size = m_rParams.desiredShape;
 	m_eParams.dx_s = samplePlanePixelSize();
+	m_eParams.dx=m_eParams.dx_s;
 
 }
 
@@ -446,9 +447,13 @@ void Parameters::parseFromCPython(char *jobID, char *algorithm, char *fp, int fs
 //		cutGetCmdLineArgumentstr(argc, (const char**) argv, "T", &strValue);
 //		m_rParams.time = atof(strValue);
 //	}
-    if(size >= 32)
+    if(size>16)
     {
         m_rParams.desiredShape = size;
+    }
+    else
+    {
+        printf("the size must be large than 16 \n");
     }
     if(probeModes>=1)
     {
@@ -539,8 +544,8 @@ void Parameters::parseFromCPython(char *jobID, char *algorithm, char *fp, int fs
     }
     if(stepx > 0 && stepy >0)
     {
-        m_eParams.stepSize.x = nx;
-        m_eParams.stepSize.y = ny;
+        m_eParams.stepSize.x = stepx;
+        m_eParams.stepSize.y = stepy;
     }
     if (beamSize > 0)
     {
@@ -572,7 +577,7 @@ void Parameters::parseFromCPython(char *jobID, char *algorithm, char *fp, int fs
     if((algorithm != NULL) && (algorithm[0] != '\0'))
     {
         m_rParams.algorithm = string(algorithm);
-        m_rParams.algorithm = string(algorithm);
+//        m_rParams.method=m_rParams.algorithm;
     }
     if((lf != NULL) && (lf[0] != '\0'))
     {
@@ -596,5 +601,5 @@ void Parameters::parseFromCPython(char *jobID, char *algorithm, char *fp, int fs
 //
 	m_pParams.symmetric_array_size = m_rParams.desiredShape;
 	m_eParams.dx_s = samplePlanePixelSize();
-
+	m_eParams.dx=m_eParams.dx_s;
 }

@@ -2,12 +2,60 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="5d48ff31-8f99-4299-aad7-47dbe466e20b" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/CartesianScanMesh.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/CartesianScanMesh.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Diffractions.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Diffractions.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Diffractions.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Diffractions.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/IPhaser.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/IPhaser.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/IPtychoScanMesh.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/IPtychoScanMesh.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/MLS.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/MLS.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Makefile" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Parameters.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Parameters.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Parameters.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Parameters.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/build.sh" beforeDir="false" afterPath="$PROJECT_DIR$/src/build.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ePIE.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/ePIE.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/examples/optimizeEPIE.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/examples/optimizeEPIE.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/examples/testEPIE.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/examples/testEPIE.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/CXMath.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/CartesianScanMesh.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/Cuda2DArray.hpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/CudaFFTPlan.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/CudaSmartPtr.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/CudaSmartPtr.hpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/DM.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/DiffractionLoader.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/Diffractions.cuh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/Diffractions.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/FileManager.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/GLResourceManager.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/IPhaser.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/IPhasingMethod.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/IPtychoScanMesh.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/IRenderable.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/IRenderer.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/IRunnable.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/ListScanMesh.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/MLS.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/MPIPhaser.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/Parameters.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/Probe.cuh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/Probe.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/RenderServer.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/Sample.cuh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/Sample.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/ScanMesh.cuh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/Singleton.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/SpiralScanMesh.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/ThreadPool.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/Timer.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/datatypes.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/ePIE.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/include/utilities.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/kernelsLib.a" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/ptychopy.c" beforeDir="false" afterPath="$PROJECT_DIR$/src/ptychopy.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tools/GLRenderer.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/tools/GLRenderer.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/tools/remotePtycho.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/tools/remotePtycho.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/testPTY.py" beforeDir="false" afterPath="$PROJECT_DIR$/testPTY.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -31,7 +79,7 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="full.screen.before.presentation.mode" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="/data2/JunjingData/mlhcode/read_raw_data.py" />
     <property name="settings.editor.selected.configurable" value="editor.preferences.fonts.default" />
   </component>
   <component name="SvnConfiguration">
@@ -56,10 +104,10 @@
     </option>
   </component>
   <component name="WindowStateProjectService">
-    <state x="743" y="355" width="424" height="491" key="FileChooserDialogImpl" timestamp="1616021181742">
+    <state x="743" y="355" width="424" height="491" key="FileChooserDialogImpl" timestamp="1617823414192">
       <screen x="0" y="27" width="1920" height="1140" />
     </state>
-    <state x="743" y="355" width="424" height="491" key="FileChooserDialogImpl/0.27.1920.1140/1920.0.1920.1200@0.27.1920.1140" timestamp="1616021181742" />
+    <state x="743" y="355" width="424" height="491" key="FileChooserDialogImpl/0.27.1920.1140/1920.0.1920.1200@0.27.1920.1140" timestamp="1617823414192" />
     <state x="456" y="232" width="1007" height="737" key="SettingsEditor" timestamp="1617659874539">
       <screen x="0" y="27" width="1920" height="1140" />
     </state>

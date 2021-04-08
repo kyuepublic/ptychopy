@@ -75,7 +75,7 @@ bool IPhaser::initSample(uint2 meshDimensions)
 	{
 		const ReconstructionParams* rParams = CXParams::getInstance()->getReconstructionParams();
 
-		if(rParams->method.compare("MLs")==0)
+		if(rParams->algorithm.compare("MLs")==0)
 		{
 			meshDimensions=m_scanMesh->getNPONEW();
 		}
@@ -111,7 +111,7 @@ bool IPhaser::initProbe()
 			else
 				m_probe->init(0, eParams->beamSize, eParams->dx_s, rParams->probeGuess.c_str());
 
-		if(rParams->method.compare("MLs")==0)
+		if(rParams->algorithm.compare("MLs")==0)
 		{
 			m_probe->initVarModes();
 		}
@@ -125,8 +125,13 @@ bool IPhaser::initScanMesh()
 	if(m_scanMesh==0)
 	{
 
-		const ExperimentParams* eParams = CXParams::getInstance()->getExperimentParams();
-		const ReconstructionParams* rParams = CXParams::getInstance()->getReconstructionParams();
+        const ExperimentParams* eParams = CXParams::getInstance()->getExperimentParams();
+        const ReconstructionParams* rParams = CXParams::getInstance()->getReconstructionParams();
+//        printf("the scanDims is %d, %d, stepx is %.8e, stepy is %.8e, the beamSize is %.8e, size is %d, \
+//        dx_d is %.8e, z is %.8e \n", eParams->scanDims.x, \
+//        eParams->scanDims.y, eParams->stepSize.x, eParams->stepSize.y, eParams->beamSize, rParams->desiredShape, \
+//        eParams->dx_d, eParams->z_d);
+
 		if(!rParams->positionsFilename.empty())
 			m_scanMesh = new ListScanMesh(rParams->positionsFilename.c_str(), eParams->scanDims.x*eParams->scanDims.y,
 											eParams->stepSize.x, rParams->jitterRadius);
@@ -137,9 +142,8 @@ bool IPhaser::initScanMesh()
 			m_scanMesh = new CartesianScanMesh(eParams->scanDims.x, eParams->scanDims.y, eParams->stepSize.x,
 											eParams->stepSize.y, rParams->jitterRadius);
 
-		if(rParams->method.compare("MLs")==0)
+		if(rParams->algorithm.compare("MLs")==0)
 		{
-//			std::cout<<rParams->method<<rParams->method.compare("MLs")<<std::endl;
 			m_scanMesh->generateMeshML(this->getBounds());
 	//		m_scanMesh->get_close_indices(); //MLC
 			m_scanMesh->get_nonoverlapping_indices(); // MLs
@@ -150,8 +154,6 @@ bool IPhaser::initScanMesh()
 		{
 			m_scanMesh->generateMesh(this->getBounds());
 		}
-
-
 
 	}
 	return true;
@@ -167,8 +169,19 @@ bool IPhaser::initDiffractions()
 
 		m_diffractions = new Diffractions;
 		if(rParams->simulated)
+		{
+		if(rParams->algorithm.compare("MLs")==0)
+		{
+			m_diffractions->simulateMLs(m_scanMesh->getScanPositions(), m_scanMesh->getMeshOffsets(),
+												m_probe->getModes()->getAt(0), m_sample->getObjectArray(), m_scanMesh->getMinima());
+		}
+		else
+		{
 			m_diffractions->simulate(m_scanMesh->getScanPositions(), m_scanMesh->getMeshOffsets(),
-									m_probe->getModes()->getAt(0), m_sample->getObjectArray());
+													m_probe->getModes()->getAt(0), m_sample->getObjectArray());
+		}
+
+		}
 		else
 		{
 			string fpStr(pParams->dataFilePattern);
@@ -249,9 +262,10 @@ void IPhaser::prePhase()
 	//Clear objects for a new phasing round
 	const ExperimentParams* eParams = CXParams::getInstance()->getExperimentParams();
 	const ReconstructionParams* rParams = CXParams::getInstance()->getReconstructionParams();
-	double dx_recon = eParams->dx_s / rParams->desiredShape * rParams->desiredShape;
+//	double dx_recon = eParams->dx_s / rParams->desiredShape * rParams->Shape;
+	double dx_recon = eParams->dx_s;
 
-	if(rParams->method.compare("MLs")==0)
+	if(rParams->algorithm.compare("MLs")==0)
 	{
 		// initMLH generate the new probe value
 		if(!m_probe->initMLH(rParams->desiredShape, eParams->lambda, dx_recon, eParams->beamSize, rParams->nProbes, (rParams->probeGuess.empty())?0:rParams->probeGuess.c_str()))
@@ -275,28 +289,23 @@ void IPhaser::prePhase()
 
 //	m_scanMesh->get_close_indices();
 
-	// non mls
-//	m_sample->setObjectArrayShape(m_scanMesh->getMeshDimensions());
-	//MLS
-//	m_sample->setObjectArrayShape(m_scanMesh->getNPONEW());
-//	m_sample->clearObjectArray();
-
 	////////////////////// test with matlab
 	if(!rParams->objectGuess.empty())
 		m_sample->loadGuess(rParams->objectGuess.c_str());
-	else if(rParams->method.compare("MLs")==0)
+	else if(rParams->algorithm.compare("MLs")==0&&rParams->simulated==0)
 		m_sample->initObject();
     //////////////////////////
 
 	//	if(rParams->calculateRMS)
 	//		m_diffractions->fillSquaredSums();
 
-	if(rParams->method.compare("MLs")!=0)
+	if(rParams->algorithm.compare("MLs")!=0)
 	{
 		if(rParams->calculateRMS)
 			m_diffractions->fillSquaredSums();
 
 		m_scanMesh->generateMesh(this->getBounds());
+
 		m_errors.resize(rParams->iterations, 0);
 
 	}
@@ -359,14 +368,11 @@ void IPhaser::phaseLoop()
 	for(size_t mIndex=0; mIndex<m_phasingMethods.size(); ++mIndex)
 		for(unsigned int i=1; i<=m_phasingMethods[mIndex].iterations; ++i)
 		{
+
 			m_stepTimer.start();
-
 			m_errors[i-1] += phaseStep(m_phasingMethods[mIndex].method, i);
-
 			m_stepTimer.stop();
-
 			fprintf(stderr,"%s Iteration [%05d] --- step time= %fs\n", m_phasingMethods[mIndex].name.c_str(), i, m_stepTimer.getElapsedTimeInSec());
-
 //			if(i%rParams->updateVis==0 && m_renderer)
 //				m_renderer->renderResources();
 			#ifdef DEBUG_MSGS
@@ -417,7 +423,6 @@ void IPhaser::phase()
 		#endif
 		return;
 	}
-
 	m_phasingTimer.start();
 	this->prePhase();
 	this->phaseLoop();
@@ -462,8 +467,6 @@ void IPhaser::phasestepvis(unsigned int i)
 {
 
 	const ReconstructionParams* rParams = CXParams::getInstance()->getReconstructionParams();
-
-
 	for(size_t mIndex=0; mIndex<m_phasingMethods.size(); ++mIndex)
 	{
 		m_errors[i-1] += phaseStep(m_phasingMethods[mIndex].method, i);
@@ -501,7 +504,6 @@ void IPhaser::phaseVisStep()
 void IPhaser::phaseLoopVisStep()
 {
 	const ReconstructionParams* rParams = CXParams::getInstance()->getReconstructionParams();
-
 	for(size_t mIndex=0; mIndex<m_phasingMethods.size(); ++mIndex)
 		for(unsigned int i=1; i<=m_phasingMethods[mIndex].iterations; ++i)
 		{

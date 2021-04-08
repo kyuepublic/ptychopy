@@ -111,8 +111,6 @@ void IPtychoScanMesh::addScanPositionMLs(float2 scanPos, unsigned int index, boo
 	float2 tempPos = scanPos;
 //	scanPos.x=(flip?tempPos.y-m_minima.y : tempPos.x-m_minima.x);
 //	scanPos.y=(flip?tempPos.x-m_minima.x : tempPos.y-m_minima.y);
-//	scanPos.x=tempPos.x/dx;
-//	scanPos.y=tempPos.y/dx;
 	scanPos.x=tempPos.x;
 	scanPos.y=tempPos.y;
 	m_positions.push_back(scanPos);

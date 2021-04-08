@@ -130,7 +130,7 @@ struct ReconstructionParams
 	int object_reconstruct;
 	unsigned int Nobjects;
 	double delta_p;
-	std::string method;
+//	std::string method;
 	int Nrec;
 
 	bool blind;
@@ -146,12 +146,12 @@ struct ReconstructionParams
 	std::string wsServerUrl;
 
 	ReconstructionParams() :
-		algorithm("ePIE"), iterations(100), save(999999), time(-1.0), desiredShape(256), probeModes(5), jitterRadius(0), halo(0), shareFrequency(10),
+		algorithm("ePIE"), iterations(100), save(999999), time(-1.0), desiredShape(256), probeModes(1), jitterRadius(0), halo(0), shareFrequency(10),
 		updateProbe(10), updateProbeModes(20), updateVis(10), phaseConstraint(1),
-		blind(true), simulated(false), flipScanAxis(false), mirrorX(false), mirrorY(false), calculateRMS(false), binaryOutput(false), nProbes(5),
+		blind(true), simulated(false), flipScanAxis(false), mirrorX(false), mirrorY(false), calculateRMS(false), binaryOutput(false), nProbes(1),
 		Niter(100), variable_probe_modes(1), beta_LSQ(0.9),beta_object(1), beta_probe(1), probe_pos_search(5), variable_intensity(1),
 		variable_probe(1), apply_subpix_shift(1), apply_multimodal_update(0), object_reconstruct(1), probe_reconstruct(1), Nobjects(1), delta_p(0.1),
-		method("MLs"), Nrec(1)
+		Nrec(1)
 	{}
 };
 

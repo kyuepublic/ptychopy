@@ -97,6 +97,7 @@ real_t ePIE::iteration(Diffractions* diffs, Probe* probe,
 		object->extractROI(m_psi_old->getAt(0), scanPositions[i].x, scanPositions[i].y);
 
 		CXMath::multiply<complex_t>(m_psi_old, probe->getModes(), m_psi_old, true);
+
 		PhaserUtil::getInstance()->applyModulusConstraint(m_psi_old, m_psi, diffs->getPatterns()->getAt(i), diffs->getBeamstopMask());
 
 		//TODO: Figure out how to do object and probe updates with sub-pixel accuracy

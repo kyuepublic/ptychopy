@@ -48,11 +48,28 @@ parameters to do the reconstruction.
  
  8. API
   ```
-  epieinit(cmd)
-  epiestep()
-  epieresobj()
-  epieresprobe()
-  epiepost()
+There are two sets API for doing the reonstrunction, one set is for the whole mode and the other set is for step mode.  
+The step mode is used mostly for debug purpose, so the result for each reconstruction step could be checked. And the whole
+mode would be finishing the whole reconstruction process and write the result to the disk.
+
+Whole mode API example:
+
+    ptychopy.epie(jobID="ePIEsimu1", beamSize=110e-9, scanDimsx=30, scanDimsy=30, stepx=50e-9, \
+               stepy=50e-9, lambd=2.4796837508399954e-10, iter=3, size=512, dx_d=172e-6, z=1, simulate=1);
+    ptychopy.dm(jobID="ePIEsimu1", beamSize=110e-9, scanDimsx=30, scanDimsy=30, stepx=50e-9, \
+              stepy=50e-9, lambd=2.4796837508399954e-10, iter=3, size=512, dx_d=172e-6, z=1, simulate=1);
+    ptychopy.mls(jobID="ePIEsimu1", beamSize=110e-9, scanDimsx=30, scanDimsy=30, stepx=50e-9, \
+               stepy=50e-9, lambd=2.4796837508399954e-10, iter=3, size=512, dx_d=172e-6, z=1, simulate=0);
+
+Step mode API example:
+
+    str = "./ptycho -jobID=sim512 -algorithm=ePIE -beamSize=110e-9 -scanDims=30,30 -step=50e-9,50e-9 -i=3 -size=512 
+    -lambda=2.4796837508399954e-10 -dx_d=172e-6 -z=1 -simulate=1"
+    epieinit(str)
+    epiestep()
+    epieresobj()
+    epieresprobe()
+    epiepost()
   
   For implentation example, please check testPTY.py, testMTY.py
    ```

@@ -71,7 +71,6 @@ void Diffractions::simulate(const vector<float2>& scanPositions, uint2 offset,
 	char fname[1024];*/
 	for(unsigned int i=0; i<m_patterns->getNum(); ++i)
 	{
-		//printf("Simulating diff patt %d (%f,%f)\n", i, scanPositions[i].x, scanPositions[i].y);
 		float2 scanPos = make_float2(scanPositions[i].x+offset.x, scanPositions[i].y+offset.y);
 		if(scanPos.x<0 || scanPos.y<0)
 		{
@@ -98,6 +97,47 @@ void Diffractions::simulate(const vector<float2>& scanPositions, uint2 offset,
 		diff->save<real_t>(fname, true);*/
 	}
 }
+
+void Diffractions::simulateMLs(const vector<float2>& scanPositions, uint2 offset,
+							Cuda3DElement<complex_t> probeMode, const CudaSmartPtr& objectArray, float2 minima)
+{
+	clearPatterns();
+	m_patterns= new Cuda3DArray<real_t>(scanPositions.size(), probeMode.getDimensions());
+
+	const complex_t* probeWavefront = probeMode.getDevicePtr();
+	CudaSmartPtr psi = new Cuda2DArray<complex_t>(probeMode.getX(), probeMode.getY());
+	/*CudaSmartPtr diff = new Cuda2DArray<real_t>(probeMode.getX(), probeMode.getY());
+	char fname[1024];*/
+	for(unsigned int i=0; i<m_patterns->getNum(); ++i)
+	{
+
+		float2 scanPos = make_float2(scanPositions[i].x-minima.x+offset.x, scanPositions[i].y-minima.y+offset.y);
+		if(scanPos.x<0 || scanPos.y<0)
+		{
+			fprintf(stderr, "Diffractions::simulate() Runtime Error! Object array too small.\n Try increasing object array size.\n");
+			exit(1);
+		}
+
+		h_simulatePSI(objectArray->getDevicePtr<complex_t>(), probeWavefront, psi->getDevicePtr<complex_t>(),
+					scanPos, psi->getX(), psi->getY(), psi->getAlignedY(),
+					objectArray->getX(), objectArray->getY(), objectArray->getAlignedY());
+
+		//PhaserUtil::getInstance()->applyProjectionApprox(objectArray, probeMode, psi, scanPositions[i]);
+
+		COMPLEX2COMPLEX_FFT(FFTPlanner::getInstance()->getC2CPlan(psi.get()), psi->getDevicePtr<complex_t>(),
+							psi->getDevicePtr<complex_t>(), CUFFT_FORWARD);
+		cutilCheckMsg("Diffractions::simulate() FFT execution failed!\n");
+
+
+		h_realComplexAbs(psi->getDevicePtr<complex_t>(), m_patterns->getAt(i).getDevicePtr(), psi->getX(), psi->getY(), psi->getAlignedY());
+		psi->set(0);
+
+		/*sprintf(fname, "data/sim%06d.bin", i);
+		diff->setFromDevice(m_patterns->getAt(i).getDevicePtr(), psi->getX(), psi->getY());
+		diff->save<real_t>(fname, true);*/
+	}
+}
+
 
 int Diffractions::load(const char* filePattern, const vector<unsigned int>& indeces, unsigned int fStart, const PreprocessingParams* params)
 {

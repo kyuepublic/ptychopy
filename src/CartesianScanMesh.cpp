@@ -117,23 +117,19 @@ void CartesianScanMesh::generateMeshML(const int* bounds)
 		float2 Np_o= make_float2(1e5f, 1e5f);
 		int Npos=m_scanPositions->getX()*m_scanPositions->getY();
 		float2 Np_p = make_float2(rParams->desiredShape, rParams->desiredShape);
-
 		float2 ceilvar=make_float2(ceil(Np_o.x*1.0/2-Np_p.x*1.0/2), ceil(Np_o.y*1.0/2-Np_p.y*1.0/2));
 
 		float2 resprobex;
 		resprobex.x=(m_maxima.x+m_minima.x)/2;
 		resprobex.y=(m_maxima.y+m_minima.y)/2;
-
 		unsigned int oROIminx=Np_o.x;
 		unsigned int oROIminy=Np_o.y;
 		unsigned int oROImaxx=0;
 		unsigned int oROImaxy=0;
-
 		unsigned int tmpminx=0;
 		unsigned int tmpminy=0;
 		unsigned int tmpmaxx=0;
 		unsigned int tmpmaxy=0;
-
 		unsigned int tmpx=0;
 		unsigned int tmpy=0;
 

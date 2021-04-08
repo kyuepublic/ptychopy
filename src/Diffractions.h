@@ -60,6 +60,8 @@ public:
 	int load(const char*, const std::vector<unsigned int>& indeces, unsigned int fStart, const PreprocessingParams* p);
 	void simulate(const std::vector<float2>& scanPositions, uint2 offset,
 					Cuda3DElement<complex_t> probeMode, const CudaSmartPtr& objectArray);
+	void simulateMLs(const std::vector<float2>& scanPositions, uint2 offset,
+					Cuda3DElement<complex_t> probeMode, const CudaSmartPtr& objectArray, float2 minima);
 	void dumpSTXM(const ICuda2DArray*, const char*) const;
 	void fillSquaredSums();
 	const Cuda3DArray<real_t>* getPatterns()	const {return m_patterns;}
