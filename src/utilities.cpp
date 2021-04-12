@@ -213,14 +213,14 @@ real_t CXUtil::getModalDoubleMax(const Cuda3DArray<real_t>* d_arr)
 real_t CXUtil::getModalDoubleSum(const Cuda3DArray<real_t>* d_arr)
 {
 	if( (!d_arr->checkUseAll()) || d_arr->getNum()==1)
-		return h_realSum(d_arr->getPtr()->getDevicePtr<real_t>(), d_arr->getPtr()->getX(), d_arr->getPtr()->getY(), d_arr->getPtr()->getAlignedY());
+		return h_realSum(d_arr->getPtr()->getDevicePtr<real_t>(), 0, d_arr->getPtr()->getX(), 0, d_arr->getPtr()->getY(), d_arr->getPtr()->getAlignedY());
 	else
 	{
 		if(!m_workingMemory.isValid())
 			m_workingMemory = new Cuda2DArray<real_t>(d_arr->getDimensions().x, d_arr->getDimensions().y);
 		h_realModalSum(d_arr->getPtr()->getDevicePtr<real_t>(), m_workingMemory->getDevicePtr<real_t>(), d_arr->getNum(),
 						m_workingMemory->getX(), m_workingMemory->getY(), m_workingMemory->getAlignedY());
-		return h_realSum(m_workingMemory->getDevicePtr<real_t>(), m_workingMemory->getX(), m_workingMemory->getY(), m_workingMemory->getAlignedY());
+		return h_realSum(m_workingMemory->getDevicePtr<real_t>(), 0, m_workingMemory->getX(), 0, m_workingMemory->getY(), m_workingMemory->getAlignedY());
 	}
 }
 

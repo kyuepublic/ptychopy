@@ -86,8 +86,8 @@ __global__ void d_check(real_t* d_data)
 
 	unsigned int Index = (blockIdx.x * blockDim.x) + threadIdx.x;
 
-	real_t temp=d_data[Index];
-	unsigned int sq1=1;
+//	real_t temp=d_data[Index];
+//	unsigned int sq1=1;
 }
 
 __global__ void d_checkcomplex(complex_t* d_data)
@@ -95,8 +95,8 @@ __global__ void d_checkcomplex(complex_t* d_data)
 
 	unsigned int Index = (blockIdx.x * blockDim.x) + threadIdx.x;
 
-	complex_t temp=d_data[Index];
-	unsigned int sq1=1;
+//	complex_t temp=d_data[Index];
+//	unsigned int sq1=1;
 }
 
 template<unsigned int threadNum>
@@ -294,6 +294,26 @@ __global__ void d_multiply(const real_t* a, real_t b, real_t* result,
 	}
 }
 
+template<bool enoughThreads>
+__global__ void d_mul_rca_mulc_rcr(complex_t* a, complex_t* b, complex_t* c, real_t* weight_proj,
+		unsigned int x, unsigned int y, unsigned int alignedY)
+{
+	unsigned int row = enoughThreads? (blockIdx.x*blockDim.y) + threadIdx.y : blockIdx.x;
+	unsigned int col = enoughThreads? threadIdx.x : (blockIdx.y*blockDim.x) + threadIdx.x;
+	unsigned int index = (row * alignedY) + col;
+
+	if(row<x && col<y)
+	{
+		complex_t temp1=mul_complex_t(a[index],b[index]);
+		float sum2denom=abs_complex_t(temp1);
+
+		complex_t temp3=mul_complex_t(c[index], conj_complex_t(temp1));
+		float sum2nom=real_complex_t(temp3);
+		weight_proj[index]=0.1*sum2nom/(sum2denom*sum2denom);
+	}
+
+}
+
 // Only has one row of factor col from 1 to alignedy
 template<bool enoughThreads>
 __global__ void d_multiplyRow(const complex_t* a, real_t* b, complex_t* result,
@@ -343,7 +363,7 @@ __global__ void d_multiplyColum(const complex_t* a, real_t* b, complex_t* result
 //    Atb2 = real(cdPO .* chi);
 //end
 
-// this brings a question compare temperary cuda array while using cuda temporary varialbes
+
 template<bool enoughThreads>
 __global__ void d_get_optimal_step_lsq(complex_t* chi, complex_t* object_update_proj, complex_t* dPO, complex_t* probe, real_t lambda,
 		real_t* AA1, complex_t* AA2, real_t* AA4, real_t* Atb1, real_t* Atb2,
@@ -356,7 +376,6 @@ __global__ void d_get_optimal_step_lsq(complex_t* chi, complex_t* object_update_
 	if(row<x && col<y)
 	{
 		complex_t dOP=mul_complex_t(object_update_proj[index], probe[index]);
-
 		complex_t cdOP=conj_complex_t(dOP);
 		complex_t cdPO=conj_complex_t(dPO[index]);
 
@@ -1142,7 +1161,8 @@ __host__ real_t h_realSum(real_t* a, unsigned int x, unsigned int y, unsigned in
 
 __host__ real_t h_mean2(real_t* a, unsigned int x, unsigned int y, unsigned int alignedY)
 {
-	double sum=h_realSum(a, x, y, alignedY);
+//	double sum=h_realSum(a, x, y, alignedY);
+	double sum=h_realSum(a, 0, x, 0, y, alignedY);
 	return sum/(x*y);
 }
 
@@ -1406,7 +1426,7 @@ __host__ void h_multiplyRow(complex_t* a, real_t* b, complex_t* result, unsigned
 	bool enoughThreads = calcGrids(x,alignedY,grid,block);
 	if(enoughThreads)	d_multiplyRow<true> <<<grid, block>>>(a, b, result, x, y, alignedY, normalize?1.0/(real_t)(x*y):1);
 	else 				d_multiplyRow<false><<<grid, block>>>(a, b, result, x, y, alignedY, normalize?1.0/(real_t)(x*y):1);
-	cutilCheckMsg("d_complexMultiply() execution failed!\n");
+	cutilCheckMsg("h_multiplyRow() execution failed!\n");
 }
 
 __host__ void h_multiplyColumn(complex_t* a, real_t* b, complex_t* result, unsigned int x, unsigned int y, unsigned int alignedY,
@@ -1416,7 +1436,7 @@ __host__ void h_multiplyColumn(complex_t* a, real_t* b, complex_t* result, unsig
 	bool enoughThreads = calcGrids(x,alignedY,grid,block);
 	if(enoughThreads)	d_multiplyColum<true> <<<grid, block>>>(a, b, result, x, y, alignedY, normalize?1.0/(real_t)(x*y):1);
 	else 				d_multiplyColum<false><<<grid, block>>>(a, b, result, x, y, alignedY, normalize?1.0/(real_t)(x*y):1);
-	cutilCheckMsg("d_complexMultiply() execution failed!\n");
+	cutilCheckMsg("h_multiplyColumn() execution failed!\n");
 }
 
 __host__ void h_get_optimal_step_lsq(complex_t* chi,complex_t* object_update_proj, complex_t* dPO, complex_t* probe, real_t lambda,
@@ -1428,7 +1448,18 @@ __host__ void h_get_optimal_step_lsq(complex_t* chi,complex_t* object_update_pro
 			AA1, AA2, AA4, Atb1, Atb2, x, y, alignedY);
 	else 				d_get_optimal_step_lsq<false><<<grid, block>>>(chi, object_update_proj, dPO, probe, lambda,
 			AA1, AA2, AA4, Atb1, Atb2, x, y, alignedY);
-	cutilCheckMsg("d_complexMultiply() execution failed!\n");
+	cutilCheckMsg("h_get_optimal_step_lsq() execution failed!\n");
+
+}
+
+__host__ void h_mul_rca_mulc_rcr(complex_t* obj_proj_i, complex_t* modes_i, complex_t* chi_i, real_t* weight_proj,
+		unsigned int x, unsigned int y, unsigned int alignedY)
+{
+	dim3 grid, block;
+	bool enoughThreads = calcGrids(x,alignedY,grid,block);
+	if(enoughThreads)	d_mul_rca_mulc_rcr<true> <<<grid, block>>>(obj_proj_i, modes_i, chi_i, weight_proj, x, y, alignedY);
+	else 				d_mul_rca_mulc_rcr<false><<<grid, block>>>(obj_proj_i, modes_i, chi_i, weight_proj, x, y, alignedY);
+	cutilCheckMsg("h_mul_rca_mulc_rcr() execution failed!\n");
 
 }
 
@@ -1439,7 +1470,7 @@ __host__ void h_multiplyReal(real_t* a, real_t* result,
 	bool enoughThreads = calcGrids(x,alignedY,grid,block);
 	if(enoughThreads)	d_realMultiply<true> <<<grid, block>>>(a, result, x, y, alignedY);
 	else 				d_realMultiply<false> <<<grid, block>>>(a, result, x, y, alignedY);
-	cutilCheckMsg("d_complexMultiply() execution failed!\n");
+	cutilCheckMsg("h_multiplyReal() execution failed!\n");
 }
 
 
@@ -1450,7 +1481,7 @@ __host__ void h_normalize(complex_t* a, unsigned int x, unsigned int y, unsigned
 	bool enoughThreads = calcGrids(x,alignedY,grid,block);
 	if(enoughThreads)	d_complexMultiply<true> <<<grid, block>>>(a, factor, a, x, y, alignedY);
 	else				d_complexMultiply<false><<<grid, block>>>(a, factor, a, x, y, alignedY);
-	cutilCheckMsg("d_complexMultiply() execution failed\n");
+	cutilCheckMsg("h_normalize() execution failed\n");
 }
 
 __host__ void h_normalize(const complex_t* a, complex_t* result, unsigned int x, unsigned int y, unsigned int alignedY, real_t factor)
@@ -1459,7 +1490,7 @@ __host__ void h_normalize(const complex_t* a, complex_t* result, unsigned int x,
 	bool enoughThreads = calcGrids(x,alignedY,grid,block);
 	if(enoughThreads)	d_complexMultiply<true> <<<grid, block>>>(a, factor, result, x, y, alignedY);
 	else				d_complexMultiply<false><<<grid, block>>>(a, factor, result, x, y, alignedY);
-	cutilCheckMsg("d_complexMultiply() execution failed\n");
+	cutilCheckMsg("h_normalize() execution failed\n");
 }
 
 __host__ void h_normalize(real_t* a, unsigned int x, unsigned int y, unsigned int alignedY)
@@ -1513,7 +1544,8 @@ __host__ real_t h_norm2Mat(real_t* d_arr, real_t* d_result, unsigned int x, unsi
 	else				d_square<false><<<grid, block>>>(d_arr, d_result, x, y, alignedY);
 	cutilCheckMsg("h_realComplexReal() execution failed\n");
 
-	real_t result=h_realSum(d_result, x, y, alignedY);
+//	real_t result=h_realSum(d_result, x, y, alignedY);
+	real_t result=h_realSum(d_result, 0, x, 0, y, alignedY);
 	real_t xresult=sqrt_real_t(result/(x*y));
 
 	return xresult;
@@ -1522,7 +1554,8 @@ __host__ real_t h_norm2Mat(real_t* d_arr, real_t* d_result, unsigned int x, unsi
 __host__ real_t h_norm2Mat(complex_t* d_arr, real_t* d_result, unsigned int x, unsigned int y, unsigned int alignedY)
 {
 	h_realComplexAbs(d_arr, d_result, x, y, alignedY, true);
-	real_t result=h_realSum(d_result, x, y, alignedY);
+//	real_t result=h_realSum(d_result, x, y, alignedY);
+	real_t result=h_realSum(d_result, 0, x, 0, y, alignedY);
 	real_t xresult=sqrt_real_t(result/(x*y));
 	return xresult;
 }

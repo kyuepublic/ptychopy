@@ -38,6 +38,7 @@
 #include "IRenderable.h"
 #include "datatypes.h"
 #include <vector_types.h>
+#include "Timer.h"
 
 template<typename T> class Cuda3DArray;
 template<typename T> class Cuda3DElement;
@@ -51,6 +52,8 @@ public:
 	CudaSmartPtr p_object;
 	real_t MAX_ILLUM;
 	std::vector <complex_t> beta_probevec;
+
+	CudaSmartPtr tempArrR;
 
 private:
 	// 3d array for the 2d probes
@@ -67,6 +70,7 @@ private:
     bool m_modesInitialized;
     real_t m_MAX_ILLUM;
 
+	Timer m_testTimer;
 
 	void initProbeModes();
 

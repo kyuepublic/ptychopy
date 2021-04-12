@@ -300,7 +300,7 @@ void Sample::update_object(CudaSmartPtr object_upd_sum, int llo, std::vector<int
 			object_upd_sum->getX(), object_upd_sum->getY(), object_upd_sum->getAlignedY());
 	h_complexSum(m_objectArray->getDevicePtr<complex_t>(), tmpResult->getDevicePtr<complex_t>(), m_objectArray->getDevicePtr<complex_t>(), 1, 1,
 			tmpResult->getX(), tmpResult->getY(), tmpResult->getAlignedY());
-	tmpResult->set();
+//	tmpResult->set();
 }
 
 void Sample::updateIntensities(bool useSum)
@@ -312,7 +312,7 @@ void Sample::updateIntensities(bool useSum)
 
 void Sample::updateMaxIntensity(bool useSum)
 {
-	m_maxObjectIntensity = useSum ? h_realSum(m_objectIntensities->getDevicePtr<real_t>(), m_objectIntensities->getX(), m_objectIntensities->getY(), m_objectIntensities->getAlignedY()):
+	m_maxObjectIntensity = useSum ? h_realSum(m_objectIntensities->getDevicePtr<real_t>(), 0, m_objectIntensities->getX(), 0, m_objectIntensities->getY(), m_objectIntensities->getAlignedY()):
 									h_realMax(m_objectIntensities->getDevicePtr<real_t>(), m_objectIntensities->getX(), m_objectIntensities->getY(), m_objectIntensities->getAlignedY());
 	m_renderableUpdated = true;
 }

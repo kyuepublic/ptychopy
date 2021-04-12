@@ -219,11 +219,13 @@ nearest(point pt, point cent, int n_cluster, double *d2)
 inline void kpp(point pts, int len, point cent, int n_cent)
 {
 #	define for_len for (j = 0, p = pts; j < len; j++, p++)
-	int i, j;
+//	int i;
+	int j;
 	int n_cluster;
 	double sum, *d = (double*)malloc(sizeof(double) * len);
 
-	point p, c;
+	point p;
+//	point c;
 	cent[0] = pts[ rand() % len ];
 	for (n_cluster = 1; n_cluster < n_cent; n_cluster++) {
 		sum = 0;
@@ -468,6 +470,9 @@ __host__ void h_get_projections(const real_t* p_object, real_t* proj, unsigned i
 
 __host__ void h_get_optimal_step_lsq(complex_t* chi,complex_t* object_update_proj, complex_t* dPO, complex_t* probe, real_t lambda,
 		real_t* AA1, complex_t* AA2, real_t* AA4, real_t* Atb1, real_t* Atb2, unsigned int x, unsigned int y, unsigned int alignedY);
+
+__host__ void h_mul_rca_mulc_rcr(complex_t* obj_proj_i, complex_t* modes_i, complex_t* chi_i, real_t* weight_proj,
+		unsigned int x, unsigned int y, unsigned int alignedY);
 
 
 template<typename T> class Cuda3DArray;

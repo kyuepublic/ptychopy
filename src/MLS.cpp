@@ -327,12 +327,12 @@ real_t MLS::iteration(Diffractions* diffs, Probe* probe,
 					std::vector <real_t> Atb2vec(g_ind_vec.size(), 0);
 					for(int sumIndex=0; sumIndex<AA1->getNum(); sumIndex++)
 					{
-						AA1vec[sumIndex]=h_realSum(AA1->getAt(sumIndex).getDevicePtr(), AA1->getDimensions().x, AA1->getPtr()->getY(), AA1->getPtr()->getAlignedY());
+						AA1vec[sumIndex]=h_realSum(AA1->getAt(sumIndex).getDevicePtr(), 0, AA1->getDimensions().x, 0, AA1->getPtr()->getY(), AA1->getPtr()->getAlignedY());
 						AA2vec[sumIndex]=h_complexSum(AA2->getAt(sumIndex).getDevicePtr(), 0, AA2->getDimensions().x, 0, AA2->getPtr()->getY(), AA2->getPtr()->getAlignedY());
 						AA3vec[sumIndex]=conj_complex_t(AA2vec[sumIndex]);
-						AA4vec[sumIndex]=h_realSum(AA4->getAt(sumIndex).getDevicePtr(), AA4->getDimensions().x, AA4->getPtr()->getY(), AA4->getPtr()->getAlignedY());
-						Atb1vec[sumIndex]=h_realSum(Atb1->getAt(sumIndex).getDevicePtr(), Atb1->getDimensions().x, Atb1->getPtr()->getY(), Atb1->getPtr()->getAlignedY());
-						Atb2vec[sumIndex]=h_realSum(Atb2->getAt(sumIndex).getDevicePtr(), Atb2->getDimensions().x, Atb2->getPtr()->getY(), Atb2->getPtr()->getAlignedY());
+						AA4vec[sumIndex]=h_realSum(AA4->getAt(sumIndex).getDevicePtr(), 0, AA4->getDimensions().x, 0, AA4->getPtr()->getY(), AA4->getPtr()->getAlignedY());
+						Atb1vec[sumIndex]=h_realSum(Atb1->getAt(sumIndex).getDevicePtr(), 0, Atb1->getDimensions().x, 0, Atb1->getPtr()->getY(), Atb1->getPtr()->getAlignedY());
+						Atb2vec[sumIndex]=h_realSum(Atb2->getAt(sumIndex).getDevicePtr(), 0, Atb2->getDimensions().x, 0, Atb2->getPtr()->getY(), Atb2->getPtr()->getAlignedY());
 					}
 
 					lambda = 0.1;
