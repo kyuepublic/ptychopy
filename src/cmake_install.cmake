@@ -12,7 +12,7 @@ if(NOT DEFINED CMAKE_INSTALL_CONFIG_NAME)
     string(REGEX REPLACE "^[^A-Za-z0-9_]+" ""
            CMAKE_INSTALL_CONFIG_NAME "${BUILD_TYPE}")
   else()
-    set(CMAKE_INSTALL_CONFIG_NAME "Debug")
+    set(CMAKE_INSTALL_CONFIG_NAME "Release")
   endif()
   message(STATUS "Install configuration: \"${CMAKE_INSTALL_CONFIG_NAME}\"")
 endif()
@@ -82,14 +82,14 @@ endif()
 
 if("${CMAKE_INSTALL_COMPONENT}" STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
-   "/local/kyue/anlproject/ptography/pushPtychopy/ptychopy/src/lib/libptychoLibD.a")
+   "/local/kyue/anlproject/ptography/pushPtychopy/ptychopy/src/lib/libptychoLib.a")
   if(CMAKE_WARN_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(WARNING "ABSOLUTE path INSTALL DESTINATION : ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
   if(CMAKE_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION)
     message(FATAL_ERROR "ABSOLUTE path INSTALL DESTINATION forbidden (by caller): ${CMAKE_ABSOLUTE_DESTINATION_FILES}")
   endif()
-file(INSTALL DESTINATION "/local/kyue/anlproject/ptography/pushPtychopy/ptychopy/src/lib" TYPE STATIC_LIBRARY FILES "/local/kyue/anlproject/ptography/pushPtychopy/ptychopy/src/libptychoLibD.a")
+file(INSTALL DESTINATION "/local/kyue/anlproject/ptography/pushPtychopy/ptychopy/src/lib" TYPE STATIC_LIBRARY FILES "/local/kyue/anlproject/ptography/pushPtychopy/ptychopy/src/libptychoLib.a")
 endif()
 
 if("${CMAKE_INSTALL_COMPONENT}" STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
@@ -97,7 +97,7 @@ if("${CMAKE_INSTALL_COMPONENT}" STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMP
      NOT IS_SYMLINK "$ENV{DESTDIR}/local/kyue/anlproject/ptography/pushPtychopy/ptychopy/src/ptycho")
     file(RPATH_CHECK
          FILE "$ENV{DESTDIR}/local/kyue/anlproject/ptography/pushPtychopy/ptychopy/src/ptycho"
-         RPATH "/local/kyue/program/cuda/lib64:/local/kyue/program/anaconda/lib")
+         RPATH "/local/kyue/program/cuda/lib64")
   endif()
   list(APPEND CMAKE_ABSOLUTE_DESTINATION_FILES
    "/local/kyue/anlproject/ptography/pushPtychopy/ptychopy/src/ptycho")
@@ -112,8 +112,8 @@ file(INSTALL DESTINATION "/local/kyue/anlproject/ptography/pushPtychopy/ptychopy
      NOT IS_SYMLINK "$ENV{DESTDIR}/local/kyue/anlproject/ptography/pushPtychopy/ptychopy/src/ptycho")
     file(RPATH_CHANGE
          FILE "$ENV{DESTDIR}/local/kyue/anlproject/ptography/pushPtychopy/ptychopy/src/ptycho"
-         OLD_RPATH "/local/kyue/program/cuda/lib64:/local/kyue/program/anaconda/lib:"
-         NEW_RPATH "/local/kyue/program/cuda/lib64:/local/kyue/program/anaconda/lib")
+         OLD_RPATH "/local/kyue/program/cuda/lib64:"
+         NEW_RPATH "/local/kyue/program/cuda/lib64")
     if(CMAKE_INSTALL_DO_STRIP)
       execute_process(COMMAND "/bin/strip" "$ENV{DESTDIR}/local/kyue/anlproject/ptography/pushPtychopy/ptychopy/src/ptycho")
     endif()

@@ -172,17 +172,17 @@ void Probe::ortho_modes()
 							m_modes->getDimensions().x, m_modes->getDimensions().y, m_modes->getPtr()->getAlignedY());
 		}
 
-		complex_t* pobjectHost=m_modes->getAt(i-1).getHostPtr();
-		int Npx=m_modes->getPtr()->getY();
-		for(int j=165; j<Npx; j++)
-		{
-			int offset=161*Npx;
-			printf("%d %.10e %.10e ", j, pobjectHost[offset+j].x, pobjectHost[offset+j].y);
-
-		}
-		printf("\n");
-
-		int temp=1;
+//		complex_t* pobjectHost=m_modes->getAt(i-1).getHostPtr();
+//		int Npx=m_modes->getPtr()->getY();
+//		for(int j=165; j<Npx; j++)
+//		{
+//			int offset=161*Npx;
+//			printf("%d %.10e %.10e ", j, pobjectHost[offset+j].x, pobjectHost[offset+j].y);
+//
+//		}
+//		printf("\n");
+//
+//		int temp=1;
 
     }
 
