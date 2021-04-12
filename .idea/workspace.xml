@@ -2,21 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="5d48ff31-8f99-4299-aad7-47dbe466e20b" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Diffractions.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Diffractions.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/IPtychoScanMesh.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/IPtychoScanMesh.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/MLS.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/MLS.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/IPhaser.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/IPhaser.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Probe.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Probe.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Probe.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Probe.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ProbeKernels.cu" beforeDir="false" afterPath="$PROJECT_DIR$/src/ProbeKernels.cu" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Sample.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Sample.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/cmake_install.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/src/cmake_install.cmake" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/data/IOTest_object_0.csv" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/IOTest_object_0.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/data/IOTest_probes_0.csv" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/IOTest_probes_0.csv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/kernelsLib.a" beforeDir="false" afterPath="$PROJECT_DIR$/src/kernelsLib.a" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utilities.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/utilities.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utilitiesKernels.cu" beforeDir="false" afterPath="$PROJECT_DIR$/src/utilitiesKernels.cu" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

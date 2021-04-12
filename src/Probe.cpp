@@ -419,13 +419,13 @@ bool Probe::initEvo(int Npos, int variable_probe_modes, std::vector <uint2> oROI
 
 	/////////////////////////////////////
 	// Load from file to test initVarModes has the real randome one test with matlab
-	char* filename1="/data2/JunjingData/probe21.csv";
-	char* filename2="/data2/JunjingData/probe22.csv";
-	m_extramodes->load2Complex<complex_t>(filename1, filename2);
-	char* filename3="/data2/JunjingData/probeevolution.csv";
-	std::vector <double> vec;
-	PhaserUtil::getInstance()->load<double>(filename3, vec);
-	m_probe_evolution[1]=vec;
+//	char* filename1="/data2/JunjingData/probe21.csv";
+//	char* filename2="/data2/JunjingData/probe22.csv";
+//	m_extramodes->load2Complex<complex_t>(filename1, filename2);
+//	char* filename3="/data2/JunjingData/probeevolution.csv";
+//	std::vector <double> vec;
+//	PhaserUtil::getInstance()->load<double>(filename3, vec);
+//	m_probe_evolution[1]=vec;
 	/////////////////////////////////////
 
 	CudaSmartPtr d_result = new Cuda2DArray<real_t>(m_extramodes->getDimensions().x, m_extramodes->getDimensions().y);

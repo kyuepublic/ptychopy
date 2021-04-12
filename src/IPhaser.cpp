@@ -292,7 +292,7 @@ void IPhaser::prePhase()
 	////////////////////// test with matlab
 	if(!rParams->objectGuess.empty())
 		m_sample->loadGuess(rParams->objectGuess.c_str());
-	else if(rParams->algorithm.compare("MLs")==0&&rParams->simulated==0)
+	else if(rParams->algorithm.compare("MLs")==0&&rParams->simulated==false)
 		m_sample->initObject();
     //////////////////////////
 

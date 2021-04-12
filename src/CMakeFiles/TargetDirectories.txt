@@ -1,9 +1,0 @@
-/local/kyue/anlproject/ptography/pushPtychopy/ptychopy/src/CMakeFiles/install/strip.dir
-/local/kyue/anlproject/ptography/pushPtychopy/ptychopy/src/CMakeFiles/install/local.dir
-/local/kyue/anlproject/ptography/pushPtychopy/ptychopy/src/CMakeFiles/install.dir
-/local/kyue/anlproject/ptography/pushPtychopy/ptychopy/src/CMakeFiles/list_install_components.dir
-/local/kyue/anlproject/ptography/pushPtychopy/ptychopy/src/CMakeFiles/kernelsLib_target.dir
-/local/kyue/anlproject/ptography/pushPtychopy/ptychopy/src/CMakeFiles/ptychoLib.dir
-/local/kyue/anlproject/ptography/pushPtychopy/ptychopy/src/CMakeFiles/rebuild_cache.dir
-/local/kyue/anlproject/ptography/pushPtychopy/ptychopy/src/CMakeFiles/ptycho.dir
-/local/kyue/anlproject/ptography/pushPtychopy/ptychopy/src/CMakeFiles/edit_cache.dir
