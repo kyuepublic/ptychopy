@@ -46,6 +46,13 @@
 #include <thrust/transform.h>
 #include <thrust/extrema.h>
 
+#include <cub/util_allocator.cuh>
+#include <cub/device/device_reduce.cuh>
+
+using namespace cub;
+
+CachingDeviceAllocator  g_allocator(true);
+
 /* extern shared memory for dynamic allocation */
 extern __shared__ real_t shared_array[];
 
@@ -1155,14 +1162,19 @@ __host__ complex_t h_complexSum(const complex_t* a, unsigned int x1, unsigned in
 
 __host__ real_t h_realSum(real_t* a, unsigned int x, unsigned int y, unsigned int alignedY)
 {
-	thrust::device_ptr<real_t> devPtr_a = thrust::device_pointer_cast(a);
-	return thrust::reduce(devPtr_a, devPtr_a+(x*alignedY));
+//	thrust::device_ptr<real_t> devPtr_a = thrust::device_pointer_cast(a);
+//	return thrust::reduce(devPtr_a, devPtr_a+(x*alignedY));
+	real_t sum = h_realSumCUB(a, x, y, alignedY);
+	return sum;
 }
 
 __host__ real_t h_mean2(real_t* a, unsigned int x, unsigned int y, unsigned int alignedY)
 {
 //	double sum=h_realSum(a, x, y, alignedY);
-	double sum=h_realSum(a, 0, x, 0, y, alignedY);
+//	double sum=h_realSum(a, 0, x, 0, y, alignedY);
+
+	double sum=h_realSumCUB(a, x, y, alignedY);
+
 	return sum/(x*y);
 }
 
@@ -1171,6 +1183,35 @@ __host__ real_t h_realSum(const real_t* a, unsigned int x1, unsigned int x2, uns
 	thrust::device_vector<real_t> output;
 	h_reduceToSum<real_t>(a, output, x1, x2, y1, y2, alignedY);
 	return thrust::reduce(output.begin(), output.end());
+
+}
+
+__host__ real_t h_realSumCUB(real_t* d_in, unsigned int x, unsigned int y, unsigned int alignedY)
+{
+
+	real_t* d_out;
+	cudaMalloc((void **)&d_out, sizeof(real_t));
+
+    // Request and allocate temporary storage
+    void            *d_temp_storage = NULL;
+    size_t          temp_storage_bytes = 0;
+    int num_items=x*alignedY;
+
+    DeviceReduce::Sum(d_temp_storage, temp_storage_bytes, d_in, d_out, num_items);
+    cudaMalloc((void**)&d_temp_storage, temp_storage_bytes);
+    DeviceReduce::Sum(d_temp_storage, temp_storage_bytes, d_in, d_out, num_items);
+    cudaDeviceSynchronize();
+
+    real_t sum=0;
+    cudaMemcpy(&sum, d_out, sizeof(real_t), cudaMemcpyDeviceToHost);
+
+	cudaFree(d_out);
+	cudaFree(d_temp_storage);
+//    printf("sum: %15e.\n", sum);
+
+    cutilCheckMsg("h_realSumCUB() execution failed!\n");
+
+    return sum;
 }
 
 __host__ float2 h_maxFloat2(float2* a, unsigned int x, unsigned int y, unsigned int alignedY)

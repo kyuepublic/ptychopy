@@ -190,8 +190,8 @@ void Diffractions::fillSquaredSums()
 {
 	for(unsigned int i=0; i<m_patterns->getNum(); ++i)
 	{
-		m_squaredSums.push_back(h_realSum(m_patterns->getAt(i).getDevicePtr(), 	0,  m_patterns->getDimensions().x,
-																				0, m_patterns->getDimensions().y,
+		m_squaredSums.push_back(h_realSum(m_patterns->getAt(i).getDevicePtr(), m_patterns->getDimensions().x,
+																				m_patterns->getDimensions().y,
 																				m_patterns->getPtr()->getAlignedY()));
 	}
 }
@@ -224,7 +224,7 @@ void Diffractions::get_fourier_error(Cuda3DArray<real_t>* apsi, std::vector<int>
 	    h_square(tmpgrid->getAt(i).getDevicePtr(), tmpgrid->getAt(i).getDevicePtr(), tmpgrid->getDimensions().x, tmpgrid->getDimensions().y, tmpgrid->getPtr()->getAlignedY());
 	    h_normalize(tmpgrid->getAt(i).getDevicePtr(), 0.5*0.5, tmpgrid->getDimensions().x, tmpgrid->getDimensions().y, tmpgrid->getPtr()->getAlignedY());
 
-		real_t result=h_realSum(tmpgrid->getAt(i).getDevicePtr(), 0, tmpgrid->getDimensions().x, 0, tmpgrid->getDimensions().y, tmpgrid->getPtr()->getAlignedY());
+		real_t result=h_realSum(tmpgrid->getAt(i).getDevicePtr(), tmpgrid->getDimensions().x, tmpgrid->getDimensions().y, tmpgrid->getPtr()->getAlignedY());
 		real_t err=sqrt_real_t(result/(tmpgrid->getDimensions().x*tmpgrid->getDimensions().y));
 
 		fourierErrors[ind_read[i]]=err;

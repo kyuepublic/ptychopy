@@ -1,4 +1,4 @@
-import ptychopy
+#import ptychopy
 
 
 # str = "./ptycho -jobID=sim512 -algorithm=ePIE -beamSize=110e-9 -scanDims=30,30 -step=50e-9,50e-9 -i=3 -size=512 -lambda=2.4796837508399954e-10 -dx_d=172e-6 -z=1 -simulate=1"
@@ -17,8 +17,8 @@ from matplotlib import animation
 # Whole mode with keyworkd
 # ptychopy.epie(jobID="ePIEsimu1", beamSize=110e-9, scanDimsx=30, scanDimsy=30, stepx=50e-9, \
 #               stepy=50e-9, lambd=2.4796837508399954e-10, iter=3, size=512, dx_d=172e-6, z=1, simulate=1);
-ptychopy.dm(jobID="ePIEsimu1", beamSize=110e-9, scanDimsx=30, scanDimsy=30, stepx=50e-9, \
-              stepy=50e-9, lambd=2.4796837508399954e-10, iter=3, size=512, dx_d=172e-6, z=1, simulate=1);
+#ptychopy.dm(jobID="ePIEsimu1", beamSize=110e-9, scanDimsx=30, scanDimsy=30, stepx=50e-9, \
+              #stepy=50e-9, lambd=2.4796837508399954e-10, iter=3, size=512, dx_d=172e-6, z=1, simulate=1);
 # ptychopy.mls(jobID="ePIEsimu1", beamSize=110e-9, scanDimsx=30, scanDimsy=30, stepx=50e-9, \
 #               stepy=50e-9, lambd=2.4796837508399954e-10, iter=3, size=512, dx_d=172e-6, z=1, simulate=0);
 
@@ -46,6 +46,13 @@ ptychopy.dm(jobID="ePIEsimu1", beamSize=110e-9, scanDimsx=30, scanDimsy=30, step
 # plt.show()
 #
 # ptychopy.epiepost()
+
+fig = plt.figure()
+ax = fig.add_subplot(1,1,1)
+ob=np.genfromtxt(str("./data/ePIEsimu1_object_0.csv"),delimiter=',',dtype=complex)
+im = ax.imshow(np.angle(data), animated=True)
+plt.show()
+
 
 
 

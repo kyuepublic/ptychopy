@@ -479,10 +479,10 @@ void IPtychoScanMesh::get_close_indices()
 		}
 	}
 
-	// For testing load from files
+/////// For testing load from files
 
-	char* filename1="/data2/JunjingData/groups.csv";
-	std::ifstream infile1(filename1, std::ofstream::in|std::ofstream::binary );
+	std::string filename1("/data2/JunjingData/groups.csv");
+	std::ifstream infile1(filename1.c_str(), std::ofstream::in|std::ofstream::binary );
 	std::vector<int> groupsTest;
 	std::string line1 = "";
 	int rowIdx=0;
@@ -502,8 +502,9 @@ void IPtychoScanMesh::get_close_indices()
 	}
 	infile1.close();
 
-	char* filename2="/data2/JunjingData/D.csv";
-	std::ifstream infile2(filename2, std::ofstream::in|std::ofstream::binary );
+//	char* filename2="/data2/JunjingData/D.csv";
+	std::string filename2("/data2/JunjingData/D.csv");
+	std::ifstream infile2(filename2.c_str(), std::ofstream::in|std::ofstream::binary );
 	std::vector< std::vector<double> > dTest (diffcount, std::vector<double> (Ngroups) );
 	std::string line2 = "";
 	rowIdx=0;
@@ -523,8 +524,8 @@ void IPtychoScanMesh::get_close_indices()
 	}
 	infile2.close();
 
-	char* filename3="/data2/JunjingData/C.csv";
-	std::ifstream infile3(filename3, std::ofstream::in|std::ofstream::binary );
+	std::string filename3("/data2/JunjingData/C.csv");
+	std::ifstream infile3(filename3.c_str(), std::ofstream::in|std::ofstream::binary );
 	std::vector< std::vector<double> > cTest (Ngroups, std::vector<double> (2) );
 	std::string line3 = "";
 	rowIdx=0;

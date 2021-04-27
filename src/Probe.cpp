@@ -141,6 +141,8 @@ void Probe::orthogonalize()
 void Probe::ortho_modes()
 {
 
+//    printProbe(165, 161);
+
 	CudaSmartPtr tempR = new Cuda2DArray<real_t>(m_modes->getDimensions().x, m_modes->getDimensions().y);
 	CudaSmartPtr tempC = new Cuda2DArray<complex_t>(m_modes->getDimensions().x, m_modes->getDimensions().y);
 //	std::vector <real_t> vec;
@@ -149,7 +151,7 @@ void Probe::ortho_modes()
     {
     	h_realComplexAbs(m_modes->getAt(i-1).getDevicePtr(), tempR->getDevicePtr<real_t>(),
     			m_modes->getDimensions().x, m_modes->getDimensions().y, m_modes->getPtr()->getAlignedY(), true);
-    	real_t sumtemp=h_realSum(tempR->getDevicePtr<real_t>(), 0, tempR->getX(), 0, tempR->getY(), tempR->getAlignedY());
+    	real_t sumtemp=h_realSum(tempR->getDevicePtr<real_t>(), tempR->getX(), tempR->getY(), tempR->getAlignedY());
     	vec.push_back(make_pair(-sumtemp, i-1));
 //    	vec.push_back(sumtemp);
 		for(int j=1; j<i; j++)
@@ -157,7 +159,9 @@ void Probe::ortho_modes()
 			//	           mx_i = mean(x{i}(:,:,:,1),3);
 	    	h_realComplexAbs(m_modes->getAt(j-1).getDevicePtr(), tempR->getDevicePtr<real_t>(),
 	    			m_modes->getDimensions().x, m_modes->getDimensions().y, m_modes->getPtr()->getAlignedY(), true);
-	    	real_t sumRight=h_realSum(tempR->getDevicePtr<real_t>(), 0, tempR->getX(), 0, tempR->getY(), tempR->getAlignedY());
+//	    	real_t sumRight=h_realSum(tempR->getDevicePtr<real_t>(), 0, tempR->getX(), 0, tempR->getY(), tempR->getAlignedY());
+
+	    	real_t sumRight=h_realSumCUB(tempR->getDevicePtr<real_t>(), tempR->getX(), tempR->getY(), tempR->getAlignedY());
 
 //	    	Cuda3DArray<complex_t> modesCopy(*m_modes);
 			h_multiplyConju(m_modes->getAt(i-1).getDevicePtr(), m_modes->getAt(j-1).getDevicePtr(), tempC->getDevicePtr<complex_t>(),
@@ -171,19 +175,6 @@ void Probe::ortho_modes()
 			h_subtract(m_modes->getAt(i-1).getDevicePtr(), tempC->getDevicePtr<complex_t>(), m_modes->getAt(i-1).getDevicePtr(),
 							m_modes->getDimensions().x, m_modes->getDimensions().y, m_modes->getPtr()->getAlignedY());
 		}
-
-//		complex_t* pobjectHost=m_modes->getAt(i-1).getHostPtr();
-//		int Npx=m_modes->getPtr()->getY();
-//		for(int j=165; j<Npx; j++)
-//		{
-//			int offset=161*Npx;
-//			printf("%d %.10e %.10e ", j, pobjectHost[offset+j].x, pobjectHost[offset+j].y);
-//
-//		}
-//		printf("\n");
-//
-//		int temp=1;
-
     }
 
 	sort (vec.begin(),vec.end());
@@ -194,6 +185,8 @@ void Probe::ortho_modes()
         h_switchprobe(m_modes->getAt(i).getDevicePtr(), modesCopy.getAt(vec[i].second).getDevicePtr(),
         		m_modes->getNum(), m_modes->getDimensions().x, m_modes->getDimensions().y, m_modes->getPtr()->getAlignedY());
 	}
+
+//    printProbe(165, 161);
 
 }
 
@@ -311,7 +304,7 @@ bool Probe::initMLH(unsigned int desiredShape, double lambda, double dx_recon, d
 	CudaSmartPtr tempProbe;
 	tempProbe = new Cuda2DArray<complex_t>(m_modes->getDimensions().x,m_modes->getDimensions().y);
 
-	/////////////////////////////// test with matlab code, uncomment h_initVarProbe
+//	/////////////////////////////// test with matlab code, uncomment h_initVarProbe
 //    float randna[]={0, 0.3362, 0.0803, 1.1553, 0.5397};
 //    float randnb[]={0, -0.3993, -1.2279, -1.3133, 0.2743};
 	////////////////////////////////////
@@ -418,7 +411,7 @@ bool Probe::initEvo(int Npos, int variable_probe_modes, std::vector <uint2> oROI
 	}
 
 	/////////////////////////////////////
-	// Load from file to test initVarModes has the real randome one test with matlab
+//	// Load from file to test initVarModes has the real randome one test with matlab
 //	char* filename1="/data2/JunjingData/probe21.csv";
 //	char* filename2="/data2/JunjingData/probe22.csv";
 //	m_extramodes->load2Complex<complex_t>(filename1, filename2);
@@ -587,6 +580,7 @@ void Probe::calc_object_norm(uint2 objectx, uint2 objecty, CudaSmartPtr objectAr
 						m_modes->getPtr()->getY(), m_modes->getPtr()->getAlignedY(), object_norm);
 	h_normalize(m_extramodes->getDevicePtr<complex_t>(), m_extramodes->getDimensions().x,
 			m_extramodes->getDimensions().y, m_extramodes->getAlignedY(), object_norm);
+
 	//self.object{ll} = self.object{ll} / object_norm ;
 	h_normalize(objectArray->getDevicePtr<complex_t>(), objectArray->getX(), objectArray->getY(), objectArray->getAlignedY(), 1.0/object_norm);
 }
@@ -855,12 +849,14 @@ void Probe::gradient_position_solver(Cuda3DArray<complex_t>* xi, Cuda3DArray<com
 	for(int i=0;i<Npy;i++)
 		h_p_positions_x[i]=(i*1.0/Npy)-0.5;
     p_positions_x->setFromHost<real_t>(h_p_positions_x, 1, Npy);
+
 	// p_positions_y=Y
 	CudaSmartPtr p_positions_y = new Cuda2DArray<real_t>(1, Npx);
 	real_t* h_p_positions_y = p_positions_y->getHostPtr<real_t>();
 	for(int i=0;i<Npx;i++)
 		h_p_positions_y[i]=(i*1.0/Npx)-0.5;
 	p_positions_y->setFromHost<real_t>(h_p_positions_y, 1, Npx);
+
 
     h_shiftFFTy(p_positions_x->getDevicePtr<real_t>(), p_positions_x->getDevicePtr<real_t>(), p_positions_x->getX(), p_positions_x->getY(), p_positions_x->getAlignedY());
     h_shiftFFTy(p_positions_y->getDevicePtr<real_t>(), p_positions_y->getDevicePtr<real_t>(), p_positions_y->getX(), p_positions_y->getY(), p_positions_y->getAlignedY());
@@ -876,7 +872,7 @@ void Probe::gradient_position_solver(Cuda3DArray<complex_t>* xi, Cuda3DArray<com
 	complex_t factor=make_complex_t(0, 2.0*CUDART_PI);
 	h_multiply(img->getPtr()->getDevicePtr<complex_t>(), factor, img->getPtr()->getDevicePtr<complex_t>(), img->getPtr()->getX(),
 			img->getPtr()->getY(), img->getPtr()->getAlignedY());
-	// The problem is the 3d multiply by a 2d TODO change to a loop for iteratio
+	// The problem is the 3d multiply by a 2d TODO change to a loop for iteration
 	h_multiplyRow(img->getPtr()->getDevicePtr<complex_t>(), p_positions_x->getDevicePtr<real_t>(), dX->getPtr()->getDevicePtr<complex_t>(), dX->getPtr()->getX(),
 			dX->getPtr()->getY(), dX->getPtr()->getAlignedY());
 
@@ -1081,6 +1077,7 @@ void Probe::update_variable_probe(CudaSmartPtr probe_update_m, Cuda3DArray<compl
 			probe_evolNorm+=pow(m_probe_evolution[1][g_ind_vec[i]], 2);
 		}
 		double tempWeight=h_maxFloat(p_object->getDevicePtr<real_t>(), p_object->getX(), p_object->getY(), p_object->getAlignedY());
+
 		h_multiply(p_object->getDevicePtr<real_t>(), 1.0/tempWeight, weights->getDevicePtr<real_t>(),
 				weights->getX(), weights->getY(), weights->getAlignedY());
 
@@ -1185,6 +1182,14 @@ void Probe::update_variable_probe(CudaSmartPtr probe_update_m, Cuda3DArray<compl
 	{
 		double sum2nom=0;
 		double sum2denom=0;
+
+
+//		h_mul_rca_mulc_rcr(obj_proj->getPtr()->getDevicePtr<complex_t>(), m_modes->getAt(0).getDevicePtr(), chi->getPtr()->getDevicePtr<complex_t>(),
+//				weight_proj->getPtr()->getDevicePtr<complex_t>(),
+//				weight_proj->getDimensions().x, weight_proj->getDimensions().y, weight_proj->getPtr()->getAlignedY());
+
+
+
 		for(int i=0; i<probe_update->getNum(); i++)
 		{
 			// orginal code before change
@@ -1199,7 +1204,7 @@ void Probe::update_variable_probe(CudaSmartPtr probe_update_m, Cuda3DArray<compl
 //			sum2denom=h_realSum(denum->getAt(i).getDevicePtr(), denum->getDimensions().x, denum->getDimensions().y, denum->getPtr()->getAlignedY());
 //			sum2nom=h_realSum(num->getAt(i).getDevicePtr(), num->getDimensions().x, num->getDimensions().y, num->getPtr()->getAlignedY());
 
-			// Reuse weight_proj as denum, proj as num
+			// Reuse weight_proj as denum, proj as num to save gpu array for bigger samples
 			h_multiply(obj_proj->getAt(i).getDevicePtr(), m_modes->getAt(0).getDevicePtr(), tempArr->getAt(i).getDevicePtr(),
 					tempArr->getDimensions().x, tempArr->getDimensions().y, tempArr->getPtr()->getAlignedY());
 			h_realComplexAbs(tempArr->getAt(i).getDevicePtr(), weight_proj->getAt(i).getDevicePtr(), weight_proj->getDimensions().x,
@@ -1213,10 +1218,9 @@ void Probe::update_variable_probe(CudaSmartPtr probe_update_m, Cuda3DArray<compl
 			h_realComplexReal(tempArr->getAt(i).getDevicePtr(), proj->getAt(i).getDevicePtr(), proj->getDimensions().x, proj->getDimensions().y,
 					proj->getPtr()->getAlignedY());
 
-
-			sum2denom=h_realSum(weight_proj->getAt(i).getDevicePtr(), 	0,  weight_proj->getDimensions().x, 0, weight_proj->getDimensions().y, \
+			sum2denom=h_realSum(weight_proj->getAt(i).getDevicePtr(), weight_proj->getDimensions().x, weight_proj->getDimensions().y, \
 								weight_proj->getPtr()->getAlignedY());
-			sum2nom=h_realSum(proj->getAt(i).getDevicePtr(), 0, proj->getDimensions().x, 0, proj->getDimensions().y, proj->getPtr()->getAlignedY());
+			sum2nom=h_realSum(proj->getAt(i).getDevicePtr(), proj->getDimensions().x, proj->getDimensions().y, proj->getPtr()->getAlignedY());
 			double temp=0.1*sum2nom/sum2denom;
 
 			int index=g_ind_vec[i];
@@ -1308,4 +1312,21 @@ void Probe::fillResources()
 		sprintf(probeName, "|P%d|", m);
 		m_myResources.push_back(Resource(probeName, RAINBOW, this));
 	}
+}
+
+void Probe::printProbe(int column, int row)
+{
+    for(unsigned int i=1; i<=m_modes->getNum(); ++i)
+    {
+		complex_t* pobjectHost=m_modes->getAt(i-1).getHostPtr();
+		int Npx=m_modes->getPtr()->getY();
+		for(int j=column; j<Npx; j++)
+		{
+			// row 161, column 165, on mlab, 162,166
+			int offset=row*Npx;
+			printf("%d %.10e %.10e ", j, pobjectHost[offset+j].x, pobjectHost[offset+j].y);
+
+		}
+		printf("\n");
+    }
 }

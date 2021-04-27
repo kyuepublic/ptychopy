@@ -554,7 +554,7 @@ __host__ real_t h_norm2(complex_t* d_extramodes, real_t* d_result, unsigned int 
 {
 	d_norm2<<<probeX, alignedProbeY>>>(d_extramodes, d_result, probeX,
 			 probeY, alignedProbeY);
-	real_t result=h_realSum(d_result, 0, probeX, 0, probeY, alignedProbeY);
+	real_t result=h_realSum(d_result, probeX, probeY, alignedProbeY);
 	real_t xresult=sqrt_real_t(result/(probeX*probeY));
 
 	return xresult;
@@ -704,18 +704,18 @@ __host__ void h_preCalillum(complex_t* d_modes, real_t* d_result, real_t* p_obje
     dim3 const dimThread(threadsPerBlockEachDim, threadsPerBlockEachDim, 1);
     bool isFlat=true;
 
-    addToArray_r<<<dimBlock, dimThread>>>(d_result, p_object, p_positions_x, p_positions_y ,probeX , probeY, Np_o.x, Np_o.y, Npos, obalignedProbeY, isFlat);
+    addToArray_r<<<dimBlock, dimThread>>>(d_result, p_object, p_positions_x, p_positions_y , probeX, probeY, Np_o.x, Np_o.y, Npos, obalignedProbeY, isFlat);
 //    d_check1<<<Np_o.x, obalignedProbeY>>>(p_object);
 
     // sum2(illum_sum_0{ll}
-    real_t resultillum=h_realSum(p_object, 0, Np_o.x, 0, Np_o.y, obalignedProbeY);
+    real_t resultillum=h_realSum(p_object, Np_o.x, Np_o.y, obalignedProbeY);
 
     //abs(self.object{ll}).^2
 	d_norm2<<<Np_o.x, obalignedProbeY>>>(d_objet, d_tmpObjResult, Np_o.x,
 			Np_o.y, obalignedProbeY);
 	//abs(self.object{ll}).^2 .* illum_sum_0{ll}
 	h_multiplyReal(p_object, d_tmpObjResult, Np_o.x, Np_o.y, obalignedProbeY);
-	real_t resultobjillum=h_realSum(d_tmpObjResult, 0, Np_o.x, 0, Np_o.y, obalignedProbeY);
+	real_t resultobjillum=h_realSum(d_tmpObjResult, Np_o.x, Np_o.y, obalignedProbeY);
 
 	real_t object_norm=sqrt_real_t(resultobjillum/resultillum);
 	h_normalize(d_objet, Np_o.x, Np_o.y, obalignedProbeY, (1.0/object_norm));

@@ -103,6 +103,8 @@ public:
 	unsigned int getHeight()const {return getObjectArrayShapeX();}
 	void toRGBA(float4*,const char*,float,float);
 	void toGray(float*,const char*,bool=false);
+
+	void printObject(int column, int row);
 };
 
 #endif /* SAMPLE_H_ */

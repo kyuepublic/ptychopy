@@ -305,11 +305,8 @@ void IPhaser::prePhase()
 	{
 		if(rParams->calculateRMS)
 			m_diffractions->fillSquaredSums();
-
 		m_scanMesh->generateMesh(this->getBounds());
-
 		m_errors.resize(rParams->iterations, 0);
-
 	}
 	else
 	{

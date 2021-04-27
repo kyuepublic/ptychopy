@@ -52,6 +52,8 @@ real_t MLS::iteration(Diffractions* diffs, Probe* probe,
 						bool phaseConstraint, bool updateProbe, bool updateProbeModes, unsigned int iter, bool RMS)
 {
 
+//	object->printObject(165, 161);
+
 	const ReconstructionParams* rParams = CXParams::getInstance()->getReconstructionParams();
 	int diffSize=diffs->getPatterns()->getNum();
 	unsigned int iterC=iter-1;
@@ -65,6 +67,8 @@ real_t MLS::iteration(Diffractions* diffs, Probe* probe,
 	uint2 objectx=scanMesh->getobject_ROIx();
 	uint2 objecty=scanMesh->getobject_ROIy();
 	probe->calc_object_norm(objectx, objecty, object->getObjectArray());
+
+//	object->printObject(165, 161);
 
 	//remove extra degree of freedom  other optimizations
 	scanMesh->updateScanPositionsDiff();
@@ -121,6 +125,8 @@ real_t MLS::iteration(Diffractions* diffs, Probe* probe,
 	CudaSmartPtr object_upd_precond=new Cuda2DArray<complex_t>(probe->p_object->getX(), probe->p_object->getY());
 	for(int i=0; i<Nind; i++)
 	{
+//		object->printObject(165, 161);
+
 		probe_update_m->set();
 		weight_proj->set();
 		object_upd_sum->set();
@@ -191,7 +197,18 @@ real_t MLS::iteration(Diffractions* diffs, Probe* probe,
 			}
 		}
 
+
 		probe->get_projections(object->getObjectArray(), obj_proj, g_ind_vec, scanMesh->m_oROI1, scanMesh->m_oROI2);
+//		if(obj_proj->getNum()==1)
+//		{
+//			probe->get_projections_cpu(object->getObjectArray(), obj_proj, g_ind_vec, scanMesh->m_oROI_vec1, scanMesh->m_oROI_vec2);
+//		}
+//		else
+//		{	// run on GPU
+//			probe->get_projections(object->getObjectArray(), obj_proj, g_ind_vec, scanMesh->m_oROI1, scanMesh->m_oROI2);
+//		}
+
+//		object->printObject(165, 161);
 		probe->get_illumination_probe(g_ind_vec, scanMesh->m_sub_px_shift, varProbe, psivec, obj_proj, apsi);
 
 		if(iter/(min(20.0, pow(2, floor(2+iter*1.0/50))))==0 || iter<10)
@@ -327,12 +344,12 @@ real_t MLS::iteration(Diffractions* diffs, Probe* probe,
 					std::vector <real_t> Atb2vec(g_ind_vec.size(), 0);
 					for(int sumIndex=0; sumIndex<AA1->getNum(); sumIndex++)
 					{
-						AA1vec[sumIndex]=h_realSum(AA1->getAt(sumIndex).getDevicePtr(), 0, AA1->getDimensions().x, 0, AA1->getPtr()->getY(), AA1->getPtr()->getAlignedY());
+						AA1vec[sumIndex]=h_realSum(AA1->getAt(sumIndex).getDevicePtr(), AA1->getDimensions().x, AA1->getPtr()->getY(), AA1->getPtr()->getAlignedY());
 						AA2vec[sumIndex]=h_complexSum(AA2->getAt(sumIndex).getDevicePtr(), 0, AA2->getDimensions().x, 0, AA2->getPtr()->getY(), AA2->getPtr()->getAlignedY());
 						AA3vec[sumIndex]=conj_complex_t(AA2vec[sumIndex]);
-						AA4vec[sumIndex]=h_realSum(AA4->getAt(sumIndex).getDevicePtr(), 0, AA4->getDimensions().x, 0, AA4->getPtr()->getY(), AA4->getPtr()->getAlignedY());
-						Atb1vec[sumIndex]=h_realSum(Atb1->getAt(sumIndex).getDevicePtr(), 0, Atb1->getDimensions().x, 0, Atb1->getPtr()->getY(), Atb1->getPtr()->getAlignedY());
-						Atb2vec[sumIndex]=h_realSum(Atb2->getAt(sumIndex).getDevicePtr(), 0, Atb2->getDimensions().x, 0, Atb2->getPtr()->getY(), Atb2->getPtr()->getAlignedY());
+						AA4vec[sumIndex]=h_realSum(AA4->getAt(sumIndex).getDevicePtr(), AA4->getDimensions().x, AA4->getPtr()->getY(), AA4->getPtr()->getAlignedY());
+						Atb1vec[sumIndex]=h_realSum(Atb1->getAt(sumIndex).getDevicePtr(), Atb1->getDimensions().x, Atb1->getPtr()->getY(), Atb1->getPtr()->getAlignedY());
+						Atb2vec[sumIndex]=h_realSum(Atb2->getAt(sumIndex).getDevicePtr(), Atb2->getDimensions().x, Atb2->getPtr()->getY(), Atb2->getPtr()->getAlignedY());
 					}
 
 					lambda = 0.1;
@@ -409,24 +426,28 @@ real_t MLS::iteration(Diffractions* diffs, Probe* probe,
 			{
 				object->update_object(object_upd_sum, llo, g_ind_vec, scan_idsvec, probe->p_object, probe->MAX_ILLUM);
 			}
-
+//			object->printObject(165, 161);
 			if(probe_reconstruct && ll<=probe->getModes()->getNum())
 			{
 				probe->update_probe(ll, probe_update_m, g_ind_vec);
 			}
 
+			// Starts when interations larget than PPS numbers
 			if(iter>=rParams->probe_pos_search && ll==1)
 			{
 				probe->gradient_position_solver(psivec[0], obj_proj, varProbe, g_ind_vec, scanMesh->m_positions_o, scanMesh->m_positions);
 			}
 
+			// Startes at 3rd interation usually
 			if((rParams->variable_probe || rParams->variable_intensity) && iter>(rParams->probe_reconstruct+1) && ll==1)
 			{
 				probe->update_variable_probe(probe_update_m, probe_update, obj_proj, psivec[ll-1], g_ind_vec, scanMesh->m_oROI1, scanMesh->m_oROI2,
 						scanMesh->m_oROI_vec1, scanMesh->m_oROI_vec2);
 			}
 		}
-//		printf("the iteration range is %d \n", i);
+
+//		object->printObject(165, 161);
+//		printf("the current iteration is %d \n", i);
 	}
 
 	delete obj_proj;
@@ -441,11 +462,12 @@ real_t MLS::iteration(Diffractions* diffs, Probe* probe,
 		delete psivec[i];
 	}
 
-	if(rParams->nProbes>rParams->Nrec)
+	if(rParams->probeModes>rParams->Nrec)
 	{
 		probe->ortho_modes();
 	}
 
+//	object->printObject(165, 161);
 	return 1;
 }
 

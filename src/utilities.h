@@ -443,6 +443,9 @@ __host__ real_t h_realSum(real_t* a, unsigned int x, unsigned int y, unsigned in
 __host__ real_t h_realSum(const real_t* a, unsigned int x1, unsigned int x2, unsigned int y1, unsigned int y2, unsigned int alignedY);
 __host__ void h_realSum(real_t* d_leftArr, real_t* d_rightArr, real_t* d_result, real_t leftFactor, real_t rightFactor, unsigned int x, unsigned int y,
 								unsigned int alignedY);
+
+__host__ real_t h_realSumCUB(real_t* d_in, unsigned int x, unsigned int y, unsigned int alignedY);
+
 // Get the mean2 of each 2d array
 __host__ real_t h_mean2(real_t* a, unsigned int x, unsigned int y, unsigned int alignedY);
 

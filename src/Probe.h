@@ -153,6 +153,7 @@ public:
 
 //	double rand_gen();
 //	double normalRandom();
+	void printProbe(int column, int row);
 
 };	
 

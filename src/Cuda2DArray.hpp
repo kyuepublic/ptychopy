@@ -38,6 +38,7 @@
 #include "utilities.h"
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 
 class CudaSmartPtr;
 
@@ -84,6 +85,8 @@ public:
 	template<typename T> bool save(const char* filename, bool binary=false)	 const;
 	template<typename T> bool load(const char* filename, bool binary=false);
 	template<typename T> bool loadMatlab(const char* filename, bool binary=false);
+	template<typename T>
+	T toPrecision(T input, unsigned precision);
 
 	template<typename T> bool load2Complex(char* filename1, char* filename2, bool binary=false);
 
@@ -289,6 +292,7 @@ public:
 			cudaMemcpy2D(m_devicePtr, m_alignedY*m_unitSize, copy, y*m_unitSize, y*m_unitSize, x, cudaMemcpyHostToDevice);
 		cutilCheckMsg("Host to Device memory copy failed!");
 	}
+
 	void setFromDevice(const T* copy, unsigned int x, unsigned int y, cudaStream_t* stream=0)
 	{
 		if(stream)
@@ -297,7 +301,10 @@ public:
 			cudaMemcpy(m_devicePtr, copy, getSize(), cudaMemcpyDeviceToDevice);
 		cutilCheckMsg("Device memory copy failed!");
 	}
-	T* getDevicePtr() const {return m_devicePtr;}
+
+	T* getDevicePtr() const
+	{return m_devicePtr;}
+
 	T* getHostPtr(T* ptr_h=0, cudaStream_t* stream=0) const
 	{
 		T* hostPtr = ptr_h;
@@ -328,10 +335,15 @@ public:
 	{}
 
 	Cuda3DArray(unsigned int n, uint2 dims) : m_useAll(true)
-	{init(n,dims);}
+	{
+		init(n,dims);
+	}
 	//We don't want to call the default copy constructor
 	Cuda3DArray(const Cuda3DArray& copy) : m_useAll(true)
-	{init(copy.getNum(), copy.getDimensions(), copy.getPtr().get());}
+	{
+		init(copy.getNum(), copy.getDimensions(), copy.getPtr().get());
+	}
+
 	~Cuda3DArray(){}
 
 	void init(unsigned int n, uint2 dims, ICuda2DArray* ptr=0)
@@ -342,35 +354,64 @@ public:
 		else
 			m_array = new Cuda2DArray<T>(m_num*m_dimensions.x, m_dimensions.y);
 	}
-	void setUseAll(bool f) {m_useAll = f;}
-	bool checkUseAll()						const {return m_useAll;}
-	unsigned int getNum() 					const {return m_num;}
-	uint2 getDimensions()					const {return m_dimensions;}
-	const CudaSmartPtr& getPtr()			const {return m_array;}
-	void setToZeroes()							  {m_array->set();}
+
+	void setUseAll(bool f)
+	{
+		m_useAll = f;
+	}
+	bool checkUseAll()	const
+	{
+		return m_useAll;
+	}
+	unsigned int getNum()	const
+	{
+		return m_num;
+	}
+	uint2 getDimensions()	const
+	{
+		return m_dimensions;
+	}
+	const CudaSmartPtr& getPtr()	const
+	{
+		return m_array;
+	}
+	void setToZeroes()
+	{
+		m_array->set();
+	}
 	Cuda3DElement<T> getAt(unsigned int i)	const 
-	{return Cuda3DElement<T>(m_array->getDevicePtr<T>()+((size_t)i*(size_t)(m_array->getX()/m_num)*(size_t)m_array->getAlignedY()),
-							m_dimensions.x, m_dimensions.y);}
+	{
+		return Cuda3DElement<T>(m_array->getDevicePtr<T>()+((size_t)i*(size_t)(m_array->getX()/m_num)*(size_t)m_array->getAlignedY()),
+							m_dimensions.x, m_dimensions.y);
+	}
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T>
 void ICuda2DArray::setFromHost(const T* copy, unsigned int x, unsigned int y, cudaStream_t* stream)
-{ (dynamic_cast<Cuda2DArray<T>&>(*this)).setFromHost(copy, x, y, stream); }
+{
+	(dynamic_cast<Cuda2DArray<T>&>(*this)).setFromHost(copy, x, y, stream);
+}
 
 template<typename T>
 void ICuda2DArray::setFromDevice(const T* copy, unsigned int x, unsigned int y, cudaStream_t* stream)
-{ (dynamic_cast<Cuda2DArray<T>&>(*this)).setFromDevice(copy, x, y, stream); }
+{
+	(dynamic_cast<Cuda2DArray<T>&>(*this)).setFromDevice(copy, x, y, stream);
+}
 
 
 template<typename T>
 T* ICuda2DArray::getDevicePtr() const
-{ return (dynamic_cast<const Cuda2DArray<T>&>(*this)).getDevicePtr(); }
+{
+	return (dynamic_cast<const Cuda2DArray<T>&>(*this)).getDevicePtr();
+}
 
 template<typename T>
 T* ICuda2DArray::getHostPtr(T* ptr_h, cudaStream_t* stream) const
-{ return (dynamic_cast<const Cuda2DArray<T>&>(*this)).getHostPtr(ptr_h, stream); }
+{
+	return (dynamic_cast<const Cuda2DArray<T>&>(*this)).getHostPtr(ptr_h, stream);
+}
 
 std::ostream& operator<<(std::ostream &out, const complex_t &rhs);
 std::istream& operator>>(std::istream &in, complex_t &rhs);
@@ -481,6 +522,20 @@ bool ICuda2DArray::load(const char* filename, bool binary)
 		return true;
 }
 
+template<typename T>
+T ICuda2DArray::toPrecision(T input, unsigned precision)
+{
+    static std::stringstream ss;
+
+    T output;
+    ss << std::fixed;
+    ss.precision(precision);
+    ss << input;
+    ss >> output;
+    ss.clear();
+
+    return output;
+}
 
 template<typename T>
 bool ICuda2DArray::loadMatlab(const char* filename, bool binary)
@@ -513,6 +568,7 @@ bool ICuda2DArray::loadMatlab(const char* filename, bool binary)
 	int rowIdx=0;
 	float val1=0;
 	float val2=0;
+//	std::setprecision(4);
 
 	while (std::getline(infile1, line1)&&std::getline(infile2, line2))
 	{
@@ -529,6 +585,8 @@ bool ICuda2DArray::loadMatlab(const char* filename, bool binary)
 
             // Add the current integer to the 'colIdx' column's values vector
 //            result.at(colIdx).second.push_back(val);
+//        	double val3=toPrecision(val1, 3);
+//        	double val4=toPrecision(val2, 3);
         	h_array[(rowIdx*getY())+colIdx]=make_float2(val1, val2);
 
             // If the next token is a comma, ignore it and move on

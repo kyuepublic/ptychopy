@@ -312,7 +312,7 @@ void Sample::updateIntensities(bool useSum)
 
 void Sample::updateMaxIntensity(bool useSum)
 {
-	m_maxObjectIntensity = useSum ? h_realSum(m_objectIntensities->getDevicePtr<real_t>(), 0, m_objectIntensities->getX(), 0, m_objectIntensities->getY(), m_objectIntensities->getAlignedY()):
+	m_maxObjectIntensity = useSum ? h_realSum(m_objectIntensities->getDevicePtr<real_t>(), m_objectIntensities->getX(), m_objectIntensities->getY(), m_objectIntensities->getAlignedY()):
 									h_realMax(m_objectIntensities->getDevicePtr<real_t>(), m_objectIntensities->getX(), m_objectIntensities->getY(), m_objectIntensities->getAlignedY());
 	m_renderableUpdated = true;
 }
@@ -388,3 +388,21 @@ void Sample::fillResources()
 	m_myResources.push_back(Resource("arg(O)", RAINBOW, this));
 	m_objectPhases = new Cuda2DArray<real_t>(m_objectArrayShape.x, m_objectArrayShape.y);
 }
+
+void Sample::printObject(int column, int row)
+{
+
+		complex_t* pobjectHost=m_objectArray->getHostPtr<complex_t>();
+	//						int Npx=probe_update->getPtr()->getY();
+		int Npx=m_objectArray->getY();
+		for(int j=column; j<Npx; j++)
+		{
+			int offset=row*Npx;
+			printf("%d %.10e %.10e ", j, pobjectHost[offset+j].x, pobjectHost[offset+j].y);
+
+		}
+		printf("\n");
+}
+
+
+

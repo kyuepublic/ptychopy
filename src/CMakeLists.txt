@@ -1,5 +1,7 @@
 cmake_minimum_required (VERSION 3.1.0)
 
+#set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -L/local/kyue/program/glibc232/lib -I/local/kyue/program/glibc232/include -Wl,-rpath=/local/kyue/program/glibc232/lib -Wl,--dynamic-linker=/local/kyue/program/glibc232/lib/ld-linux-x86-64.so.2")
+
 project (ptychoLib)
 set (ptychoLib_VERSION_MAJOR 1)
 set (ptychoLib_VERSION_MINOR 0)
