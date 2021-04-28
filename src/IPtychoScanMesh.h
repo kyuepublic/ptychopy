@@ -68,6 +68,10 @@ public:
 	std::vector<float2> m_positions;
 	std::vector<float2> m_positions_o;
 
+	// This is the group size, and the last group size
+	int m_regularSize;
+	int m_restSize;
+
 protected:
 	CudaSmartPtr m_scanPositions;
 	CudaSmartPtr m_randStates;

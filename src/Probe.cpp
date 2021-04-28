@@ -56,7 +56,7 @@ Probe::Probe(unsigned int size, unsigned int modes) :	m_modes(0),
 	m_modes = new Cuda3DArray<complex_t>(modes, make_uint2(size,size));
 	m_intensities = new Cuda3DArray<real_t>(modes, make_uint2(size,size));
 
-	tempArrR= new Cuda2DArray<real_t>(size, size);
+
 
 	m_MAX_ILLUM=0;
 	m_modes->setUseAll(false);
@@ -68,6 +68,61 @@ Probe::~Probe()
 	clear();
 	if(m_randomGenerator)
 		curandDestroyGenerator(m_randomGenerator);
+}
+
+void Probe::initMem(IPtychoScanMesh* scanMesh)
+{
+
+	uint2 probesize=m_modes->getDimensions();
+	m_regularSize=scanMesh->m_regularSize;
+	m_restSize=scanMesh->m_restSize;
+
+	tempArrR=new Cuda2DArray<real_t>(probesize.x, probesize.y);
+//	tempArrObjR=new Cuda2DArray<real_t>( p_object->getX(), p_object->getY());
+	tempArrC=new Cuda2DArray<complex_t>(probesize.x, probesize.y);
+
+
+    img=new Cuda3DArray<complex_t>(m_regularSize, probesize);
+    dX=new Cuda3DArray<complex_t>(m_regularSize, probesize);
+    dY=new Cuda3DArray<complex_t>(m_regularSize, probesize);
+
+	nom=new Cuda3DArray<real_t>(m_regularSize, probesize);
+	denom=new Cuda3DArray<real_t>(m_regularSize, probesize);
+
+    if(m_restSize!=0)
+    {
+        img_rest=new Cuda3DArray<complex_t>(m_restSize, probesize);
+        dX_rest=new Cuda3DArray<complex_t>(m_restSize, probesize);
+        dY_rest=new Cuda3DArray<complex_t>(m_restSize, probesize);
+
+    	nom_rest=new Cuda3DArray<real_t>(m_restSize, probesize);
+    	denom_rest=new Cuda3DArray<real_t>(m_restSize, probesize);
+    }
+}
+
+void Probe::freeMem(IPtychoScanMesh* scanMesh)
+{
+	if(img) delete img;
+	if(dX) delete dX;
+	if(dY) delete dY;
+
+	if(nom) delete nom;
+	if(denom) delete denom;
+
+	if(tempArrR) delete tempArrR;
+//	if(tempArrObjR) delete tempArrObjR;
+//	if(tempArrC) delete tempArrC;
+
+
+    if(m_restSize!=0)
+    {
+    	if(img_rest) delete img_rest;
+    	if(dX_rest) delete dX_rest;
+    	if(dY_rest) delete dY_rest;
+
+    	if(nom_rest) delete nom_rest;
+    	if(denom_rest) delete denom_rest;
+    }
 }
 
 void Probe::clear()
@@ -305,16 +360,16 @@ bool Probe::initMLH(unsigned int desiredShape, double lambda, double dx_recon, d
 	tempProbe = new Cuda2DArray<complex_t>(m_modes->getDimensions().x,m_modes->getDimensions().y);
 
 //	/////////////////////////////// test with matlab code, uncomment h_initVarProbe
-//    float randna[]={0, 0.3362, 0.0803, 1.1553, 0.5397};
-//    float randnb[]={0, -0.3993, -1.2279, -1.3133, 0.2743};
+    float randna[]={0, 0.3362, 0.0803, 1.1553, 0.5397};
+    float randnb[]={0, -0.3993, -1.2279, -1.3133, 0.2743};
 	////////////////////////////////////
 
     for(unsigned int i=1; i<m_modes->getNum(); ++i)
 	{
-//		h_initVarProbe(m_modes->getAt(i).getDevicePtr(), tempProbe->getDevicePtr<complex_t>(), m_modes->getAt(0).getDevicePtr(),
-//				m_modes->getDimensions().x, m_modes->getDimensions().y, m_modes->getPtr()->getAlignedY(), randna[i], randnb[i]);
 		h_initVarProbe(m_modes->getAt(i).getDevicePtr(), tempProbe->getDevicePtr<complex_t>(), m_modes->getAt(0).getDevicePtr(),
-				m_modes->getDimensions().x, m_modes->getDimensions().y, m_modes->getPtr()->getAlignedY(), normalRandom(), normalRandom());
+				m_modes->getDimensions().x, m_modes->getDimensions().y, m_modes->getPtr()->getAlignedY(), randna[i], randnb[i]);
+//		h_initVarProbe(m_modes->getAt(i).getDevicePtr(), tempProbe->getDevicePtr<complex_t>(), m_modes->getAt(0).getDevicePtr(),
+//				m_modes->getDimensions().x, m_modes->getDimensions().y, m_modes->getPtr()->getAlignedY(), normalRandom(), normalRandom());
 
 	}
 
@@ -411,14 +466,14 @@ bool Probe::initEvo(int Npos, int variable_probe_modes, std::vector <uint2> oROI
 	}
 
 	/////////////////////////////////////
-//	// Load from file to test initVarModes has the real randome one test with matlab
-//	char* filename1="/data2/JunjingData/probe21.csv";
-//	char* filename2="/data2/JunjingData/probe22.csv";
-//	m_extramodes->load2Complex<complex_t>(filename1, filename2);
-//	char* filename3="/data2/JunjingData/probeevolution.csv";
-//	std::vector <double> vec;
-//	PhaserUtil::getInstance()->load<double>(filename3, vec);
-//	m_probe_evolution[1]=vec;
+	// Load from file to test initVarModes has the real randome one test with matlab
+	char* filename1="/data2/JunjingData/probe21.csv";
+	char* filename2="/data2/JunjingData/probe22.csv";
+	m_extramodes->load2Complex<complex_t>(filename1, filename2);
+	char* filename3="/data2/JunjingData/probeevolution.csv";
+	std::vector <double> vec;
+	PhaserUtil::getInstance()->load<double>(filename3, vec);
+	m_probe_evolution[1]=vec;
 	/////////////////////////////////////
 
 	CudaSmartPtr d_result = new Cuda2DArray<real_t>(m_extramodes->getDimensions().x, m_extramodes->getDimensions().y);
@@ -843,6 +898,7 @@ void Probe::gradient_position_solver(Cuda3DArray<complex_t>* xi, Cuda3DArray<com
 {
 	int Npx=obj_proj->getDimensions().x;
 	int Npy=obj_proj->getDimensions().y;
+
 	// p_positions_x=X
 	CudaSmartPtr p_positions_x = new Cuda2DArray<real_t>(1, Npy);
 	real_t* h_p_positions_x = p_positions_x->getHostPtr<real_t>();
@@ -860,95 +916,315 @@ void Probe::gradient_position_solver(Cuda3DArray<complex_t>* xi, Cuda3DArray<com
 
     h_shiftFFTy(p_positions_x->getDevicePtr<real_t>(), p_positions_x->getDevicePtr<real_t>(), p_positions_x->getX(), p_positions_x->getY(), p_positions_x->getAlignedY());
     h_shiftFFTy(p_positions_y->getDevicePtr<real_t>(), p_positions_y->getDevicePtr<real_t>(), p_positions_y->getX(), p_positions_y->getY(), p_positions_y->getAlignedY());
+
     //img = fft2(img);
-    Cuda3DArray<complex_t>* img=new Cuda3DArray<complex_t>(obj_proj->getNum(), obj_proj->getDimensions());
-    Cuda3DArray<complex_t>* dX=new Cuda3DArray<complex_t>(obj_proj->getNum(), obj_proj->getDimensions());
-    Cuda3DArray<complex_t>* dY=new Cuda3DArray<complex_t>(obj_proj->getNum(), obj_proj->getDimensions());
 
-	Cuda3DElement<real_t> tempDet = m_intensities->getAt(0);
-	PhaserUtil::getInstance()->ff2Mat(obj_proj, img, tempDet);
+    if(obj_proj->getNum()==m_regularSize)
+    {
+    	Cuda3DElement<real_t> tempDet = m_intensities->getAt(0);
+    	PhaserUtil::getInstance()->ff2Mat(obj_proj, img, tempDet);
 
-	//[dX, dY] = Gfun(@multiply_gfun, img, X, Y);
-	complex_t factor=make_complex_t(0, 2.0*CUDART_PI);
-	h_multiply(img->getPtr()->getDevicePtr<complex_t>(), factor, img->getPtr()->getDevicePtr<complex_t>(), img->getPtr()->getX(),
-			img->getPtr()->getY(), img->getPtr()->getAlignedY());
-	// The problem is the 3d multiply by a 2d TODO change to a loop for iteration
-	h_multiplyRow(img->getPtr()->getDevicePtr<complex_t>(), p_positions_x->getDevicePtr<real_t>(), dX->getPtr()->getDevicePtr<complex_t>(), dX->getPtr()->getX(),
-			dX->getPtr()->getY(), dX->getPtr()->getAlignedY());
+    	//[dX, dY] = Gfun(@multiply_gfun, img, X, Y);
+    	complex_t factor=make_complex_t(0, 2.0*CUDART_PI);
+    	h_multiply(img->getPtr()->getDevicePtr<complex_t>(), factor, img->getPtr()->getDevicePtr<complex_t>(), img->getPtr()->getX(),
+    			img->getPtr()->getY(), img->getPtr()->getAlignedY());
+    	// The problem is the 3d multiply by a 2d TODO change to a loop for iteration
+    	h_multiplyRow(img->getPtr()->getDevicePtr<complex_t>(), p_positions_x->getDevicePtr<real_t>(), dX->getPtr()->getDevicePtr<complex_t>(), dX->getPtr()->getX(),
+    			dX->getPtr()->getY(), dX->getPtr()->getAlignedY());
 
-	for(int i=0; i<obj_proj->getNum(); i++)
-	{
-		h_multiplyColumn(img->getAt(i).getDevicePtr(), p_positions_y->getDevicePtr<real_t>(), dY->getAt(i).getDevicePtr(), dY->getDimensions().x,
-				dY->getDimensions().y, dY->getPtr()->getAlignedY());
-	}
+    	for(int i=0; i<obj_proj->getNum(); i++)
+    	{
+    		h_multiplyColumn(img->getAt(i).getDevicePtr(), p_positions_y->getDevicePtr<real_t>(), dY->getAt(i).getDevicePtr(), dY->getDimensions().x,
+    				dY->getDimensions().y, dY->getPtr()->getAlignedY());
+    	}
 
-	//ifft2mat, cudafft has to normailze by the totall number of elments, here is 256*256 varProbe->getPtr()->getX()=256*26
-	PhaserUtil::getInstance()->iff2Mat(dX, dX, tempDet);
-	h_normalize(dX->getPtr()->getDevicePtr<complex_t>(), dX->getPtr()->getX(),
-			dX->getPtr()->getY(), dX->getPtr()->getAlignedY(), 1.0/(Npx*Npy));
-	PhaserUtil::getInstance()->iff2Mat(dY, dY, tempDet);
-	h_normalize(dY->getPtr()->getDevicePtr<complex_t>(), dY->getPtr()->getX(),
-			dY->getPtr()->getY(), dY->getPtr()->getAlignedY(), 1.0/(Npx*Npy));
+    	//ifft2mat, cudafft has to normailze by the totall number of elments, here is 256*256 varProbe->getPtr()->getX()=256*26
+    	PhaserUtil::getInstance()->iff2Mat(dX, dX, tempDet);
+    	h_normalize(dX->getPtr()->getDevicePtr<complex_t>(), dX->getPtr()->getX(),
+    			dX->getPtr()->getY(), dX->getPtr()->getAlignedY(), 1.0/(Npx*Npy));
 
-	Cuda3DArray<complex_t>* tempArrC=new Cuda3DArray<complex_t>(obj_proj->getNum(), obj_proj->getDimensions());
-	Cuda3DArray<real_t>* nom=new Cuda3DArray<real_t>(obj_proj->getNum(), obj_proj->getDimensions());
-	Cuda3DArray<real_t>* denom=new Cuda3DArray<real_t>(obj_proj->getNum(), obj_proj->getDimensions());
-	double cutoff=std::numeric_limits<double>::max();
-	for(int i=0; i<obj_proj->getNum(); i++)
-	{
-		h_multiply(dX->getAt(i).getDevicePtr(), varProbe->getAt(i).getDevicePtr(), tempArrC->getAt(i).getDevicePtr(),
-				tempArrC->getDimensions().x, tempArrC->getDimensions().y, tempArrC->getPtr()->getAlignedY());
-		h_realComplexAbs(tempArrC->getAt(i).getDevicePtr(), denom->getAt(i).getDevicePtr(), denom->getDimensions().x,
-				denom->getDimensions().y, denom->getPtr()->getAlignedY(), true);
-		h_multiplyConju(xi->getAt(i).getDevicePtr(), tempArrC->getAt(i).getDevicePtr(), tempArrC->getAt(i).getDevicePtr(),
-				tempArrC->getDimensions().x, tempArrC->getDimensions().y, tempArrC->getPtr()->getAlignedY());
-		h_realComplexReal(tempArrC->getAt(i).getDevicePtr(), nom->getAt(i).getDevicePtr(), nom->getDimensions().x, nom->getDimensions().y,
-				nom->getPtr()->getAlignedY());
+    	PhaserUtil::getInstance()->iff2Mat(dY, dY, tempDet);
+    	h_normalize(dY->getPtr()->getDevicePtr<complex_t>(), dY->getPtr()->getX(),
+    			dY->getPtr()->getY(), dY->getPtr()->getAlignedY(), 1.0/(Npx*Npy));
 
-		double sum2nom1=h_realSum(nom->getAt(i).getDevicePtr(), nom->getDimensions().x, nom->getDimensions().y, nom->getPtr()->getAlignedY());
-		double sum2denom1=h_realSum(denom->getAt(i).getDevicePtr(), denom->getDimensions().x, denom->getDimensions().y, denom->getPtr()->getAlignedY());
-		double dx=sum2nom1/sum2denom1;
+    	double cutoff=std::numeric_limits<double>::max();
 
-		h_multiply(dY->getAt(i).getDevicePtr(), varProbe->getAt(i).getDevicePtr(), tempArrC->getAt(i).getDevicePtr(),
-				tempArrC->getDimensions().x, tempArrC->getDimensions().y, tempArrC->getPtr()->getAlignedY());
-		h_realComplexAbs(tempArrC->getAt(i).getDevicePtr(), denom->getAt(i).getDevicePtr(), denom->getDimensions().x,
-				denom->getDimensions().y, denom->getPtr()->getAlignedY(), true);
+    	for(int i=0; i<obj_proj->getNum(); i++)
+    	{
 
-		h_multiplyConju(xi->getAt(i).getDevicePtr(), tempArrC->getAt(i).getDevicePtr(), tempArrC->getAt(i).getDevicePtr(),
-				tempArrC->getDimensions().x, tempArrC->getDimensions().y, tempArrC->getPtr()->getAlignedY());
-		h_realComplexReal(tempArrC->getAt(i).getDevicePtr(), nom->getAt(i).getDevicePtr(), nom->getDimensions().x, nom->getDimensions().y,
-				nom->getPtr()->getAlignedY());
+    		h_multiply(dX->getAt(i).getDevicePtr(), varProbe->getAt(i).getDevicePtr(), img->getAt(i).getDevicePtr(),
+    				img->getDimensions().x, img->getDimensions().y, img->getPtr()->getAlignedY());
+    		h_realComplexAbs(img->getAt(i).getDevicePtr(), denom->getAt(i).getDevicePtr(), denom->getDimensions().x,
+    				denom->getDimensions().y, denom->getPtr()->getAlignedY(), true);
 
-		double sum2nom2=h_realSum(nom->getAt(i).getDevicePtr(), nom->getDimensions().x, nom->getDimensions().y, nom->getPtr()->getAlignedY());
-		double sum2denom2=h_realSum(denom->getAt(i).getDevicePtr(), denom->getDimensions().x, denom->getDimensions().y, denom->getPtr()->getAlignedY());
-		double dy=sum2nom2/sum2denom2;
+    		h_multiplyConju(xi->getAt(i).getDevicePtr(), img->getAt(i).getDevicePtr(), img->getAt(i).getDevicePtr(),
+    				img->getDimensions().x, img->getDimensions().y, img->getPtr()->getAlignedY());
+    		h_realComplexReal(img->getAt(i).getDevicePtr(), nom->getAt(i).getDevicePtr(), nom->getDimensions().x, nom->getDimensions().y,
+    				nom->getPtr()->getAlignedY());
 
-		int signx=PhaserUtil::getInstance()->sgn(dx);
-		int signy=PhaserUtil::getInstance()->sgn(dy);
-		double shiftx=std::min(abs(dx),0.2)*signx;
-		double shifty=std::min(abs(dy),0.2)*signy;
-		int index=g_ind_vec[i];
-		//diff = sqrt(sum((mode.probe_positions(ind,:)+shift - position0).^2,2));
-		double diff=sqrt_real_t(pow((probe_positions[index].x+shiftx-positions_o[index].x), 2)+pow((probe_positions[index].y+shifty-positions_o[index].y), 2));
-		if(diff>cutoff)
-		{
-			shiftx=0;
-			shifty=0;
-		}
 
-//		printf("shiftx is %.10e, shifty is %.10e \n", shiftx, shifty);
+    		double sum2nom1=h_realSum(nom->getAt(i).getDevicePtr(), nom->getDimensions().x, nom->getDimensions().y, nom->getPtr()->getAlignedY());
+    		double sum2denom1=h_realSum(denom->getAt(i).getDevicePtr(), denom->getDimensions().x, denom->getDimensions().y, denom->getPtr()->getAlignedY());
+    		double dx=sum2nom1/sum2denom1;
 
-		probe_positions[index].x=probe_positions[index].x+shiftx;
-		probe_positions[index].y=probe_positions[index].y+shifty;
-	}
 
-	delete img;
-	delete dX;
-	delete dY;
-	delete tempArrC;
-	delete nom;
-	delete denom;
+    		h_multiply(dY->getAt(i).getDevicePtr(), varProbe->getAt(i).getDevicePtr(), img->getAt(i).getDevicePtr(),
+    				img->getDimensions().x, img->getDimensions().y, img->getPtr()->getAlignedY());
+    		h_realComplexAbs(img->getAt(i).getDevicePtr(), denom->getAt(i).getDevicePtr(), denom->getDimensions().x,
+    				denom->getDimensions().y, denom->getPtr()->getAlignedY(), true);
+
+    		h_multiplyConju(xi->getAt(i).getDevicePtr(), img->getAt(i).getDevicePtr(), img->getAt(i).getDevicePtr(),
+    				img->getDimensions().x, img->getDimensions().y, img->getPtr()->getAlignedY());
+    		h_realComplexReal(img->getAt(i).getDevicePtr(), nom->getAt(i).getDevicePtr(), nom->getDimensions().x, nom->getDimensions().y,
+    				nom->getPtr()->getAlignedY());
+
+    		double sum2nom2=h_realSum(nom->getAt(i).getDevicePtr(), nom->getDimensions().x, nom->getDimensions().y, nom->getPtr()->getAlignedY());
+    		double sum2denom2=h_realSum(denom->getAt(i).getDevicePtr(), denom->getDimensions().x, denom->getDimensions().y, denom->getPtr()->getAlignedY());
+    		double dy=sum2nom2/sum2denom2;
+
+    		int signx=PhaserUtil::getInstance()->sgn(dx);
+    		int signy=PhaserUtil::getInstance()->sgn(dy);
+    		double shiftx=std::min(abs(dx),0.2)*signx;
+    		double shifty=std::min(abs(dy),0.2)*signy;
+    		int index=g_ind_vec[i];
+
+    		double diff=sqrt_real_t(pow((probe_positions[index].x+shiftx-positions_o[index].x), 2)+pow((probe_positions[index].y+shifty-positions_o[index].y), 2));
+    		if(diff>cutoff)
+    		{
+    			shiftx=0;
+    			shifty=0;
+    		}
+
+    		probe_positions[index].x=probe_positions[index].x+shiftx;
+    		probe_positions[index].y=probe_positions[index].y+shifty;
+    	}
+
+    }
+    else
+    {
+    	Cuda3DElement<real_t> tempDet = m_intensities->getAt(0);
+    	PhaserUtil::getInstance()->ff2Mat(obj_proj, img_rest, tempDet);
+
+    	//[dX, dY] = Gfun(@multiply_gfun, img, X, Y);
+    	complex_t factor=make_complex_t(0, 2.0*CUDART_PI);
+    	h_multiply(img_rest->getPtr()->getDevicePtr<complex_t>(), factor, img_rest->getPtr()->getDevicePtr<complex_t>(), img_rest->getPtr()->getX(),
+    			img_rest->getPtr()->getY(), img_rest->getPtr()->getAlignedY());
+    	// The problem is the 3d multiply by a 2d TODO change to a loop for iteration
+    	h_multiplyRow(img_rest->getPtr()->getDevicePtr<complex_t>(), p_positions_x->getDevicePtr<real_t>(), dX_rest->getPtr()->getDevicePtr<complex_t>(), dX_rest->getPtr()->getX(),
+    			dX_rest->getPtr()->getY(), dX_rest->getPtr()->getAlignedY());
+
+    	for(int i=0; i<obj_proj->getNum(); i++)
+    	{
+    		h_multiplyColumn(img_rest->getAt(i).getDevicePtr(), p_positions_y->getDevicePtr<real_t>(), dY_rest->getAt(i).getDevicePtr(), dY_rest->getDimensions().x,
+    				dY_rest->getDimensions().y, dY_rest->getPtr()->getAlignedY());
+    	}
+
+    	//ifft2mat, cudafft has to normailze by the totall number of elments, here is 256*256 varProbe->getPtr()->getX()=256*26
+    	PhaserUtil::getInstance()->iff2Mat(dX_rest, dX_rest, tempDet);
+    	h_normalize(dX_rest->getPtr()->getDevicePtr<complex_t>(), dX_rest->getPtr()->getX(),
+    			dX_rest->getPtr()->getY(), dX_rest->getPtr()->getAlignedY(), 1.0/(Npx*Npy));
+
+    	PhaserUtil::getInstance()->iff2Mat(dY_rest, dY_rest, tempDet);
+    	h_normalize(dY_rest->getPtr()->getDevicePtr<complex_t>(), dY_rest->getPtr()->getX(),
+    			dY_rest->getPtr()->getY(), dY_rest->getPtr()->getAlignedY(), 1.0/(Npx*Npy));
+
+//    	Cuda3DArray<real_t>* nom=new Cuda3DArray<real_t>(obj_proj->getNum(), obj_proj->getDimensions());
+//    	Cuda3DArray<real_t>* denom=new Cuda3DArray<real_t>(obj_proj->getNum(), obj_proj->getDimensions());
+    	double cutoff=std::numeric_limits<double>::max();
+
+    	for(int i=0; i<obj_proj->getNum(); i++)
+    	{
+
+    		h_multiply(dX_rest->getAt(i).getDevicePtr(), varProbe->getAt(i).getDevicePtr(), img_rest->getAt(i).getDevicePtr(),
+    				img_rest->getDimensions().x, img_rest->getDimensions().y, img_rest->getPtr()->getAlignedY());
+    		h_realComplexAbs(img_rest->getAt(i).getDevicePtr(), denom_rest->getAt(i).getDevicePtr(), denom_rest->getDimensions().x,
+    				denom_rest->getDimensions().y, denom_rest->getPtr()->getAlignedY(), true);
+
+    		h_multiplyConju(xi->getAt(i).getDevicePtr(), img_rest->getAt(i).getDevicePtr(), img_rest->getAt(i).getDevicePtr(),
+    				img_rest->getDimensions().x, img_rest->getDimensions().y, img_rest->getPtr()->getAlignedY());
+    		h_realComplexReal(img_rest->getAt(i).getDevicePtr(), nom_rest->getAt(i).getDevicePtr(), nom_rest->getDimensions().x, nom_rest->getDimensions().y,
+    				nom_rest->getPtr()->getAlignedY());
+
+
+    		double sum2nom1=h_realSum(nom_rest->getAt(i).getDevicePtr(), nom_rest->getDimensions().x, nom_rest->getDimensions().y, nom_rest->getPtr()->getAlignedY());
+    		double sum2denom1=h_realSum(denom_rest->getAt(i).getDevicePtr(), denom_rest->getDimensions().x, denom_rest->getDimensions().y, denom_rest->getPtr()->getAlignedY());
+    		double dx=sum2nom1/sum2denom1;
+
+    		h_multiply(dY_rest->getAt(i).getDevicePtr(), varProbe->getAt(i).getDevicePtr(), img_rest->getAt(i).getDevicePtr(),
+    				img_rest->getDimensions().x, img_rest->getDimensions().y, img_rest->getPtr()->getAlignedY());
+    		h_realComplexAbs(img_rest->getAt(i).getDevicePtr(), denom_rest->getAt(i).getDevicePtr(), denom_rest->getDimensions().x,
+    				denom_rest->getDimensions().y, denom_rest->getPtr()->getAlignedY(), true);
+
+    		h_multiplyConju(xi->getAt(i).getDevicePtr(), img_rest->getAt(i).getDevicePtr(), img_rest->getAt(i).getDevicePtr(),
+    				img_rest->getDimensions().x, img_rest->getDimensions().y, img_rest->getPtr()->getAlignedY());
+    		h_realComplexReal(img_rest->getAt(i).getDevicePtr(), nom_rest->getAt(i).getDevicePtr(), nom_rest->getDimensions().x, nom_rest->getDimensions().y,
+    				nom_rest->getPtr()->getAlignedY());
+
+    		double sum2nom2=h_realSum(nom_rest->getAt(i).getDevicePtr(), nom_rest->getDimensions().x, nom_rest->getDimensions().y, nom_rest->getPtr()->getAlignedY());
+    		double sum2denom2=h_realSum(denom_rest->getAt(i).getDevicePtr(), denom_rest->getDimensions().x, denom_rest->getDimensions().y, denom_rest->getPtr()->getAlignedY());
+    		double dy=sum2nom2/sum2denom2;
+
+    		int signx=PhaserUtil::getInstance()->sgn(dx);
+    		int signy=PhaserUtil::getInstance()->sgn(dy);
+    		double shiftx=std::min(abs(dx),0.2)*signx;
+    		double shifty=std::min(abs(dy),0.2)*signy;
+    		int index=g_ind_vec[i];
+
+    		double diff=sqrt_real_t(pow((probe_positions[index].x+shiftx-positions_o[index].x), 2)+pow((probe_positions[index].y+shifty-positions_o[index].y), 2));
+    		if(diff>cutoff)
+    		{
+    			shiftx=0;
+    			shifty=0;
+    		}
+
+    		probe_positions[index].x=probe_positions[index].x+shiftx;
+    		probe_positions[index].y=probe_positions[index].y+shifty;
+    	}
+
+    }
+
 }
+
+
+//void Probe::gradient_position_solver(Cuda3DArray<complex_t>* xi, Cuda3DArray<complex_t>* obj_proj, Cuda3DArray<complex_t>* varProbe, std::vector<int>& g_ind_vec,
+//		std::vector<float2>& positions_o, std::vector<float2>& probe_positions)
+//{
+//	int Npx=obj_proj->getDimensions().x;
+//	int Npy=obj_proj->getDimensions().y;
+//
+//	// p_positions_x=X
+//	CudaSmartPtr p_positions_x = new Cuda2DArray<real_t>(1, Npy);
+//	real_t* h_p_positions_x = p_positions_x->getHostPtr<real_t>();
+//	for(int i=0;i<Npy;i++)
+//		h_p_positions_x[i]=(i*1.0/Npy)-0.5;
+//    p_positions_x->setFromHost<real_t>(h_p_positions_x, 1, Npy);
+//
+//	// p_positions_y=Y
+//	CudaSmartPtr p_positions_y = new Cuda2DArray<real_t>(1, Npx);
+//	real_t* h_p_positions_y = p_positions_y->getHostPtr<real_t>();
+//	for(int i=0;i<Npx;i++)
+//		h_p_positions_y[i]=(i*1.0/Npx)-0.5;
+//	p_positions_y->setFromHost<real_t>(h_p_positions_y, 1, Npx);
+//
+//
+//    h_shiftFFTy(p_positions_x->getDevicePtr<real_t>(), p_positions_x->getDevicePtr<real_t>(), p_positions_x->getX(), p_positions_x->getY(), p_positions_x->getAlignedY());
+//    h_shiftFFTy(p_positions_y->getDevicePtr<real_t>(), p_positions_y->getDevicePtr<real_t>(), p_positions_y->getX(), p_positions_y->getY(), p_positions_y->getAlignedY());
+//
+//    //img = fft2(img);
+////    Cuda3DArray<complex_t>* img=new Cuda3DArray<complex_t>(obj_proj->getNum(), obj_proj->getDimensions());
+////    Cuda3DArray<complex_t>* dX=new Cuda3DArray<complex_t>(obj_proj->getNum(), obj_proj->getDimensions());
+////    Cuda3DArray<complex_t>* dY=new Cuda3DArray<complex_t>(obj_proj->getNum(), obj_proj->getDimensions());
+//
+//	Cuda3DElement<real_t> tempDet = m_intensities->getAt(0);
+//	PhaserUtil::getInstance()->ff2Mat(obj_proj, img, tempDet);
+//
+//	//[dX, dY] = Gfun(@multiply_gfun, img, X, Y);
+//	complex_t factor=make_complex_t(0, 2.0*CUDART_PI);
+//	h_multiply(img->getPtr()->getDevicePtr<complex_t>(), factor, img->getPtr()->getDevicePtr<complex_t>(), img->getPtr()->getX(),
+//			img->getPtr()->getY(), img->getPtr()->getAlignedY());
+//	// The problem is the 3d multiply by a 2d TODO change to a loop for iteration
+//	h_multiplyRow(img->getPtr()->getDevicePtr<complex_t>(), p_positions_x->getDevicePtr<real_t>(), dX->getPtr()->getDevicePtr<complex_t>(), dX->getPtr()->getX(),
+//			dX->getPtr()->getY(), dX->getPtr()->getAlignedY());
+//
+//	for(int i=0; i<obj_proj->getNum(); i++)
+//	{
+//		h_multiplyColumn(img->getAt(i).getDevicePtr(), p_positions_y->getDevicePtr<real_t>(), dY->getAt(i).getDevicePtr(), dY->getDimensions().x,
+//				dY->getDimensions().y, dY->getPtr()->getAlignedY());
+//	}
+//
+//	//ifft2mat, cudafft has to normailze by the totall number of elments, here is 256*256 varProbe->getPtr()->getX()=256*26
+//	PhaserUtil::getInstance()->iff2Mat(dX, dX, tempDet);
+//	h_normalize(dX->getPtr()->getDevicePtr<complex_t>(), dX->getPtr()->getX(),
+//			dX->getPtr()->getY(), dX->getPtr()->getAlignedY(), 1.0/(Npx*Npy));
+//
+//	PhaserUtil::getInstance()->iff2Mat(dY, dY, tempDet);
+//	h_normalize(dY->getPtr()->getDevicePtr<complex_t>(), dY->getPtr()->getX(),
+//			dY->getPtr()->getY(), dY->getPtr()->getAlignedY(), 1.0/(Npx*Npy));
+//
+////	Cuda3DArray<complex_t>* tempArrC=new Cuda3DArray<complex_t>(obj_proj->getNum(), obj_proj->getDimensions());
+//	Cuda3DArray<real_t>* nom=new Cuda3DArray<real_t>(obj_proj->getNum(), obj_proj->getDimensions());
+//	Cuda3DArray<real_t>* denom=new Cuda3DArray<real_t>(obj_proj->getNum(), obj_proj->getDimensions());
+//	double cutoff=std::numeric_limits<double>::max();
+//
+//	for(int i=0; i<obj_proj->getNum(); i++)
+//	{
+////		h_multiply(dX->getAt(i).getDevicePtr(), varProbe->getAt(i).getDevicePtr(), tempArrC->getAt(i).getDevicePtr(),
+////				tempArrC->getDimensions().x, tempArrC->getDimensions().y, tempArrC->getPtr()->getAlignedY());
+////		h_realComplexAbs(tempArrC->getAt(i).getDevicePtr(), denom->getAt(i).getDevicePtr(), denom->getDimensions().x,
+////				denom->getDimensions().y, denom->getPtr()->getAlignedY(), true);
+////
+////		h_multiplyConju(xi->getAt(i).getDevicePtr(), tempArrC->getAt(i).getDevicePtr(), tempArrC->getAt(i).getDevicePtr(),
+////				tempArrC->getDimensions().x, tempArrC->getDimensions().y, tempArrC->getPtr()->getAlignedY());
+////		h_realComplexReal(tempArrC->getAt(i).getDevicePtr(), nom->getAt(i).getDevicePtr(), nom->getDimensions().x, nom->getDimensions().y,
+////				nom->getPtr()->getAlignedY());
+//
+//		h_multiply(dX->getAt(i).getDevicePtr(), varProbe->getAt(i).getDevicePtr(), img->getAt(i).getDevicePtr(),
+//				img->getDimensions().x, img->getDimensions().y, img->getPtr()->getAlignedY());
+//		h_realComplexAbs(img->getAt(i).getDevicePtr(), denom->getAt(i).getDevicePtr(), denom->getDimensions().x,
+//				denom->getDimensions().y, denom->getPtr()->getAlignedY(), true);
+//
+//		h_multiplyConju(xi->getAt(i).getDevicePtr(), img->getAt(i).getDevicePtr(), img->getAt(i).getDevicePtr(),
+//				img->getDimensions().x, img->getDimensions().y, img->getPtr()->getAlignedY());
+//		h_realComplexReal(img->getAt(i).getDevicePtr(), nom->getAt(i).getDevicePtr(), nom->getDimensions().x, nom->getDimensions().y,
+//				nom->getPtr()->getAlignedY());
+//
+//
+//		double sum2nom1=h_realSum(nom->getAt(i).getDevicePtr(), nom->getDimensions().x, nom->getDimensions().y, nom->getPtr()->getAlignedY());
+//		double sum2denom1=h_realSum(denom->getAt(i).getDevicePtr(), denom->getDimensions().x, denom->getDimensions().y, denom->getPtr()->getAlignedY());
+//		double dx=sum2nom1/sum2denom1;
+//
+////		h_multiply(dY->getAt(i).getDevicePtr(), varProbe->getAt(i).getDevicePtr(), tempArrC->getAt(i).getDevicePtr(),
+////				tempArrC->getDimensions().x, tempArrC->getDimensions().y, tempArrC->getPtr()->getAlignedY());
+////		h_realComplexAbs(tempArrC->getAt(i).getDevicePtr(), denom->getAt(i).getDevicePtr(), denom->getDimensions().x,
+////				denom->getDimensions().y, denom->getPtr()->getAlignedY(), true);
+////
+////		h_multiplyConju(xi->getAt(i).getDevicePtr(), tempArrC->getAt(i).getDevicePtr(), tempArrC->getAt(i).getDevicePtr(),
+////				tempArrC->getDimensions().x, tempArrC->getDimensions().y, tempArrC->getPtr()->getAlignedY());
+////		h_realComplexReal(tempArrC->getAt(i).getDevicePtr(), nom->getAt(i).getDevicePtr(), nom->getDimensions().x, nom->getDimensions().y,
+////				nom->getPtr()->getAlignedY());
+//
+//		h_multiply(dY->getAt(i).getDevicePtr(), varProbe->getAt(i).getDevicePtr(), img->getAt(i).getDevicePtr(),
+//				img->getDimensions().x, img->getDimensions().y, img->getPtr()->getAlignedY());
+//		h_realComplexAbs(img->getAt(i).getDevicePtr(), denom->getAt(i).getDevicePtr(), denom->getDimensions().x,
+//				denom->getDimensions().y, denom->getPtr()->getAlignedY(), true);
+//
+//		h_multiplyConju(xi->getAt(i).getDevicePtr(), img->getAt(i).getDevicePtr(), img->getAt(i).getDevicePtr(),
+//				img->getDimensions().x, img->getDimensions().y, img->getPtr()->getAlignedY());
+//		h_realComplexReal(img->getAt(i).getDevicePtr(), nom->getAt(i).getDevicePtr(), nom->getDimensions().x, nom->getDimensions().y,
+//				nom->getPtr()->getAlignedY());
+//
+//		double sum2nom2=h_realSum(nom->getAt(i).getDevicePtr(), nom->getDimensions().x, nom->getDimensions().y, nom->getPtr()->getAlignedY());
+//		double sum2denom2=h_realSum(denom->getAt(i).getDevicePtr(), denom->getDimensions().x, denom->getDimensions().y, denom->getPtr()->getAlignedY());
+//		double dy=sum2nom2/sum2denom2;
+//
+//		int signx=PhaserUtil::getInstance()->sgn(dx);
+//		int signy=PhaserUtil::getInstance()->sgn(dy);
+//		double shiftx=std::min(abs(dx),0.2)*signx;
+//		double shifty=std::min(abs(dy),0.2)*signy;
+//		int index=g_ind_vec[i];
+//
+//		//diff = sqrt(sum((mode.probe_positions(ind,:)+shift - position0).^2,2));
+//
+//		double diff=sqrt_real_t(pow((probe_positions[index].x+shiftx-positions_o[index].x), 2)+pow((probe_positions[index].y+shifty-positions_o[index].y), 2));
+//		if(diff>cutoff)
+//		{
+//			shiftx=0;
+//			shifty=0;
+//		}
+//
+////		printf("shiftx is %.10e, shifty is %.10e \n", shiftx, shifty);
+//
+//		probe_positions[index].x=probe_positions[index].x+shiftx;
+//		probe_positions[index].y=probe_positions[index].y+shifty;
+//	}
+//
+////	delete img;
+////	delete dX;
+////	delete dY;
+////	delete tempArrC;
+//	delete nom;
+//	delete denom;
+//}
 
 void Probe::shift_probe(std::vector<int>& g_ind_vec, std::vector<float2>& sub_px_shift, Cuda3DArray<complex_t>* varProbe)
 {
@@ -1032,213 +1308,479 @@ void Probe::update_probe(unsigned int ll, CudaSmartPtr probe_update_m, std::vect
 	}
 	complex_t objMean=div_complex_t(objSum, make_complex_t(No, 0));
 
-	CudaSmartPtr tmpResult=new Cuda2DArray<complex_t>(probe_update_m->getX(), probe_update_m->getY());
-	h_multiply(probe_update_m->getDevicePtr<complex_t>(), objMean, tmpResult->getDevicePtr<complex_t>(),
+	h_multiply(probe_update_m->getDevicePtr<complex_t>(), objMean, tempArrC->getDevicePtr<complex_t>(),
 			probe_update_m->getX(), probe_update_m->getY(), probe_update_m->getAlignedY());
+	h_complexSum(m_modes->getAt(ll-1).getDevicePtr(), tempArrC->getDevicePtr<complex_t>(), m_modes->getAt(ll-1).getDevicePtr(), 1.0, 1.0,
+			tempArrC->getDimensions().x, tempArrC->getDimensions().y, tempArrC->getAlignedY());
 
-	h_complexSum(m_modes->getAt(ll-1).getDevicePtr(), tmpResult->getDevicePtr<complex_t>(), m_modes->getAt(ll-1).getDevicePtr(), 1.0, 1.0,
-			tmpResult->getDimensions().x, tmpResult->getDimensions().y, tmpResult->getAlignedY());
+//	CudaSmartPtr tmpResult=new Cuda2DArray<complex_t>(probe_update_m->getX(), probe_update_m->getY());
+//	h_multiply(probe_update_m->getDevicePtr<complex_t>(), objMean, tmpResult->getDevicePtr<complex_t>(),
+//			probe_update_m->getX(), probe_update_m->getY(), probe_update_m->getAlignedY());
+//	h_complexSum(m_modes->getAt(ll-1).getDevicePtr(), tmpResult->getDevicePtr<complex_t>(), m_modes->getAt(ll-1).getDevicePtr(), 1.0, 1.0,
+//			tmpResult->getDimensions().x, tmpResult->getDimensions().y, tmpResult->getAlignedY());
 
 //	tmpResult->set();
 
 }
 
-void Probe::update_variable_probe(CudaSmartPtr probe_update_m, Cuda3DArray<complex_t>* probe_update, Cuda3DArray<complex_t>* obj_proj, Cuda3DArray<complex_t>* chi,
-		std::vector<int>& g_ind_vec, std::vector <uint2>& oROI1, std::vector <uint2>& oROI2, std::vector < std::vector <int> >& oROI_vec1,
-		std::vector < std::vector <int> >& oROI_vec2)
-{
+//void Probe::update_variable_probe(CudaSmartPtr probe_update_m, Cuda3DArray<complex_t>* probe_update, Cuda3DArray<complex_t>* obj_proj, Cuda3DArray<complex_t>* chi,
+//		std::vector<int>& g_ind_vec, std::vector <uint2>& oROI1, std::vector <uint2>& oROI2, std::vector < std::vector <int> >& oROI_vec1,
+//		std::vector < std::vector <int> >& oROI_vec2)
+//{
+//
+//	const ReconstructionParams* rParams = CXParams::getInstance()->getReconstructionParams();
+//	int block_size=g_ind_vec.size();
+//	int Npos=oROI1.size();
+//	std::vector <double> probe_evol;
+//	double probe_evolNorm=0;
+//
+////	uint2 objprojDim=obj_proj->getDimensions();
+//
+//	// resid=img tempArr=dX
+////	Cuda3DArray<complex_t>* resid=new Cuda3DArray<complex_t>(block_size, objprojDim);
+////	Cuda3DArray<complex_t>* tempArr=new Cuda3DArray<complex_t>(block_size, objprojDim);
+//
+//	//proj=nom weight_proj=dnom
+////	Cuda3DArray<real_t>* proj=new Cuda3DArray<real_t>(block_size, objprojDim);
+////	Cuda3DArray<real_t>* weight_proj=new Cuda3DArray<real_t>(block_size, objprojDim);
+//
+//	//var_probe_upd=tempArrC weights=tempArrObjR
+////	CudaSmartPtr var_probe_upd= new Cuda2DArray<complex_t>(objprojDim.x, objprojDim.y);
+////	CudaSmartPtr weights= new Cuda2DArray<real_t>(p_object->getX(), p_object->getY());
+//
+////	CudaSmartPtr tempArrR=new Cuda2DArray<real_t>(objprojDim.x, objprojDim.y);
+////	CudaSmartPtr tempArrC= new Cuda2DArray<complex_t>(objprojDim.x, objprojDim.y);
+//	CudaSmartPtr tempArrObjR= new Cuda2DArray<real_t>(p_object->getX(), p_object->getY());
+//
+//	if(rParams->variable_probe)
+//	{
+//		double relax_U=block_size*1.0/Npos;
+//		int relax_V = 1;
+//		for(int i=0; i<block_size; i++)
+//		{
+//			probe_evol.push_back(m_probe_evolution[1][g_ind_vec[i]]);
+//			probe_evolNorm+=pow(m_probe_evolution[1][g_ind_vec[i]], 2);
+//		}
+//		double tempWeight=h_maxFloat(p_object->getDevicePtr<real_t>(), p_object->getX(), p_object->getY(), p_object->getAlignedY());
+//
+//		h_multiply(p_object->getDevicePtr<real_t>(), 1.0/tempWeight, tempArrObjR->getDevicePtr<real_t>(),
+//				tempArrObjR->getX(), tempArrObjR->getY(), tempArrObjR->getAlignedY());
+//
+//
+//
+//
+//	    if(obj_proj->getNum()==m_regularSize)
+//	    {
+//			if(obj_proj->getNum()==1)
+//			{
+//				get_projections_cpu(tempArrObjR, denom, g_ind_vec, oROI_vec1, oROI_vec2);
+//			}
+//			else
+//			{	// run on GPU get weight_proj
+//				get_projections(tempArrObjR, denom, g_ind_vec, oROI1, oROI2);
+//			}
+//
+//			//get_SVD_update resid=img tempArr=dX
+//			for(int i=0; i<probe_update->getNum(); i++)
+//			{
+//				h_subtract(probe_update->getAt(i).getDevicePtr(), probe_update_m->getDevicePtr<complex_t>(), img->getAt(i).getDevicePtr(),
+//						probe_update->getDimensions().x, probe_update->getDimensions().y, probe_update->getPtr()->getAlignedY());
+//				h_multiply(denom->getAt(i).getDevicePtr(), img->getAt(i).getDevicePtr(), img->getAt(i).getDevicePtr(),
+//						img->getDimensions().x, img->getDimensions().y, img->getPtr()->getAlignedY());
+//				h_multiplyConju(m_extramodes->getDevicePtr<complex_t>(), img->getAt(i).getDevicePtr(), dX->getAt(i).getDevicePtr(),
+//						img->getDimensions().x, img->getDimensions().y, img->getPtr()->getAlignedY());
+//
+//				h_realComplexReal(dX->getAt(i).getDevicePtr(), nom->getAt(i).getDevicePtr(), dX->getDimensions().x, dX->getDimensions().y,
+//						dX->getPtr()->getAlignedY());
+//				h_addFactor(nom->getAt(i).getDevicePtr(), nom->getAt(i).getDevicePtr(), probe_evol[i],
+//						nom->getDimensions().x, nom->getDimensions().y, nom->getPtr()->getAlignedY());
+//				h_normalize(nom->getAt(i).getDevicePtr(), probe_evolNorm, nom->getDimensions().x, nom->getDimensions().y, nom->getPtr()->getAlignedY());
+//
+//				real_t mean2Proj=h_mean2(nom->getAt(i).getDevicePtr(), nom->getDimensions().x, nom->getDimensions().y, nom->getPtr()->getAlignedY());
+//				h_normalize(img->getAt(i).getDevicePtr(), img->getDimensions().x, img->getDimensions().y, img->getPtr()->getAlignedY(), mean2Proj);
+//			}
+//
+//			h_realModalSum(img->getPtr()->getDevicePtr<complex_t>(), tempArrC->getDevicePtr<complex_t>(), img->getNum(), img->getDimensions().x,
+//					img->getDimensions().y, img->getPtr()->getAlignedY());
+//	    }
+//	    else
+//	    {
+//			if(obj_proj->getNum()==1)
+//			{
+//				get_projections_cpu(tempArrObjR, denom_rest, g_ind_vec, oROI_vec1, oROI_vec2);
+//			}
+//			else
+//			{	// run on GPU get weight_proj
+//				get_projections(tempArrObjR, denom_rest, g_ind_vec, oROI1, oROI2);
+//			}
+//
+//			//get_SVD_update resid=img tempArr=dX
+//			for(int i=0; i<probe_update->getNum(); i++)
+//			{
+//				h_subtract(probe_update->getAt(i).getDevicePtr(), probe_update_m->getDevicePtr<complex_t>(), img_rest->getAt(i).getDevicePtr(),
+//						probe_update->getDimensions().x, probe_update->getDimensions().y, probe_update->getPtr()->getAlignedY());
+//				h_multiply(denom_rest->getAt(i).getDevicePtr(), img_rest->getAt(i).getDevicePtr(), img_rest->getAt(i).getDevicePtr(),
+//						img_rest->getDimensions().x, img_rest->getDimensions().y, img_rest->getPtr()->getAlignedY());
+//				h_multiplyConju(m_extramodes->getDevicePtr<complex_t>(), img_rest->getAt(i).getDevicePtr(), dX_rest->getAt(i).getDevicePtr(),
+//						img_rest->getDimensions().x, img_rest->getDimensions().y, img_rest->getPtr()->getAlignedY());
+//
+//				h_realComplexReal(dX_rest->getAt(i).getDevicePtr(), nom_rest->getAt(i).getDevicePtr(), dX_rest->getDimensions().x, dX_rest->getDimensions().y,
+//						dX_rest->getPtr()->getAlignedY());
+//				h_addFactor(nom_rest->getAt(i).getDevicePtr(), nom_rest->getAt(i).getDevicePtr(), probe_evol[i],
+//						nom_rest->getDimensions().x, nom_rest->getDimensions().y, nom_rest->getPtr()->getAlignedY());
+//				h_normalize(nom_rest->getAt(i).getDevicePtr(), probe_evolNorm, nom_rest->getDimensions().x, nom_rest->getDimensions().y, nom_rest->getPtr()->getAlignedY());
+//
+//				real_t mean2Proj=h_mean2(nom_rest->getAt(i).getDevicePtr(), nom_rest->getDimensions().x, nom_rest->getDimensions().y, nom_rest->getPtr()->getAlignedY());
+//				h_normalize(img_rest->getAt(i).getDevicePtr(), img_rest->getDimensions().x, img_rest->getDimensions().y, img_rest->getPtr()->getAlignedY(), mean2Proj);
+//			}
+//
+//			h_realModalSum(img_rest->getPtr()->getDevicePtr<complex_t>(), tempArrC->getDevicePtr<complex_t>(), img_rest->getNum(), img_rest->getDimensions().x,
+//					img_rest->getDimensions().y, img->getPtr()->getAlignedY());
+//	    }
+//
+//
+//
+//
+//		h_normalize(tempArrC->getDevicePtr<complex_t>(), tempArrC->getX(), tempArrC->getY(), tempArrC->getAlignedY(),
+//				1.0/(tempArrC->getX()*tempArrC->getY()));
+//		double norm2var_probe_upd=h_norm2Mat(tempArrC->getDevicePtr<complex_t>(), tempArrR->getDevicePtr(),
+//				tempArrC->getX(), tempArrC->getY(), tempArrC->getAlignedY());
+//		double temp=relax_U/std::max(1.0, norm2var_probe_upd);
+//		h_normalize(tempArrC->getDevicePtr<complex_t>(), tempArrC->getX(), tempArrC->getY(), tempArrC->getAlignedY(), temp);
+//		h_complexSum(m_extramodes->getDevicePtr<complex_t>(), tempArrC->getDevicePtr<complex_t>(), m_extramodes->getDevicePtr<complex_t>(), 1.0, 1.0,
+//				tempArrC->getX(), tempArrC->getY(), tempArrC->getAlignedY());
+//
+//		double norm2var_probe=h_norm2Mat(m_extramodes->getDevicePtr<complex_t>(), tempArrR->getDevicePtr(),
+//				m_extramodes->getX(), m_extramodes->getY(), m_extramodes->getAlignedY());
+//		h_normalize(m_extramodes->getDevicePtr<complex_t>(), m_extramodes->getX(), m_extramodes->getY(), m_extramodes->getAlignedY(),
+//				1.0/norm2var_probe);
+//
+//		double sum2denum=0;
+//		std::vector <double> denumvec;
+//		std::vector <double> numvec;
+//
+//	    if(obj_proj->getNum()==m_regularSize)
+//	    {
+//			for(int i=0; i<probe_update->getNum(); i++)
+//			{
+//
+//				// Reuse weight_proj as denum, proj as num //get_SVD_update resid=img tempArr=dX
+//				h_multiply(obj_proj->getAt(i).getDevicePtr(), m_extramodes->getDevicePtr<complex_t>(), dX->getAt(i).getDevicePtr(),
+//						dX->getDimensions().x, dX->getDimensions().y, dX->getPtr()->getAlignedY());
+//				h_realComplexAbs(dX->getAt(i).getDevicePtr(), denom->getAt(i).getDevicePtr(), denom->getDimensions().x,
+//						denom->getDimensions().y, denom->getPtr()->getAlignedY(), true);
+//				h_multiplyConju(chi->getAt(i).getDevicePtr(), dX->getAt(i).getDevicePtr(), dX->getAt(i).getDevicePtr(),
+//						chi->getDimensions().x, chi->getDimensions().y, chi->getPtr()->getAlignedY());
+//				h_realComplexReal(dX->getAt(i).getDevicePtr(), nom->getAt(i).getDevicePtr(), nom->getDimensions().x, nom->getDimensions().y,
+//						nom->getPtr()->getAlignedY());
+//				double mean2denum=h_mean2(denom->getAt(i).getDevicePtr(), denom->getDimensions().x, denom->getDimensions().y, denom->getPtr()->getAlignedY());
+//				double mean2num=h_mean2(nom->getAt(i).getDevicePtr(), nom->getDimensions().x, nom->getDimensions().y, nom->getPtr()->getAlignedY());
+//
+//				denumvec.push_back(mean2denum);
+//				sum2denum+=mean2denum;
+//				numvec.push_back(mean2num);
+//			}
+//	    }
+//	    else
+//	    {
+//			for(int i=0; i<probe_update->getNum(); i++)
+//			{
+//
+//				// Reuse weight_proj as denum, proj as num //get_SVD_update resid=img tempArr=dX
+//				h_multiply(obj_proj->getAt(i).getDevicePtr(), m_extramodes->getDevicePtr<complex_t>(), dX_rest->getAt(i).getDevicePtr(),
+//						dX_rest->getDimensions().x, dX_rest->getDimensions().y, dX_rest->getPtr()->getAlignedY());
+//				h_realComplexAbs(dX_rest->getAt(i).getDevicePtr(), denom_rest->getAt(i).getDevicePtr(), denom_rest->getDimensions().x,
+//						denom_rest->getDimensions().y, denom_rest->getPtr()->getAlignedY(), true);
+//				h_multiplyConju(chi->getAt(i).getDevicePtr(), dX_rest->getAt(i).getDevicePtr(), dX_rest->getAt(i).getDevicePtr(),
+//						chi->getDimensions().x, chi->getDimensions().y, chi->getPtr()->getAlignedY());
+//				h_realComplexReal(dX_rest->getAt(i).getDevicePtr(), nom_rest->getAt(i).getDevicePtr(), nom_rest->getDimensions().x, nom_rest->getDimensions().y,
+//						nom_rest->getPtr()->getAlignedY());
+//				double mean2denum=h_mean2(denom_rest->getAt(i).getDevicePtr(), denom_rest->getDimensions().x, denom_rest->getDimensions().y, denom_rest->getPtr()->getAlignedY());
+//				double mean2num=h_mean2(nom_rest->getAt(i).getDevicePtr(), nom_rest->getDimensions().x, nom_rest->getDimensions().y, nom_rest->getPtr()->getAlignedY());
+//
+//				denumvec.push_back(mean2denum);
+//				sum2denum+=mean2denum;
+//				numvec.push_back(mean2num);
+//			}
+//	    }
+//
+//		double mean3denum=sum2denum/probe_update->getNum();
+//		for(int i=0; i<probe_update->getNum(); i++)
+//		{
+//			double temp=numvec[i]/(denumvec[i]+0.1*mean3denum);
+//			int index=g_ind_vec[i];
+//			m_probe_evolution[1][index]=m_probe_evolution[1][index]+relax_V*temp;
+//		}
+//	}
+//
+//
+//	if(rParams->variable_intensity)
+//	{
+//		double sum2nom=0;
+//		double sum2denom=0;
+//
+//	    if(obj_proj->getNum()==m_regularSize)
+//	    {
+//			for(int i=0; i<probe_update->getNum(); i++)
+//			{
+//				// Reuse weight_proj as denum, proj as num to save gpu array for bigger samples
+//				h_multiply(obj_proj->getAt(i).getDevicePtr(), m_modes->getAt(0).getDevicePtr(), img->getAt(i).getDevicePtr(),
+//						img->getDimensions().x, img->getDimensions().y, img->getPtr()->getAlignedY());
+//				h_realComplexAbs(img->getAt(i).getDevicePtr(), denom->getAt(i).getDevicePtr(), denom->getDimensions().x,
+//						denom->getDimensions().y, denom->getPtr()->getAlignedY(), true);
+//
+//
+//				h_multiplyConju(chi->getAt(i).getDevicePtr(), img->getAt(i).getDevicePtr(), img->getAt(i).getDevicePtr(),
+//						chi->getDimensions().x, chi->getDimensions().y, chi->getPtr()->getAlignedY());
+//				h_realComplexReal(img->getAt(i).getDevicePtr(), nom->getAt(i).getDevicePtr(), nom->getDimensions().x, nom->getDimensions().y,
+//						nom->getPtr()->getAlignedY());
+//
+//				sum2denom=h_realSum(denom->getAt(i).getDevicePtr(), denom->getDimensions().x, denom->getDimensions().y, \
+//						denom->getPtr()->getAlignedY());
+//				sum2nom=h_realSum(nom->getAt(i).getDevicePtr(), nom->getDimensions().x, nom->getDimensions().y, nom->getPtr()->getAlignedY());
+//				double temp=0.1*sum2nom/sum2denom;
+//				int index=g_ind_vec[i];
+//				m_probe_evolution[0][index]=m_probe_evolution[0][index]+temp;
+//			}
+//	    }
+//	    else
+//	    {
+//			for(int i=0; i<probe_update->getNum(); i++)
+//			{
+//				// Reuse weight_proj as denum, proj as num to save gpu array for bigger samples tempArr=img
+//				h_multiply(obj_proj->getAt(i).getDevicePtr(), m_modes->getAt(0).getDevicePtr(), img_rest->getAt(i).getDevicePtr(),
+//						img_rest->getDimensions().x, img_rest->getDimensions().y, img_rest->getPtr()->getAlignedY());
+//				h_realComplexAbs(img_rest->getAt(i).getDevicePtr(), denom_rest->getAt(i).getDevicePtr(), denom_rest->getDimensions().x,
+//						denom_rest->getDimensions().y, denom_rest->getPtr()->getAlignedY(), true);
+//
+//
+//				h_multiplyConju(chi->getAt(i).getDevicePtr(), img_rest->getAt(i).getDevicePtr(), img_rest->getAt(i).getDevicePtr(),
+//						chi->getDimensions().x, chi->getDimensions().y, chi->getPtr()->getAlignedY());
+//				h_realComplexReal(img_rest->getAt(i).getDevicePtr(), nom_rest->getAt(i).getDevicePtr(), nom_rest->getDimensions().x, nom_rest->getDimensions().y,
+//						nom_rest->getPtr()->getAlignedY());
+//
+//				sum2denom=h_realSum(denom_rest->getAt(i).getDevicePtr(), denom_rest->getDimensions().x, denom_rest->getDimensions().y, \
+//						denom_rest->getPtr()->getAlignedY());
+//				sum2nom=h_realSum(nom_rest->getAt(i).getDevicePtr(), nom_rest->getDimensions().x, nom_rest->getDimensions().y, nom_rest->getPtr()->getAlignedY());
+//				double temp=0.1*sum2nom/sum2denom;
+//				int index=g_ind_vec[i];
+//				m_probe_evolution[0][index]=m_probe_evolution[0][index]+temp;
+//			}
+//
+//	    }
+//
+//	}
+//
+//
+////	delete weight_proj;
+////	delete resid;
+////	delete proj;
+////	delete tempArr;
+//
+//}
 
-	const ReconstructionParams* rParams = CXParams::getInstance()->getReconstructionParams();
-	int block_size=g_ind_vec.size();
-	int Npos=oROI1.size();
-	std::vector <double> probe_evol;
-	double probe_evolNorm=0;
-
-	uint2 objprojDim=obj_proj->getDimensions();
-	Cuda3DArray<real_t>* weight_proj=new Cuda3DArray<real_t>(block_size, objprojDim);
-	Cuda3DArray<complex_t>* resid=new Cuda3DArray<complex_t>(block_size, objprojDim);
-	Cuda3DArray<real_t>* proj=new Cuda3DArray<real_t>(block_size, objprojDim);
-	Cuda3DArray<complex_t>* tempArr=new Cuda3DArray<complex_t>(block_size, objprojDim);
-	CudaSmartPtr var_probe_upd= new Cuda2DArray<complex_t>(objprojDim.x, objprojDim.y);
-//	CudaSmartPtr tempArrR= new Cuda2DArray<real_t>(objprojDim.x, objprojDim.y);
-//	Cuda3DArray<real_t>* denum=new Cuda3DArray<real_t>(block_size, objprojDim);
-//	Cuda3DArray<real_t>* num=new Cuda3DArray<real_t>(block_size, objprojDim);
-
-	CudaSmartPtr weights= new Cuda2DArray<real_t>(p_object->getX(), p_object->getY());
-
-//	m_testTimer.start();
-	if(rParams->variable_probe)
-	{
-		double relax_U=block_size*1.0/Npos;
-		int relax_V = 1;
-		for(int i=0; i<block_size; i++)
-		{
-			probe_evol.push_back(m_probe_evolution[1][g_ind_vec[i]]);
-			probe_evolNorm+=pow(m_probe_evolution[1][g_ind_vec[i]], 2);
-		}
-		double tempWeight=h_maxFloat(p_object->getDevicePtr<real_t>(), p_object->getX(), p_object->getY(), p_object->getAlignedY());
-
-		h_multiply(p_object->getDevicePtr<real_t>(), 1.0/tempWeight, weights->getDevicePtr<real_t>(),
-				weights->getX(), weights->getY(), weights->getAlignedY());
-
-
-		if(obj_proj->getNum()==1)
-		{
-			get_projections_cpu(weights, weight_proj, g_ind_vec, oROI_vec1, oROI_vec2);
-		}
-		else
-		{	// run on GPU get weight_proj
-			get_projections(weights, weight_proj, g_ind_vec, oROI1, oROI2);
-		}
-
-
-
-		//get_SVD_update
-		for(int i=0; i<probe_update->getNum(); i++)
-		{
-			h_subtract(probe_update->getAt(i).getDevicePtr(), probe_update_m->getDevicePtr<complex_t>(), resid->getAt(i).getDevicePtr(),
-					probe_update->getDimensions().x, probe_update->getDimensions().y, probe_update->getPtr()->getAlignedY());
-			h_multiply(weight_proj->getAt(i).getDevicePtr(), resid->getAt(i).getDevicePtr(), resid->getAt(i).getDevicePtr(),
-					resid->getDimensions().x, resid->getDimensions().y, resid->getPtr()->getAlignedY());
-			h_multiplyConju(m_extramodes->getDevicePtr<complex_t>(), resid->getAt(i).getDevicePtr(), tempArr->getAt(i).getDevicePtr(),
-					resid->getDimensions().x, resid->getDimensions().y, resid->getPtr()->getAlignedY());
-			h_realComplexReal(tempArr->getAt(i).getDevicePtr(), proj->getAt(i).getDevicePtr(), tempArr->getDimensions().x, tempArr->getDimensions().y,
-					tempArr->getPtr()->getAlignedY());
-			h_addFactor(proj->getAt(i).getDevicePtr(), proj->getAt(i).getDevicePtr(), probe_evol[i],
-					proj->getDimensions().x, proj->getDimensions().y, proj->getPtr()->getAlignedY());
-			h_normalize(proj->getAt(i).getDevicePtr(), probe_evolNorm, proj->getDimensions().x, proj->getDimensions().y, proj->getPtr()->getAlignedY());
-			real_t mean2Proj=h_mean2(proj->getAt(i).getDevicePtr(), proj->getDimensions().x, proj->getDimensions().y, proj->getPtr()->getAlignedY());
-			h_normalize(resid->getAt(i).getDevicePtr(), resid->getDimensions().x, resid->getDimensions().y, resid->getPtr()->getAlignedY(), mean2Proj);
-		}
-
-
-		h_realModalSum(resid->getPtr()->getDevicePtr<complex_t>(), var_probe_upd->getDevicePtr<complex_t>(), resid->getNum(), resid->getDimensions().x,
-				resid->getDimensions().y, resid->getPtr()->getAlignedY());
-		h_normalize(var_probe_upd->getDevicePtr<complex_t>(), var_probe_upd->getX(), var_probe_upd->getY(), var_probe_upd->getAlignedY(),
-				1.0/(var_probe_upd->getX()*var_probe_upd->getY()));
-
-		double norm2var_probe_upd=h_norm2Mat(var_probe_upd->getDevicePtr<complex_t>(), tempArrR->getDevicePtr<real_t>(),
-				var_probe_upd->getX(), var_probe_upd->getY(), var_probe_upd->getAlignedY());
-		double temp=relax_U/std::max(1.0, norm2var_probe_upd);
-		h_normalize(var_probe_upd->getDevicePtr<complex_t>(), var_probe_upd->getX(), var_probe_upd->getY(), var_probe_upd->getAlignedY(), temp);
-		h_complexSum(m_extramodes->getDevicePtr<complex_t>(), var_probe_upd->getDevicePtr<complex_t>(), m_extramodes->getDevicePtr<complex_t>(), 1.0, 1.0,
-				var_probe_upd->getX(), var_probe_upd->getY(), var_probe_upd->getAlignedY());
-
-		double norm2var_probe=h_norm2Mat(m_extramodes->getDevicePtr<complex_t>(), tempArrR->getDevicePtr<real_t>(),
-				m_extramodes->getX(), m_extramodes->getY(), m_extramodes->getAlignedY());
-		h_normalize(m_extramodes->getDevicePtr<complex_t>(), m_extramodes->getX(), m_extramodes->getY(), m_extramodes->getAlignedY(),
-				1.0/norm2var_probe);
-
-		double sum2denum=0;
-		std::vector <double> denumvec;
-		std::vector <double> numvec;
-
-//		m_testTimer.start();
-		for(int i=0; i<probe_update->getNum(); i++)
-		{
-			// orginal code before change
+//void Probe::update_variable_probe(CudaSmartPtr probe_update_m, Cuda3DArray<complex_t>* probe_update, Cuda3DArray<complex_t>* obj_proj, Cuda3DArray<complex_t>* chi,
+//		std::vector<int>& g_ind_vec, std::vector <uint2>& oROI1, std::vector <uint2>& oROI2, std::vector < std::vector <int> >& oROI_vec1,
+//		std::vector < std::vector <int> >& oROI_vec2)
+//{
+//
+//	const ReconstructionParams* rParams = CXParams::getInstance()->getReconstructionParams();
+//	int block_size=g_ind_vec.size();
+//	int Npos=oROI1.size();
+//	std::vector <double> probe_evol;
+//	double probe_evolNorm=0;
+//
+//	uint2 objprojDim=obj_proj->getDimensions();
+//
+//	// resid=img
+//	Cuda3DArray<complex_t>* resid=new Cuda3DArray<complex_t>(block_size, objprojDim);
+//	Cuda3DArray<complex_t>* tempArr=new Cuda3DArray<complex_t>(block_size, objprojDim);
+//
+//	Cuda3DArray<real_t>* proj=new Cuda3DArray<real_t>(block_size, objprojDim);
+//	Cuda3DArray<real_t>* weight_proj=new Cuda3DArray<real_t>(block_size, objprojDim);
+//
+//
+//
+//
+////	CudaSmartPtr tempArrR= new Cuda2DArray<real_t>(objprojDim.x, objprojDim.y);
+////	Cuda3DArray<real_t>* denum=new Cuda3DArray<real_t>(block_size, objprojDim);
+////	Cuda3DArray<real_t>* num=new Cuda3DArray<real_t>(block_size, objprojDim);
+//	CudaSmartPtr var_probe_upd= new Cuda2DArray<complex_t>(objprojDim.x, objprojDim.y);
+//	CudaSmartPtr weights= new Cuda2DArray<real_t>(p_object->getX(), p_object->getY());
+//
+////	m_testTimer.start();
+//	if(rParams->variable_probe)
+//	{
+//		double relax_U=block_size*1.0/Npos;
+//		int relax_V = 1;
+//		for(int i=0; i<block_size; i++)
+//		{
+//			probe_evol.push_back(m_probe_evolution[1][g_ind_vec[i]]);
+//			probe_evolNorm+=pow(m_probe_evolution[1][g_ind_vec[i]], 2);
+//		}
+//		double tempWeight=h_maxFloat(p_object->getDevicePtr<real_t>(), p_object->getX(), p_object->getY(), p_object->getAlignedY());
+//
+//		h_multiply(p_object->getDevicePtr<real_t>(), 1.0/tempWeight, weights->getDevicePtr<real_t>(),
+//				weights->getX(), weights->getY(), weights->getAlignedY());
+//
+//
+//		if(obj_proj->getNum()==1)
+//		{
+//			get_projections_cpu(weights, weight_proj, g_ind_vec, oROI_vec1, oROI_vec2);
+//		}
+//		else
+//		{	// run on GPU get weight_proj
+//			get_projections(weights, weight_proj, g_ind_vec, oROI1, oROI2);
+//		}
+//
+//
+//
+//		//get_SVD_update
+//		for(int i=0; i<probe_update->getNum(); i++)
+//		{
+//			h_subtract(probe_update->getAt(i).getDevicePtr(), probe_update_m->getDevicePtr<complex_t>(), resid->getAt(i).getDevicePtr(),
+//					probe_update->getDimensions().x, probe_update->getDimensions().y, probe_update->getPtr()->getAlignedY());
+//			h_multiply(weight_proj->getAt(i).getDevicePtr(), resid->getAt(i).getDevicePtr(), resid->getAt(i).getDevicePtr(),
+//					resid->getDimensions().x, resid->getDimensions().y, resid->getPtr()->getAlignedY());
+//			h_multiplyConju(m_extramodes->getDevicePtr<complex_t>(), resid->getAt(i).getDevicePtr(), tempArr->getAt(i).getDevicePtr(),
+//					resid->getDimensions().x, resid->getDimensions().y, resid->getPtr()->getAlignedY());
+//			h_realComplexReal(tempArr->getAt(i).getDevicePtr(), proj->getAt(i).getDevicePtr(), tempArr->getDimensions().x, tempArr->getDimensions().y,
+//					tempArr->getPtr()->getAlignedY());
+//			h_addFactor(proj->getAt(i).getDevicePtr(), proj->getAt(i).getDevicePtr(), probe_evol[i],
+//					proj->getDimensions().x, proj->getDimensions().y, proj->getPtr()->getAlignedY());
+//			h_normalize(proj->getAt(i).getDevicePtr(), probe_evolNorm, proj->getDimensions().x, proj->getDimensions().y, proj->getPtr()->getAlignedY());
+//			real_t mean2Proj=h_mean2(proj->getAt(i).getDevicePtr(), proj->getDimensions().x, proj->getDimensions().y, proj->getPtr()->getAlignedY());
+//			h_normalize(resid->getAt(i).getDevicePtr(), resid->getDimensions().x, resid->getDimensions().y, resid->getPtr()->getAlignedY(), mean2Proj);
+//		}
+//
+//
+//		h_realModalSum(resid->getPtr()->getDevicePtr<complex_t>(), var_probe_upd->getDevicePtr<complex_t>(), resid->getNum(), resid->getDimensions().x,
+//				resid->getDimensions().y, resid->getPtr()->getAlignedY());
+//		h_normalize(var_probe_upd->getDevicePtr<complex_t>(), var_probe_upd->getX(), var_probe_upd->getY(), var_probe_upd->getAlignedY(),
+//				1.0/(var_probe_upd->getX()*var_probe_upd->getY()));
+//
+//		double norm2var_probe_upd=h_norm2Mat(var_probe_upd->getDevicePtr<complex_t>(), tempArrR->getDevicePtr<real_t>(),
+//				var_probe_upd->getX(), var_probe_upd->getY(), var_probe_upd->getAlignedY());
+//		double temp=relax_U/std::max(1.0, norm2var_probe_upd);
+//		h_normalize(var_probe_upd->getDevicePtr<complex_t>(), var_probe_upd->getX(), var_probe_upd->getY(), var_probe_upd->getAlignedY(), temp);
+//		h_complexSum(m_extramodes->getDevicePtr<complex_t>(), var_probe_upd->getDevicePtr<complex_t>(), m_extramodes->getDevicePtr<complex_t>(), 1.0, 1.0,
+//				var_probe_upd->getX(), var_probe_upd->getY(), var_probe_upd->getAlignedY());
+//
+//		double norm2var_probe=h_norm2Mat(m_extramodes->getDevicePtr<complex_t>(), tempArrR->getDevicePtr<real_t>(),
+//				m_extramodes->getX(), m_extramodes->getY(), m_extramodes->getAlignedY());
+//		h_normalize(m_extramodes->getDevicePtr<complex_t>(), m_extramodes->getX(), m_extramodes->getY(), m_extramodes->getAlignedY(),
+//				1.0/norm2var_probe);
+//
+//		double sum2denum=0;
+//		std::vector <double> denumvec;
+//		std::vector <double> numvec;
+//
+////		m_testTimer.start();
+//		for(int i=0; i<probe_update->getNum(); i++)
+//		{
+//			// orginal code before change
+////			h_multiply(obj_proj->getAt(i).getDevicePtr(), m_extramodes->getDevicePtr<complex_t>(), tempArr->getAt(i).getDevicePtr(),
+////					tempArr->getDimensions().x, tempArr->getDimensions().y, tempArr->getPtr()->getAlignedY());
+////			h_realComplexAbs(tempArr->getAt(i).getDevicePtr(), denum->getAt(i).getDevicePtr(), tempArr->getDimensions().x, tempArr->getDimensions().y, tempArr->getPtr()->getAlignedY(), true);
+////			h_multiplyConju(chi->getAt(i).getDevicePtr(), tempArr->getAt(i).getDevicePtr(), tempArr->getAt(i).getDevicePtr(),
+////					chi->getDimensions().x, chi->getDimensions().y, chi->getPtr()->getAlignedY());
+////			h_realComplexReal(tempArr->getAt(i).getDevicePtr(), num->getAt(i).getDevicePtr(), num->getDimensions().x, num->getDimensions().y,
+////					num->getPtr()->getAlignedY());
+////			double mean2denum=h_mean2(denum->getAt(i).getDevicePtr(), denum->getDimensions().x, denum->getDimensions().y, denum->getPtr()->getAlignedY());
+////			double mean2num=h_mean2(num->getAt(i).getDevicePtr(), num->getDimensions().x, num->getDimensions().y, num->getPtr()->getAlignedY());
+//
+//			// Reuse weight_proj as denum, proj as num
 //			h_multiply(obj_proj->getAt(i).getDevicePtr(), m_extramodes->getDevicePtr<complex_t>(), tempArr->getAt(i).getDevicePtr(),
 //					tempArr->getDimensions().x, tempArr->getDimensions().y, tempArr->getPtr()->getAlignedY());
-//			h_realComplexAbs(tempArr->getAt(i).getDevicePtr(), denum->getAt(i).getDevicePtr(), tempArr->getDimensions().x, tempArr->getDimensions().y, tempArr->getPtr()->getAlignedY(), true);
+//			h_realComplexAbs(tempArr->getAt(i).getDevicePtr(), weight_proj->getAt(i).getDevicePtr(), weight_proj->getDimensions().x, weight_proj->getDimensions().y, weight_proj->getPtr()->getAlignedY(), true);
 //			h_multiplyConju(chi->getAt(i).getDevicePtr(), tempArr->getAt(i).getDevicePtr(), tempArr->getAt(i).getDevicePtr(),
 //					chi->getDimensions().x, chi->getDimensions().y, chi->getPtr()->getAlignedY());
-//			h_realComplexReal(tempArr->getAt(i).getDevicePtr(), num->getAt(i).getDevicePtr(), num->getDimensions().x, num->getDimensions().y,
-//					num->getPtr()->getAlignedY());
-//			double mean2denum=h_mean2(denum->getAt(i).getDevicePtr(), denum->getDimensions().x, denum->getDimensions().y, denum->getPtr()->getAlignedY());
-//			double mean2num=h_mean2(num->getAt(i).getDevicePtr(), num->getDimensions().x, num->getDimensions().y, num->getPtr()->getAlignedY());
-
-			// Reuse weight_proj as denum, proj as num
-			h_multiply(obj_proj->getAt(i).getDevicePtr(), m_extramodes->getDevicePtr<complex_t>(), tempArr->getAt(i).getDevicePtr(),
-					tempArr->getDimensions().x, tempArr->getDimensions().y, tempArr->getPtr()->getAlignedY());
-			h_realComplexAbs(tempArr->getAt(i).getDevicePtr(), weight_proj->getAt(i).getDevicePtr(), weight_proj->getDimensions().x, weight_proj->getDimensions().y, weight_proj->getPtr()->getAlignedY(), true);
-			h_multiplyConju(chi->getAt(i).getDevicePtr(), tempArr->getAt(i).getDevicePtr(), tempArr->getAt(i).getDevicePtr(),
-					chi->getDimensions().x, chi->getDimensions().y, chi->getPtr()->getAlignedY());
-			h_realComplexReal(tempArr->getAt(i).getDevicePtr(), proj->getAt(i).getDevicePtr(), proj->getDimensions().x, proj->getDimensions().y,
-					proj->getPtr()->getAlignedY());
-			double mean2denum=h_mean2(weight_proj->getAt(i).getDevicePtr(), weight_proj->getDimensions().x, weight_proj->getDimensions().y, weight_proj->getPtr()->getAlignedY());
-			double mean2num=h_mean2(proj->getAt(i).getDevicePtr(), proj->getDimensions().x, proj->getDimensions().y, proj->getPtr()->getAlignedY());
-
-			denumvec.push_back(mean2denum);
-			sum2denum+=mean2denum;
-			numvec.push_back(mean2num);
-		}
-//		m_testTimer.stop();
-//		fprintf(stderr,"  probe_update->getNum() test time  %fs\n", m_testTimer.getElapsedTimeInSec());
-
-		double mean3denum=sum2denum/probe_update->getNum();
-		for(int i=0; i<probe_update->getNum(); i++)
-		{
-			double temp=numvec[i]/(denumvec[i]+0.1*mean3denum);
-			int index=g_ind_vec[i];
-			m_probe_evolution[1][index]=m_probe_evolution[1][index]+relax_V*temp;
-		}
-	}
-
-//	m_testTimer.stop();
-//	fprintf(stderr," variable_probe --- test time= %fs\n", m_testTimer.getElapsedTimeInSec());
-
-//	m_testTimer.start();
-	if(rParams->variable_intensity)
-	{
-		double sum2nom=0;
-		double sum2denom=0;
-
-
-//		h_mul_rca_mulc_rcr(obj_proj->getPtr()->getDevicePtr<complex_t>(), m_modes->getAt(0).getDevicePtr(), chi->getPtr()->getDevicePtr<complex_t>(),
-//				weight_proj->getPtr()->getDevicePtr<complex_t>(),
-//				weight_proj->getDimensions().x, weight_proj->getDimensions().y, weight_proj->getPtr()->getAlignedY());
-
-
-
-		for(int i=0; i<probe_update->getNum(); i++)
-		{
-			// orginal code before change
+//			h_realComplexReal(tempArr->getAt(i).getDevicePtr(), proj->getAt(i).getDevicePtr(), proj->getDimensions().x, proj->getDimensions().y,
+//					proj->getPtr()->getAlignedY());
+//			double mean2denum=h_mean2(weight_proj->getAt(i).getDevicePtr(), weight_proj->getDimensions().x, weight_proj->getDimensions().y, weight_proj->getPtr()->getAlignedY());
+//			double mean2num=h_mean2(proj->getAt(i).getDevicePtr(), proj->getDimensions().x, proj->getDimensions().y, proj->getPtr()->getAlignedY());
+//
+//			denumvec.push_back(mean2denum);
+//			sum2denum+=mean2denum;
+//			numvec.push_back(mean2num);
+//		}
+////		m_testTimer.stop();
+////		fprintf(stderr,"  probe_update->getNum() test time  %fs\n", m_testTimer.getElapsedTimeInSec());
+//
+//		double mean3denum=sum2denum/probe_update->getNum();
+//		for(int i=0; i<probe_update->getNum(); i++)
+//		{
+//			double temp=numvec[i]/(denumvec[i]+0.1*mean3denum);
+//			int index=g_ind_vec[i];
+//			m_probe_evolution[1][index]=m_probe_evolution[1][index]+relax_V*temp;
+//		}
+//	}
+//
+////	m_testTimer.stop();
+////	fprintf(stderr," variable_probe --- test time= %fs\n", m_testTimer.getElapsedTimeInSec());
+//
+////	m_testTimer.start();
+//	if(rParams->variable_intensity)
+//	{
+//		double sum2nom=0;
+//		double sum2denom=0;
+//
+//
+////		h_mul_rca_mulc_rcr(obj_proj->getPtr()->getDevicePtr<complex_t>(), m_modes->getAt(0).getDevicePtr(), chi->getPtr()->getDevicePtr<complex_t>(),
+////				weight_proj->getPtr()->getDevicePtr<complex_t>(),
+////				weight_proj->getDimensions().x, weight_proj->getDimensions().y, weight_proj->getPtr()->getAlignedY());
+//
+//
+//
+//		for(int i=0; i<probe_update->getNum(); i++)
+//		{
+//			// orginal code before change
+////			h_multiply(obj_proj->getAt(i).getDevicePtr(), m_modes->getAt(0).getDevicePtr(), tempArr->getAt(i).getDevicePtr(),
+////					tempArr->getDimensions().x, tempArr->getDimensions().y, tempArr->getPtr()->getAlignedY());
+////			h_realComplexAbs(tempArr->getAt(i).getDevicePtr(), denum->getAt(i).getDevicePtr(), tempArr->getDimensions().x,
+////					tempArr->getDimensions().y, tempArr->getPtr()->getAlignedY(), true);
+////			h_multiplyConju(chi->getAt(i).getDevicePtr(), tempArr->getAt(i).getDevicePtr(), tempArr->getAt(i).getDevicePtr(),
+////					chi->getDimensions().x, chi->getDimensions().y, chi->getPtr()->getAlignedY());
+////			h_realComplexReal(tempArr->getAt(i).getDevicePtr(), num->getAt(i).getDevicePtr(), num->getDimensions().x, num->getDimensions().y,
+////					num->getPtr()->getAlignedY());
+////			sum2denom=h_realSum(denum->getAt(i).getDevicePtr(), denum->getDimensions().x, denum->getDimensions().y, denum->getPtr()->getAlignedY());
+////			sum2nom=h_realSum(num->getAt(i).getDevicePtr(), num->getDimensions().x, num->getDimensions().y, num->getPtr()->getAlignedY());
+//
+//			// Reuse weight_proj as denum, proj as num to save gpu array for bigger samples
 //			h_multiply(obj_proj->getAt(i).getDevicePtr(), m_modes->getAt(0).getDevicePtr(), tempArr->getAt(i).getDevicePtr(),
 //					tempArr->getDimensions().x, tempArr->getDimensions().y, tempArr->getPtr()->getAlignedY());
-//			h_realComplexAbs(tempArr->getAt(i).getDevicePtr(), denum->getAt(i).getDevicePtr(), tempArr->getDimensions().x,
-//					tempArr->getDimensions().y, tempArr->getPtr()->getAlignedY(), true);
+//			h_realComplexAbs(tempArr->getAt(i).getDevicePtr(), weight_proj->getAt(i).getDevicePtr(), weight_proj->getDimensions().x,
+//					weight_proj->getDimensions().y, weight_proj->getPtr()->getAlignedY(), true);
+//
+////			h_mul_rca_mulc_rcr(obj_proj->getAt(i).getDevicePtr(), m_modes->getAt(0).getDevicePtr(), chi->getAt(i).getDevicePtr(), weight_proj->getAt(i).getDevicePtr(),
+////					weight_proj->getDimensions().x, weight_proj->getDimensions().y, weight_proj->getPtr()->getAlignedY());
+//
 //			h_multiplyConju(chi->getAt(i).getDevicePtr(), tempArr->getAt(i).getDevicePtr(), tempArr->getAt(i).getDevicePtr(),
 //					chi->getDimensions().x, chi->getDimensions().y, chi->getPtr()->getAlignedY());
-//			h_realComplexReal(tempArr->getAt(i).getDevicePtr(), num->getAt(i).getDevicePtr(), num->getDimensions().x, num->getDimensions().y,
-//					num->getPtr()->getAlignedY());
-//			sum2denom=h_realSum(denum->getAt(i).getDevicePtr(), denum->getDimensions().x, denum->getDimensions().y, denum->getPtr()->getAlignedY());
-//			sum2nom=h_realSum(num->getAt(i).getDevicePtr(), num->getDimensions().x, num->getDimensions().y, num->getPtr()->getAlignedY());
-
-			// Reuse weight_proj as denum, proj as num to save gpu array for bigger samples
-			h_multiply(obj_proj->getAt(i).getDevicePtr(), m_modes->getAt(0).getDevicePtr(), tempArr->getAt(i).getDevicePtr(),
-					tempArr->getDimensions().x, tempArr->getDimensions().y, tempArr->getPtr()->getAlignedY());
-			h_realComplexAbs(tempArr->getAt(i).getDevicePtr(), weight_proj->getAt(i).getDevicePtr(), weight_proj->getDimensions().x,
-					weight_proj->getDimensions().y, weight_proj->getPtr()->getAlignedY(), true);
-
-//			h_mul_rca_mulc_rcr(obj_proj->getAt(i).getDevicePtr(), m_modes->getAt(0).getDevicePtr(), chi->getAt(i).getDevicePtr(), weight_proj->getAt(i).getDevicePtr(),
-//					weight_proj->getDimensions().x, weight_proj->getDimensions().y, weight_proj->getPtr()->getAlignedY());
-
-			h_multiplyConju(chi->getAt(i).getDevicePtr(), tempArr->getAt(i).getDevicePtr(), tempArr->getAt(i).getDevicePtr(),
-					chi->getDimensions().x, chi->getDimensions().y, chi->getPtr()->getAlignedY());
-			h_realComplexReal(tempArr->getAt(i).getDevicePtr(), proj->getAt(i).getDevicePtr(), proj->getDimensions().x, proj->getDimensions().y,
-					proj->getPtr()->getAlignedY());
-
-			sum2denom=h_realSum(weight_proj->getAt(i).getDevicePtr(), weight_proj->getDimensions().x, weight_proj->getDimensions().y, \
-								weight_proj->getPtr()->getAlignedY());
-			sum2nom=h_realSum(proj->getAt(i).getDevicePtr(), proj->getDimensions().x, proj->getDimensions().y, proj->getPtr()->getAlignedY());
-			double temp=0.1*sum2nom/sum2denom;
-
-			int index=g_ind_vec[i];
-			m_probe_evolution[0][index]=m_probe_evolution[0][index]+temp;
-		}
-
-	}
-
-//	m_testTimer.stop();
-//	fprintf(stderr," variable_intensity --- test time= %fs\n", m_testTimer.getElapsedTimeInSec());
-
-	delete weight_proj;
-	delete resid;
-	delete proj;
-	delete tempArr;
-//	delete denum;
-//	delete num;
-}
+//			h_realComplexReal(tempArr->getAt(i).getDevicePtr(), proj->getAt(i).getDevicePtr(), proj->getDimensions().x, proj->getDimensions().y,
+//					proj->getPtr()->getAlignedY());
+//
+//			sum2denom=h_realSum(weight_proj->getAt(i).getDevicePtr(), weight_proj->getDimensions().x, weight_proj->getDimensions().y, \
+//								weight_proj->getPtr()->getAlignedY());
+//			sum2nom=h_realSum(proj->getAt(i).getDevicePtr(), proj->getDimensions().x, proj->getDimensions().y, proj->getPtr()->getAlignedY());
+//			double temp=0.1*sum2nom/sum2denom;
+//
+//			int index=g_ind_vec[i];
+//			m_probe_evolution[0][index]=m_probe_evolution[0][index]+temp;
+//		}
+//
+//	}
+//
+////	m_testTimer.stop();
+////	fprintf(stderr," variable_intensity --- test time= %fs\n", m_testTimer.getElapsedTimeInSec());
+//
+//	delete weight_proj;
+//	delete resid;
+//	delete proj;
+//	delete tempArr;
+////	delete denum;
+////	delete num;
+//}
 
 void Probe::toRGBA(float4* out, const char* name, float tf, float ts)
 {

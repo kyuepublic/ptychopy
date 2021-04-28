@@ -39,6 +39,7 @@
 #include "datatypes.h"
 #include <vector_types.h>
 #include "Timer.h"
+#include "IPtychoScanMesh.h"
 
 template<typename T> class Cuda3DArray;
 template<typename T> class Cuda3DElement;
@@ -53,12 +54,39 @@ public:
 	real_t MAX_ILLUM;
 	std::vector <complex_t> beta_probevec;
 
-	CudaSmartPtr tempArrR;
+	Cuda2DArray<real_t>* tempArrR;
+//	Cuda2DArray<real_t>* tempArrObjR;
+//	CudaSmartPtr tempArrObjR;
+//	Cuda2DArray<complex_t>* tempArrC;
+	CudaSmartPtr tempArrC;
+
+	int m_regularSize;
+	int m_restSize;
 
 private:
 	// 3d array for the 2d probes
 	Cuda3DArray<complex_t>* m_modes;
 	Cuda3DArray<real_t>* m_intensities;
+
+	Cuda3DArray<complex_t>* img;
+	Cuda3DArray<complex_t>* dX;
+	Cuda3DArray<complex_t>* dY;
+
+    Cuda3DArray<complex_t>* img_rest;
+    Cuda3DArray<complex_t>* dX_rest;
+    Cuda3DArray<complex_t>* dY_rest;
+
+//	Cuda3DArray<real_t>* temp3DR1;
+//	Cuda3DArray<real_t>* temp3DR2;
+//
+//	Cuda3DArray<real_t>* temp3DR1_rest;
+//	Cuda3DArray<real_t>* temp3DR2_rest;
+
+    Cuda3DArray<real_t>* nom;
+    Cuda3DArray<real_t>* denom;
+
+    Cuda3DArray<real_t>* nom_rest;
+    Cuda3DArray<real_t>* denom_rest;
 
 	// variable modes for the first mode
 	CudaSmartPtr m_extramodes;
@@ -81,6 +109,9 @@ public:
 	void clear();
 	bool init(const Cuda3DArray<real_t>* diffractions, real_t beamSize, real_t dx_s, const char* filename=0);
 	bool initVarModes();
+
+	void initMem(IPtychoScanMesh*);
+	void freeMem(IPtychoScanMesh*);
 
 	bool initMLH(unsigned int desiredShape, double lambda, double dx_recon, double beamSize, unsigned int nProbes, const char* filename=0);
 

@@ -845,6 +845,8 @@ void IPtychoScanMesh::get_nonoverlapping_indices()
 	m_sparseindices_out.resize(miniter*maxNpos);
 	m_sparsescan_ids_out.resize(miniter*maxNpos);
 
+
+
 	for(int i=0; i<miniter; i++)
 	{
 		std::vector<int> indices_0;
@@ -853,10 +855,10 @@ void IPtychoScanMesh::get_nonoverlapping_indices()
 		std::random_shuffle ( indices_0.begin(), indices_0.end() );
 
 ///////////////// test with matlab
-//		char* filename="/data2/JunjingData/indices.csv";
-//		std::vector<int> vecFile;
-//		loadTestIGroup(filename, vecFile);
-//		indices_0=vecFile;
+		char* filename="/data2/JunjingData/indices.csv";
+		std::vector<int> vecFile;
+		loadTestIGroup(filename, vecFile);
+		indices_0=vecFile;
 ////////////////////////
 
 		std::vector< std::vector<int> > indices (maxNpos, std::vector<int>() ); //indices_out
@@ -902,6 +904,9 @@ void IPtychoScanMesh::get_nonoverlapping_indices()
 //		m_all_sparseindices_out[i]=m_sparseindices_out;
 //		m_all_sparsescan_ids_out[i]=m_sparsescan_ids_out;
 	}
+
+	m_regularSize=m_sparseindices_out[0].size();
+	m_restSize=diffcount%m_regularSize;
 
 }
 

@@ -330,6 +330,8 @@ void IPhaser::prePhase()
 		}
 	}
 
+	m_probe->initMem(m_scanMesh);
+
 //	m_scanMesh->generateMesh(this->getBounds());
 }
 
@@ -395,6 +397,9 @@ real_t IPhaser::phaseStep(IPhasingMethod* m, unsigned int i)
 
 void IPhaser::postPhase()
 {
+
+	m_probe->initMem(m_scanMesh);
+
 	m_probe->endModalReconstruction();
 	m_scanMesh->clear();
 	fprintf(stderr,"io=%f\tphase=%f\tDone!!\n", m_ioTimer.getElapsedTimeInSec(), m_phasingTimer.getElapsedTimeInSec());
