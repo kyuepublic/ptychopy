@@ -17,8 +17,8 @@ if [ "$1" = "debug" ]; then
 	cmakeVars="-Ddebug=ON -Doptimize=OFF $cmakeVars"
 fi
 
-#/local/kyue/program/cmake/cmake/bin/cmake $cmakeVars -G "Unix Makefiles" .
-/local/kyue/program/cmake/cmake/bin/cmake -DCMAKE_C_COMPILER=/home/beams/USER2IDD/userlib/gcc-6.3.0/bin/gcc $cmakeVars -G "Unix Makefiles" .
+/local/kyue/program/cmake/cmake/bin/cmake $cmakeVars -G "Unix Makefiles" .
+#/local/kyue/program/cmake/cmake/bin/cmake -DCMAKE_C_COMPILER=/home/beams/USER2IDD/userlib/gcc-6.3.0/bin/gcc $cmakeVars -G "Unix Makefiles" .
 
 make
 #cd ..

@@ -92,11 +92,11 @@ real_t MLS::iteration(Diffractions* diffs, Probe* probe,
 
 	///////////////////////////test with matlab
 	// For testing, set randNoIndex to 23 always
-	randNoIndex=23;
-	char* filename="/data2/JunjingData/ind_range.csv";
-	std::vector<int> vecFile;
-	scanMesh->loadTestIGroup(filename, vecFile);
-	ind_range=vecFile;
+//	randNoIndex=23;
+//	char* filename="/data2/JunjingData/ind_range.csv";
+//	std::vector<int> vecFile;
+//	scanMesh->loadTestIGroup(filename, vecFile);
+//	ind_range=vecFile;
 	///////////////////////////
 
 

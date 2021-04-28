@@ -166,8 +166,8 @@ void Sample::loadGuess(const char* filename)
 	}
 
 	////////////////////// test with matlab
-//	guess->load<complex_t>(filename);
-	guess->loadMatlab<complex_t>(filename);
+	guess->load<complex_t>(filename);
+//	guess->loadMatlab<complex_t>(filename);
 	//////////////////////
 
 //	guess->loadCSV(filename);
