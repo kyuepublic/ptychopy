@@ -290,10 +290,10 @@ void IPhaser::prePhase()
 //	m_scanMesh->get_close_indices();
 
 	////////////////////// test with matlab
-	if(!rParams->objectGuess.empty())
-		m_sample->loadGuess(rParams->objectGuess.c_str());
-	else if(rParams->algorithm.compare("MLs")==0&&rParams->simulated==false)
-		m_sample->initObject();
+//	if(!rParams->objectGuess.empty())
+//		m_sample->loadGuess(rParams->objectGuess.c_str());
+//	else if(rParams->algorithm.compare("MLs")==0&&rParams->simulated==false)
+//		m_sample->initObject();
     //////////////////////////
 
 
@@ -331,6 +331,8 @@ void IPhaser::prePhase()
 	}
 
 	m_probe->initMem(m_scanMesh);
+	m_phasingMethods[0].method->initMem(m_scanMesh, m_probe->getModes()->getDimensions());
+	m_diffractions->initMem(m_scanMesh, m_probe->getModes()->getDimensions());
 
 //	m_scanMesh->generateMesh(this->getBounds());
 }
@@ -398,7 +400,7 @@ real_t IPhaser::phaseStep(IPhasingMethod* m, unsigned int i)
 void IPhaser::postPhase()
 {
 
-	m_probe->initMem(m_scanMesh);
+	m_probe->freeMem(m_scanMesh);
 
 	m_probe->endModalReconstruction();
 	m_scanMesh->clear();

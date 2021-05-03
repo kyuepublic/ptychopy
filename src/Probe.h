@@ -56,12 +56,25 @@ public:
 
 	Cuda2DArray<real_t>* tempArrR;
 //	Cuda2DArray<real_t>* tempArrObjR;
-//	CudaSmartPtr tempArrObjR;
+
+	CudaSmartPtr tempArrObjR;
 //	Cuda2DArray<complex_t>* tempArrC;
 	CudaSmartPtr tempArrC;
 
 	int m_regularSize;
 	int m_restSize;
+	int m_totalSize;
+	uint2 m_probesize;
+
+	CudaSmartPtr p_positions_x;
+	CudaSmartPtr p_positions_y;
+
+//	CudaSmartPtr p_x;
+//	CudaSmartPtr p_y;
+	CudaSmartPtr p_positions_x_ind;
+    CudaSmartPtr grid;
+    CudaSmartPtr xgrid;
+    CudaSmartPtr ygrid;
 
 private:
 	// 3d array for the 2d probes

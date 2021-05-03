@@ -37,6 +37,7 @@
 #define DIFFRACTIONS_H_
 
 #include "DiffractionLoader.h"
+#include "IPtychoScanMesh.h"
 #include <vector_types.h>
 #include <vector>
 
@@ -53,8 +54,13 @@ private:
 	std::vector<real_t> m_squaredSums;
 
 public:
+	Cuda3DArray<real_t>* img;
+
+public:
 	Diffractions();
 	~Diffractions();
+
+	void initMem(IPtychoScanMesh* scanMesh, uint2 probeSize);
 
 	void clearPatterns();
 	int load(const char*, const std::vector<unsigned int>& indeces, unsigned int fStart, const PreprocessingParams* p);

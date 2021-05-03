@@ -66,6 +66,11 @@ void DM::checkCache(real_t objMax, real_t probeMax,
 	}
 }
 
+void DM::initMem(IPtychoScanMesh* scanMesh, uint2 probeSize)
+{
+
+}
+
 real_t DM::iteration(Diffractions* diffs, Probe* probe,
 						Sample* object, IPtychoScanMesh* scanMesh, std::vector< std::vector<real_t> >& fourierErrors, const std::vector<float2>& scanPositions,
 						bool phaseConstraint, bool updateProbe, bool updateProbeModes, unsigned int iter, bool RMS)

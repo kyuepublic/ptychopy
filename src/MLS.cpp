@@ -45,6 +45,25 @@ MLS::~MLS()
 {
 	if (m_psi)		delete m_psi;
 	if (m_psi_old)	delete m_psi_old;
+
+	if(dPO) delete dPO;
+	if(AA1) delete AA1;
+	if(AA2) delete AA2;
+	if(AA4) delete AA4;
+	if(Atb1) delete Atb1;
+	if(Atb2) delete Atb2;
+}
+
+void MLS::initMem(IPtychoScanMesh* scanMesh, uint2 probeSize)
+{
+	int regularSize=scanMesh->m_regularSize;
+
+	dPO=new Cuda3DArray<complex_t>(regularSize, probeSize);
+	AA1=new Cuda3DArray<real_t>(regularSize, probeSize);
+	AA2=new Cuda3DArray<complex_t>(regularSize, probeSize);
+	AA4=new Cuda3DArray<real_t>(regularSize, probeSize);
+	Atb1=new Cuda3DArray<real_t>(regularSize, probeSize);
+	Atb2=new Cuda3DArray<real_t>(regularSize, probeSize);
 }
 
 real_t MLS::iteration(Diffractions* diffs, Probe* probe,
@@ -322,19 +341,19 @@ real_t MLS::iteration(Diffractions* diffs, Probe* probe,
 
 				if(llp==1)
 				{
-					Cuda3DArray<complex_t>* dPO=new Cuda3DArray<complex_t>(g_ind_vec.size(), probeSize);
-					Cuda3DArray<real_t>* AA1=new Cuda3DArray<real_t>(g_ind_vec.size(), probeSize);
-					Cuda3DArray<complex_t>* AA2=new Cuda3DArray<complex_t>(g_ind_vec.size(), probeSize);
-					Cuda3DArray<real_t>* AA4=new Cuda3DArray<real_t>(g_ind_vec.size(), probeSize);
-					Cuda3DArray<real_t>* Atb1=new Cuda3DArray<real_t>(g_ind_vec.size(), probeSize);
-					Cuda3DArray<real_t>* Atb2=new Cuda3DArray<real_t>(g_ind_vec.size(), probeSize);
+//					Cuda3DArray<complex_t>* dPO=new Cuda3DArray<complex_t>(g_ind_vec.size(), probeSize);
+//					Cuda3DArray<real_t>* AA1=new Cuda3DArray<real_t>(g_ind_vec.size(), probeSize);
+//					Cuda3DArray<complex_t>* AA2=new Cuda3DArray<complex_t>(g_ind_vec.size(), probeSize);
+//					Cuda3DArray<real_t>* AA4=new Cuda3DArray<real_t>(g_ind_vec.size(), probeSize);
+//					Cuda3DArray<real_t>* Atb1=new Cuda3DArray<real_t>(g_ind_vec.size(), probeSize);
+//					Cuda3DArray<real_t>* Atb2=new Cuda3DArray<real_t>(g_ind_vec.size(), probeSize);
 
 					CXMath::multiply<complex_t>(probe_update_m.get(), obj_proj, dPO);
 					h_get_optimal_step_lsq(psivec[ll-1]->getPtr()->getDevicePtr<complex_t>(),object_update_proj->getPtr()->getDevicePtr<complex_t>(),
 							dPO->getPtr()->getDevicePtr<complex_t>(), varProbe->getPtr()->getDevicePtr<complex_t>(), lambda,
 							AA1->getPtr()->getDevicePtr<real_t>(), AA2->getPtr()->getDevicePtr<complex_t>(), AA4->getPtr()->getDevicePtr<real_t>(),
 							Atb1->getPtr()->getDevicePtr<real_t>(), Atb2->getPtr()->getDevicePtr<real_t>(),
-							dPO->getPtr()->getX(), dPO->getPtr()->getY(), dPO->getPtr()->getAlignedY());
+							g_ind_vec.size()*dPO->getDimensions().x, dPO->getPtr()->getY(), dPO->getPtr()->getAlignedY());
 
 					std::vector <real_t> AA1vec(g_ind_vec.size(), 0);
 					std::vector <complex_t> AA2vec(g_ind_vec.size());
@@ -342,7 +361,7 @@ real_t MLS::iteration(Diffractions* diffs, Probe* probe,
 					std::vector <real_t> AA4vec(g_ind_vec.size(), 0);
 					std::vector <real_t> Atb1vec(g_ind_vec.size(), 0);
 					std::vector <real_t> Atb2vec(g_ind_vec.size(), 0);
-					for(int sumIndex=0; sumIndex<AA1->getNum(); sumIndex++)
+					for(int sumIndex=0; sumIndex<g_ind_vec.size(); sumIndex++)
 					{
 						AA1vec[sumIndex]=h_realSum(AA1->getAt(sumIndex).getDevicePtr(), AA1->getDimensions().x, AA1->getPtr()->getY(), AA1->getPtr()->getAlignedY());
 						AA2vec[sumIndex]=h_complexSum(AA2->getAt(sumIndex).getDevicePtr(), 0, AA2->getDimensions().x, 0, AA2->getPtr()->getY(), AA2->getPtr()->getAlignedY());
@@ -390,12 +409,12 @@ real_t MLS::iteration(Diffractions* diffs, Probe* probe,
 	            				make_complex_t(std::real(LSQ_stepVec[indindex](0)), std::imag(LSQ_stepVec[indindex](0))));
 	                }
 
-					delete dPO;
-					delete AA1;
-					delete AA2;
-					delete AA4;
-					delete Atb1;
-					delete Atb2;
+//					delete dPO;
+//					delete AA1;
+//					delete AA2;
+//					delete AA4;
+//					delete Atb1;
+//					delete Atb2;
 				}
 				else
 				{

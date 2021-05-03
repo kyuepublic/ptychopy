@@ -46,10 +46,17 @@ private:
 	Cuda3DArray<complex_t>* m_psi;
 	Cuda3DArray<complex_t>* m_psi_old;
 
+	Cuda3DArray<complex_t>* dPO;
+	Cuda3DArray<real_t>* AA1;
+	Cuda3DArray<complex_t>* AA2;
+	Cuda3DArray<real_t>* AA4;
+	Cuda3DArray<real_t>* Atb1;
+	Cuda3DArray<real_t>* Atb2;
 public:
 	MLS();
 	virtual ~MLS();
 
+	virtual void initMem(IPtychoScanMesh* scanMesh, uint2 probeSize);
 	virtual real_t iteration(Diffractions*, Probe*, Sample*, IPtychoScanMesh*, std::vector< std::vector<real_t> >& fourierErrors, const std::vector<float2>&, bool phaseConstraint,
 			bool updateProbe, bool updateProbeModes, unsigned int iter, bool RMS=false);
 

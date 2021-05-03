@@ -48,10 +48,23 @@
 using namespace std;
 
 Diffractions::Diffractions() : m_patterns(0)
-{}
+{
+
+}
 
 Diffractions::~Diffractions()
-{clearPatterns();}
+{
+	if(img) delete img;
+	clearPatterns();
+}
+
+void Diffractions::initMem(IPtychoScanMesh* scanMesh, uint2 probeSize)
+{
+
+	int regularSize=scanMesh->m_regularSize;
+	img=new Cuda3DArray<real_t>(regularSize, probeSize);
+
+}
 
 void Diffractions::clearPatterns()
 {
@@ -236,28 +249,33 @@ void Diffractions::get_fourier_error(Cuda3DArray<real_t>* apsi, std::vector<int>
 void Diffractions::modulus_constraint(Cuda3DArray<real_t>* apsi, std::vector<int> ind_read, std::vector < Cuda3DArray<complex_t>* > psivec,
 		 int W, int R_offset)
 {//R = W + (1-W)*modF./(aPsi+1e-9)- R_offset;
-	Cuda3DArray<real_t>* tmpgrid=new Cuda3DArray<real_t>(apsi->getNum(), apsi->getDimensions());
+//	Cuda3DArray<real_t>* tmpgrid=new Cuda3DArray<real_t>(apsi->getNum(), apsi->getDimensions());
+
 	for(unsigned int i=0; i<ind_read.size(); ++i)
 	{
-		int index=ind_read[i];
+//		int index=ind_read[i];
 
-		h_modulus_amplitude(m_patterns->getAt(ind_read[i]).getDevicePtr(), apsi->getAt(i).getDevicePtr(), tmpgrid->getAt(i).getDevicePtr(),
-				R_offset, tmpgrid->getDimensions().x, tmpgrid->getDimensions().y, tmpgrid->getPtr()->getAlignedY());
+		h_modulus_amplitude(m_patterns->getAt(ind_read[i]).getDevicePtr(), apsi->getAt(i).getDevicePtr(), img->getAt(i).getDevicePtr(),
+				R_offset, img->getDimensions().x, img->getDimensions().y, img->getPtr()->getAlignedY());
 
 	}
 
-	Cuda3DElement<real_t> avdata=tmpgrid->getAt(0);
-	unsigned int Npx=tmpgrid->getDimensions().x;
+//	Cuda3DElement<real_t> avdata=img->getAt(0);
+	unsigned int Npx=img->getDimensions().x;
 	for(int i=0; i<psivec.size(); i++)
 	{
-		h_multiply((tmpgrid->getPtr())->getDevicePtr<real_t>(), psivec[i]->getPtr()->getDevicePtr<complex_t>(), psivec[i]->getPtr()->getDevicePtr<complex_t>(),
-				tmpgrid->getPtr()->getX(), tmpgrid->getDimensions().y, tmpgrid->getPtr()->getAlignedY());
+		h_multiply(img->getPtr()->getDevicePtr<real_t>(), psivec[i]->getPtr()->getDevicePtr<complex_t>(), psivec[i]->getPtr()->getDevicePtr<complex_t>(),
+				ind_read.size()*img->getDimensions().x, img->getDimensions().y, img->getPtr()->getAlignedY());
 
 		// ifft2 psivec
-		PhaserUtil::getInstance()->iff2Mat(psivec[i], psivec[i], avdata);
+		PhaserUtil::getInstance()->iff2Mat(psivec[i], psivec[i], img->getAt(0));
 		h_normalize(psivec[i]->getPtr()->getDevicePtr<complex_t>(), psivec[i]->getPtr()->getX(),
 				psivec[i]->getPtr()->getY(), psivec[i]->getPtr()->getAlignedY(), 1.0/(Npx*Npx));
+	}
 
+
+//	delete tmpgrid;
+}
 
 //		complex_t* pobjectHost=psivec[i]->getPtr()->getHostPtr<complex_t>();
 //		for(int j=165; j<Npx; j++)
@@ -274,12 +292,6 @@ void Diffractions::modulus_constraint(Cuda3DArray<real_t>* apsi, std::vector<int
 //		}
 //		printf("\n");
 //		delete pobjectHost;
-	}
-
-
-	delete tmpgrid;
-}
-
 
 
 

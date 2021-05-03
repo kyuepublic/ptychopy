@@ -53,6 +53,8 @@ Sample::Sample(unsigned int arrayShapeX, unsigned int arrayShapeY) : m_maxObject
 //	m_randStates = new Cuda2DArray<curandState>(arrayShapeX, arrayShapeY);
 //	h_initRandomStatesSample(arrayShapeX, m_randStates->getAlignedY(), m_randStates->getDevicePtr<curandState>());
 	setObjectArrayShape(make_uint2(arrayShapeX, arrayShapeY));
+
+	tmpArr=new Cuda2DArray<complex_t>(arrayShapeX, arrayShapeY);
 }
 
 Sample::~Sample()
@@ -295,11 +297,17 @@ void Sample::update_object(CudaSmartPtr object_upd_sum, int llo, std::vector<int
 		}
 	}
 
-	CudaSmartPtr tmpResult=new Cuda2DArray<complex_t>(object_upd_sum->getX(), object_upd_sum->getY());
-	h_multiply(object_upd_sum->getDevicePtr<complex_t>(), beta_object_avg, tmpResult->getDevicePtr<complex_t>(),
+	h_multiply(object_upd_sum->getDevicePtr<complex_t>(), beta_object_avg, tmpArr->getDevicePtr<complex_t>(),
 			object_upd_sum->getX(), object_upd_sum->getY(), object_upd_sum->getAlignedY());
-	h_complexSum(m_objectArray->getDevicePtr<complex_t>(), tmpResult->getDevicePtr<complex_t>(), m_objectArray->getDevicePtr<complex_t>(), 1, 1,
-			tmpResult->getX(), tmpResult->getY(), tmpResult->getAlignedY());
+	h_complexSum(m_objectArray->getDevicePtr<complex_t>(), tmpArr->getDevicePtr<complex_t>(), m_objectArray->getDevicePtr<complex_t>(), 1, 1,
+			tmpArr->getX(), tmpArr->getY(), tmpArr->getAlignedY());
+
+//	CudaSmartPtr tmpResult=new Cuda2DArray<complex_t>(object_upd_sum->getX(), object_upd_sum->getY());
+//	h_multiply(object_upd_sum->getDevicePtr<complex_t>(), beta_object_avg, tmpResult->getDevicePtr<complex_t>(),
+//			object_upd_sum->getX(), object_upd_sum->getY(), object_upd_sum->getAlignedY());
+//	h_complexSum(m_objectArray->getDevicePtr<complex_t>(), tmpResult->getDevicePtr<complex_t>(), m_objectArray->getDevicePtr<complex_t>(), 1, 1,
+//			tmpResult->getX(), tmpResult->getY(), tmpResult->getAlignedY());
+
 //	tmpResult->set();
 }
 

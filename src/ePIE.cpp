@@ -52,6 +52,11 @@ ePIE::~ePIE()
 	if (m_psi_old)	delete m_psi_old;
 }
 
+void ePIE::initMem(IPtychoScanMesh* scanMesh, uint2 probeSize)
+{
+
+}
+
 real_t ePIE::iteration(Diffractions* diffs, Probe* probe,
 						Sample* object, IPtychoScanMesh* scanMesh, std::vector< std::vector<real_t> >& fourierErrors, const std::vector<float2>& scanPositions,
 						bool phaseConstraint, bool updateProbe, bool updateProbeModes, unsigned int iter, bool RMS)

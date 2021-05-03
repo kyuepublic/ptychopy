@@ -53,6 +53,8 @@ public:
 
     curandGenerator_st* m_randomGenerator;
 
+    CudaSmartPtr tmpArr;
+
 private:
 	uint2 m_objectArrayShape;
 	CudaSmartPtr m_objectArray;

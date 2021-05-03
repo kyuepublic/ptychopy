@@ -57,6 +57,7 @@ public:
 	ePIE();
 	virtual ~ePIE();
 
+	virtual void initMem(IPtychoScanMesh* scanMesh, uint2 probeSize);
 	virtual real_t iteration(Diffractions*, Probe*, Sample*, IPtychoScanMesh*, std::vector< std::vector<real_t> >& fourierErrors, const std::vector<float2>&,
 								bool phaseConstraint,bool updateProbe,
 								bool updateProbeModes, unsigned int iter, bool RMS=false);

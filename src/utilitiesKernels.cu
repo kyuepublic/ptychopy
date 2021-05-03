@@ -46,12 +46,8 @@
 #include <thrust/transform.h>
 #include <thrust/extrema.h>
 
-#include <cub/util_allocator.cuh>
 #include <cub/device/device_reduce.cuh>
-
 using namespace cub;
-
-CachingDeviceAllocator  g_allocator(true);
 
 /* extern shared memory for dynamic allocation */
 extern __shared__ real_t shared_array[];
@@ -1164,13 +1160,17 @@ __host__ real_t h_realSum(real_t* a, unsigned int x, unsigned int y, unsigned in
 {
 //	thrust::device_ptr<real_t> devPtr_a = thrust::device_pointer_cast(a);
 //	return thrust::reduce(devPtr_a, devPtr_a+(x*alignedY));
+
+//	double sum=h_realSum(a, 0, x, 0, y, alignedY);
+
 	real_t sum = h_realSumCUB(a, x, y, alignedY);
+
 	return sum;
 }
 
 __host__ real_t h_mean2(real_t* a, unsigned int x, unsigned int y, unsigned int alignedY)
 {
-//	double sum=h_realSum(a, x, y, alignedY);
+
 //	double sum=h_realSum(a, 0, x, 0, y, alignedY);
 
 	double sum=h_realSumCUB(a, x, y, alignedY);
@@ -1585,8 +1585,8 @@ __host__ real_t h_norm2Mat(real_t* d_arr, real_t* d_result, unsigned int x, unsi
 	else				d_square<false><<<grid, block>>>(d_arr, d_result, x, y, alignedY);
 	cutilCheckMsg("h_realComplexReal() execution failed\n");
 
-//	real_t result=h_realSum(d_result, x, y, alignedY);
-	real_t result=h_realSum(d_result, 0, x, 0, y, alignedY);
+	real_t result=h_realSum(d_result, x, y, alignedY);
+//	real_t result=h_realSum(d_result, 0, x, 0, y, alignedY);
 	real_t xresult=sqrt_real_t(result/(x*y));
 
 	return xresult;
@@ -1595,8 +1595,8 @@ __host__ real_t h_norm2Mat(real_t* d_arr, real_t* d_result, unsigned int x, unsi
 __host__ real_t h_norm2Mat(complex_t* d_arr, real_t* d_result, unsigned int x, unsigned int y, unsigned int alignedY)
 {
 	h_realComplexAbs(d_arr, d_result, x, y, alignedY, true);
-//	real_t result=h_realSum(d_result, x, y, alignedY);
-	real_t result=h_realSum(d_result, 0, x, 0, y, alignedY);
+	real_t result=h_realSum(d_result, x, y, alignedY);
+//	real_t result=h_realSum(d_result, 0, x, 0, y, alignedY);
 	real_t xresult=sqrt_real_t(result/(x*y));
 	return xresult;
 }

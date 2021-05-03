@@ -73,30 +73,67 @@ Probe::~Probe()
 void Probe::initMem(IPtychoScanMesh* scanMesh)
 {
 
-	uint2 probesize=m_modes->getDimensions();
+	m_probesize=m_modes->getDimensions();
 	m_regularSize=scanMesh->m_regularSize;
 	m_restSize=scanMesh->m_restSize;
+	int Npx=m_probesize.x;
+	int Npy=m_probesize.y;
+	m_totalSize=Npx*Npy;
 
-	tempArrR=new Cuda2DArray<real_t>(probesize.x, probesize.y);
-//	tempArrObjR=new Cuda2DArray<real_t>( p_object->getX(), p_object->getY());
-	tempArrC=new Cuda2DArray<complex_t>(probesize.x, probesize.y);
+	// p_positions_x=X
+	p_positions_x = new Cuda2DArray<real_t>(1, Npy);
+	real_t* h_p_positions_x = p_positions_x->getHostPtr<real_t>();
+	for(int i=0;i<Npy;i++)
+		h_p_positions_x[i]=(i*1.0/Npy)-0.5;
+    p_positions_x->setFromHost<real_t>(h_p_positions_x, 1, Npy);
+
+	// p_positions_y=Y
+	p_positions_y = new Cuda2DArray<real_t>(1, Npx);
+	real_t* h_p_positions_y = p_positions_y->getHostPtr<real_t>();
+	for(int i=0;i<Npx;i++)
+		h_p_positions_y[i]=(i*1.0/Npx)-0.5;
+	p_positions_y->setFromHost<real_t>(h_p_positions_y, 1, Npx);
+
+    h_shiftFFTy(p_positions_x->getDevicePtr<real_t>(), p_positions_x->getDevicePtr<real_t>(), p_positions_x->getX(), p_positions_x->getY(), p_positions_x->getAlignedY());
+    h_shiftFFTy(p_positions_y->getDevicePtr<real_t>(), p_positions_y->getDevicePtr<real_t>(), p_positions_y->getX(), p_positions_y->getY(), p_positions_y->getAlignedY());
+
+//    p_x = new Cuda2DArray<real_t>(m_regularSize, Npx);
+//    p_y = new Cuda2DArray<real_t>(m_regularSize, Npx);
+	p_positions_x_ind = new Cuda2DArray<real_t>(m_regularSize, Npx);
+	real_t* h_p_positions_x_ind = p_positions_x_ind->getHostPtr<real_t>();
+	for(int j=0; j<m_regularSize; j++)
+	{
+		for(int p=0;p<Npx;p++)
+			h_p_positions_x_ind[j*Npx+p]=p*1.0/Npx-0.5;
+	}
+	p_positions_x_ind->setFromHost<real_t>(h_p_positions_x_ind, m_regularSize, Npx);
+
+    grid = new Cuda2DArray<real_t>(m_regularSize, Npx);
+    h_shiftFFTy(p_positions_x_ind->getDevicePtr<real_t>(), grid->getDevicePtr<real_t>(), m_regularSize, grid->getY(), grid->getAlignedY());
+    xgrid = new Cuda2DArray<real_t>(m_regularSize, Npx);
+    ygrid = new Cuda2DArray<real_t>(m_regularSize, Npx);
 
 
-    img=new Cuda3DArray<complex_t>(m_regularSize, probesize);
-    dX=new Cuda3DArray<complex_t>(m_regularSize, probesize);
-    dY=new Cuda3DArray<complex_t>(m_regularSize, probesize);
+	tempArrR=new Cuda2DArray<real_t>(m_probesize.x, m_probesize.y);
+	tempArrObjR=new Cuda2DArray<real_t>( p_object->getX(), p_object->getY());
+	tempArrC=new Cuda2DArray<complex_t>(m_probesize.x, m_probesize.y);
 
-	nom=new Cuda3DArray<real_t>(m_regularSize, probesize);
-	denom=new Cuda3DArray<real_t>(m_regularSize, probesize);
+
+    img=new Cuda3DArray<complex_t>(m_regularSize, m_probesize);
+    dX=new Cuda3DArray<complex_t>(m_regularSize, m_probesize);
+    dY=new Cuda3DArray<complex_t>(m_regularSize, m_probesize);
+
+	nom=new Cuda3DArray<real_t>(m_regularSize, m_probesize);
+	denom=new Cuda3DArray<real_t>(m_regularSize, m_probesize);
 
     if(m_restSize!=0)
     {
-        img_rest=new Cuda3DArray<complex_t>(m_restSize, probesize);
-        dX_rest=new Cuda3DArray<complex_t>(m_restSize, probesize);
-        dY_rest=new Cuda3DArray<complex_t>(m_restSize, probesize);
+        img_rest=new Cuda3DArray<complex_t>(m_restSize, m_probesize);
+        dX_rest=new Cuda3DArray<complex_t>(m_restSize, m_probesize);
+        dY_rest=new Cuda3DArray<complex_t>(m_restSize, m_probesize);
 
-    	nom_rest=new Cuda3DArray<real_t>(m_restSize, probesize);
-    	denom_rest=new Cuda3DArray<real_t>(m_restSize, probesize);
+    	nom_rest=new Cuda3DArray<real_t>(m_restSize, m_probesize);
+    	denom_rest=new Cuda3DArray<real_t>(m_restSize, m_probesize);
     }
 }
 
@@ -214,9 +251,9 @@ void Probe::ortho_modes()
 			//	           mx_i = mean(x{i}(:,:,:,1),3);
 	    	h_realComplexAbs(m_modes->getAt(j-1).getDevicePtr(), tempR->getDevicePtr<real_t>(),
 	    			m_modes->getDimensions().x, m_modes->getDimensions().y, m_modes->getPtr()->getAlignedY(), true);
-//	    	real_t sumRight=h_realSum(tempR->getDevicePtr<real_t>(), 0, tempR->getX(), 0, tempR->getY(), tempR->getAlignedY());
+	    	real_t sumRight=h_realSum(tempR->getDevicePtr<real_t>(), tempR->getX(), tempR->getY(), tempR->getAlignedY());
 
-	    	real_t sumRight=h_realSumCUB(tempR->getDevicePtr<real_t>(), tempR->getX(), tempR->getY(), tempR->getAlignedY());
+//	    	real_t sumRight=h_realSumCUB(tempR->getDevicePtr<real_t>(), tempR->getX(), tempR->getY(), tempR->getAlignedY());
 
 //	    	Cuda3DArray<complex_t> modesCopy(*m_modes);
 			h_multiplyConju(m_modes->getAt(i-1).getDevicePtr(), m_modes->getAt(j-1).getDevicePtr(), tempC->getDevicePtr<complex_t>(),
@@ -861,16 +898,18 @@ void Probe::get_illumination_probe(std::vector<int>& g_ind_vec, std::vector<floa
 		}
 	}
 // % Nlayers
-	Cuda3DElement<real_t> avdata = m_intensities->getAt(0);
+//	Cuda3DElement<real_t> avdata = m_intensities->getAt(0);
 	int Npx=apsi->getDimensions().x;
 	int indSize=g_ind_vec.size();
-	Cuda3DArray<real_t>* tmpgrid=new Cuda3DArray<real_t>(indSize, make_uint2(Npx,Npx));
+//	Cuda3DArray<real_t>* tmpgrid=new Cuda3DArray<real_t>(indSize, make_uint2(Npx,Npx));
 	for(int i=0; i<m_modes->getNum(); i++)
 	{
 		if((i==0)&&rParams->apply_subpix_shift)
 		{// varProbe=probe1 other probe just keep the same 26*256*256
 			shift_probe(g_ind_vec, sub_px_shift, varProbe);
-			CXMath::multiply<complex_t>(obj_proj, varProbe, psivec[i]);
+//			CXMath::multiply<complex_t>(obj_proj, varProbe, psivec[i]);
+			h_multiply(obj_proj->getPtr()->getDevicePtr<complex_t>(), varProbe->getPtr()->getDevicePtr<complex_t>(), psivec[i]->getPtr()->getDevicePtr<complex_t>(),
+					obj_proj->getPtr()->getX(), obj_proj->getPtr()->getY(), obj_proj->getPtr()->getAlignedY());
 		}
 		else
 		{
@@ -878,51 +917,52 @@ void Probe::get_illumination_probe(std::vector<int>& g_ind_vec, std::vector<floa
 
 		}
 		// FFT2 psi
-		PhaserUtil::getInstance()->ff2Mat(psivec[i], psivec[i], avdata);
+		PhaserUtil::getInstance()->ff2Mat(psivec[i], psivec[i], m_intensities->getAt(0));
 		//
-		h_realComplexAbs(psivec[i]->getPtr()->getDevicePtr<complex_t>(), tmpgrid->getPtr()->getDevicePtr<real_t>(),
+		h_realComplexAbs(psivec[i]->getPtr()->getDevicePtr<complex_t>(), nom->getPtr()->getDevicePtr<real_t>(),
 				psivec[i]->getPtr()->getX(), psivec[i]->getPtr()->getY(), psivec[i]->getPtr()->getAlignedY(), true);
 		//get intensity (modulus) on detector including different corrections
-		h_realSum(apsi->getPtr()->getDevicePtr<real_t>(), tmpgrid->getPtr()->getDevicePtr<real_t>(), apsi->getPtr()->getDevicePtr<real_t>(), 1.0, 1.0,
+		h_realSum(apsi->getPtr()->getDevicePtr<real_t>(), nom->getPtr()->getDevicePtr<real_t>(), apsi->getPtr()->getDevicePtr<real_t>(), 1.0, 1.0,
 				apsi->getPtr()->getX(), apsi->getPtr()->getY(), apsi->getPtr()->getAlignedY());
 	}
 	h_squareRoot(apsi->getPtr()->getDevicePtr<real_t>(), apsi->getPtr()->getDevicePtr<real_t>(),
 			apsi->getPtr()->getX(), apsi->getPtr()->getY(), apsi->getPtr()->getAlignedY());
 
-	delete tmpgrid;
+//	delete tmpgrid;
 
 }
 
 void Probe::gradient_position_solver(Cuda3DArray<complex_t>* xi, Cuda3DArray<complex_t>* obj_proj, Cuda3DArray<complex_t>* varProbe, std::vector<int>& g_ind_vec,
 		std::vector<float2>& positions_o, std::vector<float2>& probe_positions)
 {
-	int Npx=obj_proj->getDimensions().x;
-	int Npy=obj_proj->getDimensions().y;
 
-	// p_positions_x=X
-	CudaSmartPtr p_positions_x = new Cuda2DArray<real_t>(1, Npy);
-	real_t* h_p_positions_x = p_positions_x->getHostPtr<real_t>();
-	for(int i=0;i<Npy;i++)
-		h_p_positions_x[i]=(i*1.0/Npy)-0.5;
-    p_positions_x->setFromHost<real_t>(h_p_positions_x, 1, Npy);
-
-	// p_positions_y=Y
-	CudaSmartPtr p_positions_y = new Cuda2DArray<real_t>(1, Npx);
-	real_t* h_p_positions_y = p_positions_y->getHostPtr<real_t>();
-	for(int i=0;i<Npx;i++)
-		h_p_positions_y[i]=(i*1.0/Npx)-0.5;
-	p_positions_y->setFromHost<real_t>(h_p_positions_y, 1, Npx);
-
-
-    h_shiftFFTy(p_positions_x->getDevicePtr<real_t>(), p_positions_x->getDevicePtr<real_t>(), p_positions_x->getX(), p_positions_x->getY(), p_positions_x->getAlignedY());
-    h_shiftFFTy(p_positions_y->getDevicePtr<real_t>(), p_positions_y->getDevicePtr<real_t>(), p_positions_y->getX(), p_positions_y->getY(), p_positions_y->getAlignedY());
+//	int Npx=obj_proj->getDimensions().x;
+//	int Npy=obj_proj->getDimensions().y;
+//
+//	// p_positions_x=X
+//	CudaSmartPtr p_positions_x = new Cuda2DArray<real_t>(1, Npy);
+//	real_t* h_p_positions_x = p_positions_x->getHostPtr<real_t>();
+//	for(int i=0;i<Npy;i++)
+//		h_p_positions_x[i]=(i*1.0/Npy)-0.5;
+//    p_positions_x->setFromHost<real_t>(h_p_positions_x, 1, Npy);
+//
+//	// p_positions_y=Y
+//	CudaSmartPtr p_positions_y = new Cuda2DArray<real_t>(1, Npx);
+//	real_t* h_p_positions_y = p_positions_y->getHostPtr<real_t>();
+//	for(int i=0;i<Npx;i++)
+//		h_p_positions_y[i]=(i*1.0/Npx)-0.5;
+//	p_positions_y->setFromHost<real_t>(h_p_positions_y, 1, Npx);
+//
+//
+//    h_shiftFFTy(p_positions_x->getDevicePtr<real_t>(), p_positions_x->getDevicePtr<real_t>(), p_positions_x->getX(), p_positions_x->getY(), p_positions_x->getAlignedY());
+//    h_shiftFFTy(p_positions_y->getDevicePtr<real_t>(), p_positions_y->getDevicePtr<real_t>(), p_positions_y->getX(), p_positions_y->getY(), p_positions_y->getAlignedY());
 
     //img = fft2(img);
 
     if(obj_proj->getNum()==m_regularSize)
     {
-    	Cuda3DElement<real_t> tempDet = m_intensities->getAt(0);
-    	PhaserUtil::getInstance()->ff2Mat(obj_proj, img, tempDet);
+//    	Cuda3DElement<real_t> tempDet = m_intensities->getAt(0);
+    	PhaserUtil::getInstance()->ff2Mat(obj_proj, img, m_intensities->getAt(0));
 
     	//[dX, dY] = Gfun(@multiply_gfun, img, X, Y);
     	complex_t factor=make_complex_t(0, 2.0*CUDART_PI);
@@ -939,13 +979,13 @@ void Probe::gradient_position_solver(Cuda3DArray<complex_t>* xi, Cuda3DArray<com
     	}
 
     	//ifft2mat, cudafft has to normailze by the totall number of elments, here is 256*256 varProbe->getPtr()->getX()=256*26
-    	PhaserUtil::getInstance()->iff2Mat(dX, dX, tempDet);
+    	PhaserUtil::getInstance()->iff2Mat(dX, dX, m_intensities->getAt(0));
     	h_normalize(dX->getPtr()->getDevicePtr<complex_t>(), dX->getPtr()->getX(),
-    			dX->getPtr()->getY(), dX->getPtr()->getAlignedY(), 1.0/(Npx*Npy));
+    			dX->getPtr()->getY(), dX->getPtr()->getAlignedY(), 1.0/m_totalSize);
 
-    	PhaserUtil::getInstance()->iff2Mat(dY, dY, tempDet);
+    	PhaserUtil::getInstance()->iff2Mat(dY, dY, m_intensities->getAt(0));
     	h_normalize(dY->getPtr()->getDevicePtr<complex_t>(), dY->getPtr()->getX(),
-    			dY->getPtr()->getY(), dY->getPtr()->getAlignedY(), 1.0/(Npx*Npy));
+    			dY->getPtr()->getY(), dY->getPtr()->getAlignedY(), 1.0/m_totalSize);
 
     	double cutoff=std::numeric_limits<double>::max();
 
@@ -1002,8 +1042,8 @@ void Probe::gradient_position_solver(Cuda3DArray<complex_t>* xi, Cuda3DArray<com
     }
     else
     {
-    	Cuda3DElement<real_t> tempDet = m_intensities->getAt(0);
-    	PhaserUtil::getInstance()->ff2Mat(obj_proj, img_rest, tempDet);
+//    	Cuda3DElement<real_t> tempDet = m_intensities->getAt(0);
+    	PhaserUtil::getInstance()->ff2Mat(obj_proj, img_rest, m_intensities->getAt(0));
 
     	//[dX, dY] = Gfun(@multiply_gfun, img, X, Y);
     	complex_t factor=make_complex_t(0, 2.0*CUDART_PI);
@@ -1020,13 +1060,13 @@ void Probe::gradient_position_solver(Cuda3DArray<complex_t>* xi, Cuda3DArray<com
     	}
 
     	//ifft2mat, cudafft has to normailze by the totall number of elments, here is 256*256 varProbe->getPtr()->getX()=256*26
-    	PhaserUtil::getInstance()->iff2Mat(dX_rest, dX_rest, tempDet);
+    	PhaserUtil::getInstance()->iff2Mat(dX_rest, dX_rest, m_intensities->getAt(0));
     	h_normalize(dX_rest->getPtr()->getDevicePtr<complex_t>(), dX_rest->getPtr()->getX(),
-    			dX_rest->getPtr()->getY(), dX_rest->getPtr()->getAlignedY(), 1.0/(Npx*Npy));
+    			dX_rest->getPtr()->getY(), dX_rest->getPtr()->getAlignedY(), 1.0/m_totalSize);
 
-    	PhaserUtil::getInstance()->iff2Mat(dY_rest, dY_rest, tempDet);
+    	PhaserUtil::getInstance()->iff2Mat(dY_rest, dY_rest, m_intensities->getAt(0));
     	h_normalize(dY_rest->getPtr()->getDevicePtr<complex_t>(), dY_rest->getPtr()->getX(),
-    			dY_rest->getPtr()->getY(), dY_rest->getPtr()->getAlignedY(), 1.0/(Npx*Npy));
+    			dY_rest->getPtr()->getY(), dY_rest->getPtr()->getAlignedY(), 1.0/m_totalSize);
 
 //    	Cuda3DArray<real_t>* nom=new Cuda3DArray<real_t>(obj_proj->getNum(), obj_proj->getDimensions());
 //    	Cuda3DArray<real_t>* denom=new Cuda3DArray<real_t>(obj_proj->getNum(), obj_proj->getDimensions());
@@ -1250,48 +1290,56 @@ void Probe::shift_probe(std::vector<int>& g_ind_vec, std::vector<float2>& sub_px
 	p_y->setFromHost<real_t>(h_p_y, indSize, Npx);
 
 	// FFT2 varProbe=img
-	Cuda3DElement<real_t> avdata = m_intensities->getAt(0);
-	PhaserUtil::getInstance()->ff2Mat(varProbe, varProbe, avdata);
+//	Cuda3DElement<real_t> avdata = m_intensities->getAt(0);
+	PhaserUtil::getInstance()->ff2Mat(varProbe, varProbe, m_intensities->getAt(0));
 
-	CudaSmartPtr p_positions_x = new Cuda2DArray<real_t>(indSize, Npx);
-	real_t* h_p_positions_x = p_positions_x->getHostPtr<real_t>();
-	for(int j=0; j<indSize; j++)
-	{
-		for(int p=0;p<Npx;p++)
-			h_p_positions_x[j*Npx+p]=p*1.0/Npx-0.5;
-	}
-    p_positions_x->setFromHost<real_t>(h_p_positions_x, indSize, Npx);
-    CudaSmartPtr grid = new Cuda2DArray<real_t>(indSize, Npx);
-    h_shiftFFTy(p_positions_x->getDevicePtr<real_t>(), grid->getDevicePtr<real_t>(), grid->getX(), grid->getY(), grid->getAlignedY());
+//	CudaSmartPtr p_positions_x_ind = new Cuda2DArray<real_t>(indSize, Npx);
+//	real_t* h_p_positions_x = p_positions_x_ind->getHostPtr<real_t>();
+//	for(int j=0; j<indSize; j++)
+//	{
+//		for(int p=0;p<Npx;p++)
+//			h_p_positions_x[j*Npx+p]=p*1.0/Npx-0.5;
+//	}
+//	p_positions_x_ind->setFromHost<real_t>(h_p_positions_x, indSize, Npx);
 
-    CudaSmartPtr xgrid = new Cuda2DArray<real_t>(indSize, Npx);
-    h_multiply(p_x->getDevicePtr<real_t>(), grid->getDevicePtr<real_t>(), xgrid->getDevicePtr<real_t>(), xgrid->getX(), xgrid->getY(), xgrid->getAlignedY());
+//    CudaSmartPtr grid = new Cuda2DArray<real_t>(indSize, Npx);
+//    h_shiftFFTy(p_positions_x_ind->getDevicePtr<real_t>(), grid->getDevicePtr<real_t>(), indSize, grid->getY(), grid->getAlignedY());
 
-    CudaSmartPtr ygrid = new Cuda2DArray<real_t>(indSize, Npx);
-    h_multiply(p_y->getDevicePtr<real_t>(), grid->getDevicePtr<real_t>(), ygrid->getDevicePtr<real_t>(), ygrid->getX(), ygrid->getY(), ygrid->getAlignedY());
+//    CudaSmartPtr xgrid = new Cuda2DArray<real_t>(indSize, Npx);
+    h_multiply(p_x->getDevicePtr<real_t>(), grid->getDevicePtr<real_t>(), xgrid->getDevicePtr<real_t>(), indSize, xgrid->getY(), xgrid->getAlignedY());
 
-	Cuda3DArray<real_t>* allgrid=new Cuda3DArray<real_t>(indSize, make_uint2(Npx,Npx));
-	for(int i=0; i<allgrid->getNum(); i++)
+//    CudaSmartPtr ygrid = new Cuda2DArray<real_t>(indSize, Npx);
+    h_multiply(p_y->getDevicePtr<real_t>(), grid->getDevicePtr<real_t>(), ygrid->getDevicePtr<real_t>(), indSize, ygrid->getY(), ygrid->getAlignedY());
+
+
+//	Cuda3DArray<real_t>* allgrid=new Cuda3DArray<real_t>(indSize, make_uint2(Npx,Npx));
+	for(int i=0; i<indSize; i++)
 	{
 		h_realSingleSum(xgrid->getDevicePtr<real_t>()+(size_t)i*(size_t)xgrid->getAlignedY(), ygrid->getDevicePtr<real_t>()+(size_t)i*(size_t)ygrid->getAlignedY(),
-				allgrid->getAt(i).getDevicePtr(), allgrid->getDimensions().x, allgrid->getDimensions().y, allgrid->getPtr()->getAlignedY());
+				nom->getAt(i).getDevicePtr(), nom->getDimensions().x, nom->getDimensions().y, nom->getPtr()->getAlignedY());
 	}
 
-	Cuda3DArray<complex_t>* tmpgrid=new Cuda3DArray<complex_t>(indSize, make_uint2(Npx,Npx));
-	for(int i=0; i<allgrid->getNum(); i++)
-	{
-		h_realComplexExp(allgrid->getAt(i).getDevicePtr(), tmpgrid->getAt(i).getDevicePtr(), allgrid->getDimensions().x, allgrid->getDimensions().y,
-				allgrid->getPtr()->getAlignedY(), (-2.0*CUDART_PI));
-	}
+//	Cuda3DArray<complex_t>* tmpgrid=new Cuda3DArray<complex_t>(indSize, make_uint2(Npx,Npx));
+//	for(int i=0; i<indSize; i++)
+//	{
+//		h_realComplexExp(allgrid->getAt(i).getDevicePtr(), tmpgrid->getAt(i).getDevicePtr(), allgrid->getDimensions().x, allgrid->getDimensions().y,
+//				allgrid->getPtr()->getAlignedY(), (-2.0*CUDART_PI));
+//	}
 
-	CXMath::multiply<complex_t>(varProbe, tmpgrid, varProbe);
+	h_realComplexExp(nom->getPtr()->getDevicePtr<real_t>(), img->getPtr()->getDevicePtr<complex_t>(), indSize*nom->getDimensions().x, nom->getDimensions().y,
+			nom->getPtr()->getAlignedY(), (-2.0*CUDART_PI));
 
-	PhaserUtil::getInstance()->iff2Mat(varProbe, varProbe, avdata);
+//	CXMath::multiply<complex_t>(varProbe, tmpgrid, varProbe);
+
+	h_multiply(varProbe->getPtr()->getDevicePtr<complex_t>(), img->getPtr()->getDevicePtr<complex_t>(), varProbe->getPtr()->getDevicePtr<complex_t>(),
+			indSize*varProbe->getDimensions().x, varProbe->getPtr()->getY(), varProbe->getPtr()->getAlignedY());
+
+	PhaserUtil::getInstance()->iff2Mat(varProbe, varProbe, m_intensities->getAt(0));
 	h_normalize(varProbe->getPtr()->getDevicePtr<complex_t>(), varProbe->getPtr()->getX(),
 			varProbe->getPtr()->getY(), varProbe->getPtr()->getAlignedY(), 1.0/(Npx*Npx));
 
-	delete allgrid;
-	delete tmpgrid;
+//	delete allgrid;
+//	delete tmpgrid;
 
 
 }
@@ -1335,7 +1383,6 @@ void Probe::update_variable_probe(CudaSmartPtr probe_update_m, Cuda3DArray<compl
 	double probe_evolNorm=0;
 
 //	uint2 objprojDim=obj_proj->getDimensions();
-
 	// resid=img tempArr=dX
 //	Cuda3DArray<complex_t>* resid=new Cuda3DArray<complex_t>(block_size, objprojDim);
 //	Cuda3DArray<complex_t>* tempArr=new Cuda3DArray<complex_t>(block_size, objprojDim);
@@ -1350,7 +1397,7 @@ void Probe::update_variable_probe(CudaSmartPtr probe_update_m, Cuda3DArray<compl
 
 //	CudaSmartPtr tempArrR=new Cuda2DArray<real_t>(objprojDim.x, objprojDim.y);
 //	CudaSmartPtr tempArrC= new Cuda2DArray<complex_t>(objprojDim.x, objprojDim.y);
-	CudaSmartPtr tempArrObjR= new Cuda2DArray<real_t>(p_object->getX(), p_object->getY());
+//	CudaSmartPtr tempArrObjR= new Cuda2DArray<real_t>(p_object->getX(), p_object->getY());
 
 	if(rParams->variable_probe)
 	{
@@ -1365,9 +1412,6 @@ void Probe::update_variable_probe(CudaSmartPtr probe_update_m, Cuda3DArray<compl
 
 		h_multiply(p_object->getDevicePtr<real_t>(), 1.0/tempWeight, tempArrObjR->getDevicePtr<real_t>(),
 				tempArrObjR->getX(), tempArrObjR->getY(), tempArrObjR->getAlignedY());
-
-
-
 
 	    if(obj_proj->getNum()==m_regularSize)
 	    {

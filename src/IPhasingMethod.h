@@ -51,6 +51,7 @@ public:
 	IPhasingMethod(){}
 	virtual ~IPhasingMethod(){}
 
+	virtual void initMem(IPtychoScanMesh* scanMesh, uint2 probeSize)=0;
 	virtual real_t iteration(Diffractions*, Probe*, Sample*, IPtychoScanMesh*, std::vector< std::vector<real_t> >&, const std::vector<float2>&,
 							bool phaseConstraint,bool updateProbe,
 							bool updateProbeModes, unsigned int iter, bool RMS=false) = 0;
