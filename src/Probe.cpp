@@ -403,16 +403,16 @@ bool Probe::initMLH(unsigned int desiredShape, double lambda, double dx_recon, d
 	tempProbe = new Cuda2DArray<complex_t>(m_modes->getDimensions().x,m_modes->getDimensions().y);
 
 //	/////////////////////////////// test with matlab code, uncomment h_initVarProbe
-    float randna[]={0, 0.3362, 0.0803, 1.1553, 0.5397};
-    float randnb[]={0, -0.3993, -1.2279, -1.3133, 0.2743};
+//    float randna[]={0, 0.3362, 0.0803, 1.1553, 0.5397};
+//    float randnb[]={0, -0.3993, -1.2279, -1.3133, 0.2743};
 	////////////////////////////////////
 
     for(unsigned int i=1; i<m_modes->getNum(); ++i)
 	{
-		h_initVarProbe(m_modes->getAt(i).getDevicePtr(), tempProbe->getDevicePtr<complex_t>(), m_modes->getAt(0).getDevicePtr(),
-				m_modes->getDimensions().x, m_modes->getDimensions().y, m_modes->getPtr()->getAlignedY(), randna[i], randnb[i]);
 //		h_initVarProbe(m_modes->getAt(i).getDevicePtr(), tempProbe->getDevicePtr<complex_t>(), m_modes->getAt(0).getDevicePtr(),
-//				m_modes->getDimensions().x, m_modes->getDimensions().y, m_modes->getPtr()->getAlignedY(), normalRandom(), normalRandom());
+//				m_modes->getDimensions().x, m_modes->getDimensions().y, m_modes->getPtr()->getAlignedY(), randna[i], randnb[i]);
+		h_initVarProbe(m_modes->getAt(i).getDevicePtr(), tempProbe->getDevicePtr<complex_t>(), m_modes->getAt(0).getDevicePtr(),
+				m_modes->getDimensions().x, m_modes->getDimensions().y, m_modes->getPtr()->getAlignedY(), normalRandom(), normalRandom());
 
 	}
 
@@ -511,13 +511,13 @@ bool Probe::initEvo(int Npos, int variable_probe_modes, std::vector <uint2> oROI
 
 	/////////////////////////////////////
 	// Load from file to test initVarModes has the real randome one test with matlab
-	char* filename1="/data2/JunjingData/probe21.csv";
-	char* filename2="/data2/JunjingData/probe22.csv";
-	m_extramodes->load2Complex<complex_t>(filename1, filename2);
-	char* filename3="/data2/JunjingData/probeevolution.csv";
-	std::vector <double> vec;
-	PhaserUtil::getInstance()->load<double>(filename3, vec);
-	m_probe_evolution[1]=vec;
+//	char* filename1="/data2/JunjingData/probe21.csv";
+//	char* filename2="/data2/JunjingData/probe22.csv";
+//	m_extramodes->load2Complex<complex_t>(filename1, filename2);
+//	char* filename3="/data2/JunjingData/probeevolution.csv";
+//	std::vector <double> vec;
+//	PhaserUtil::getInstance()->load<double>(filename3, vec);
+//	m_probe_evolution[1]=vec;
 	/////////////////////////////////////
 
 	CudaSmartPtr d_result = new Cuda2DArray<real_t>(m_extramodes->getDimensions().x, m_extramodes->getDimensions().y);
