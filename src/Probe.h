@@ -54,6 +54,9 @@ public:
 	real_t MAX_ILLUM;
 	std::vector <complex_t> beta_probevec;
 
+	double* dxarr;
+	double* dyarr;
+
 	Cuda2DArray<real_t>* tempArrR;
 //	Cuda2DArray<real_t>* tempArrObjR;
 
@@ -75,6 +78,8 @@ public:
     CudaSmartPtr grid;
     CudaSmartPtr xgrid;
     CudaSmartPtr ygrid;
+
+    complex_t factor;
 
 private:
 	// 3d array for the 2d probes

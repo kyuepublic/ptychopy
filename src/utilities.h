@@ -293,32 +293,12 @@ inline double normalRandom() {
    double v2=rand_gen();
    return cos(2*3.14*v2)*sqrt(-2.*log(v1));
 }
-//inline int rand_gen_no(int randMax) {
-//   // return a uniformly distributed random value
-//   return ( (int)(rand()) + 1 )/( (int)(randMax) + 1 );
-//}
+
 // [lower upper]
 inline int rand_gen_no(int lower, int upper) {
 	// return a uniformly distributed random value
     return rand() % (++upper - lower) + lower;
 }
-
-//inline void meanVector(std::vector <double>& mat, int rows, int cols)
-//{
-//
-//
-//    for (int j = 0; j < cols; j++) {
-//
-//        double mean = 0.00;
-//        double sum = 0;
-//        for (int i = 0; i < rows; i++)
-//            sum += mat[i][j];
-//        mean = sum / rows;
-//        cout << mean << " ";
-//    }
-//
-//
-//}
 
 __host__ int getReductionThreadNum(int size);
 __host__ void h_initColorTransferTexture();
@@ -362,6 +342,9 @@ __host__ void h_multiply(const complex_t* a, const complex_t& b, complex_t* resu
 								unsigned int x, unsigned int y, unsigned int alignedY, bool normalize = false);
 __host__ void h_multiply(const real_t* a, const real_t& b, real_t* result,
 								unsigned int x, unsigned int y, unsigned int alignedY, bool normalize = false);
+
+__host__ void h_multiplyPage(complex_t* a, complex_t* b, complex_t* result, unsigned int x, unsigned int y, unsigned int alignedY,
+		unsigned int pagex, unsigned int axOffset=0, unsigned int ayOffset=0, unsigned int bxOffset=0, unsigned int byOffset=0);
 
 __host__ void h_multiplyReal(real_t* a, real_t* result, unsigned int x, unsigned int y, unsigned int alignedY);
 
@@ -444,7 +427,7 @@ __host__ real_t h_realSum(const real_t* a, unsigned int x1, unsigned int x2, uns
 __host__ void h_realSum(real_t* d_leftArr, real_t* d_rightArr, real_t* d_result, real_t leftFactor, real_t rightFactor, unsigned int x, unsigned int y,
 								unsigned int alignedY);
 
-__host__ real_t h_realSumCUB(real_t* d_in, unsigned int x, unsigned int y, unsigned int alignedY);
+//__host__ real_t h_realSumCUB(real_t* d_in, unsigned int x, unsigned int y, unsigned int alignedY);
 
 // Get the mean2 of each 2d array
 __host__ real_t h_mean2(real_t* a, unsigned int x, unsigned int y, unsigned int alignedY);
@@ -477,6 +460,12 @@ __host__ void h_get_optimal_step_lsq(complex_t* chi,complex_t* object_update_pro
 __host__ void h_mul_rca_mulc_rcr(complex_t* obj_proj_i, complex_t* modes_i, complex_t* chi_i, real_t* weight_proj,
 		unsigned int x, unsigned int y, unsigned int alignedY);
 
+__host__ void h_multiplyAbsConjuRealWhole(complex_t* a, complex_t* b, complex_t* c, real_t* result1, real_t* result2, unsigned int x, unsigned int y, unsigned int alignedY,
+		unsigned int pagex);
+
+__host__ void h_multiplyAbsConjuReal(complex_t* a, complex_t* b, complex_t* c, real_t* result1, real_t* result2, unsigned int x, unsigned int y, unsigned int alignedY,
+		unsigned int pagex);
+
 
 template<typename T> class Cuda3DArray;
 template<typename T> class Cuda3DElement;
@@ -496,9 +485,18 @@ public:
 	GPUProperties();
 	~GPUProperties(){}
 
-	int getDeviceCount() 							{return m_gpuCount;}
-	unsigned int getGPUMaxThreads() const			{return m_gpuMaxThread;}
-	unsigned int alignToWarp(unsigned int dimension){return gh_iAlignUp(dimension, m_gpuWarpSize);}
+	int getDeviceCount()
+	{
+		return m_gpuCount;
+	}
+	unsigned int getGPUMaxThreads() const
+	{
+		return m_gpuMaxThread;
+	}
+	unsigned int alignToWarp(unsigned int dimension)
+	{
+		return gh_iAlignUp(dimension, m_gpuWarpSize);
+	}
 	size_t getGPUAvailableMemory()  const;
 };
 

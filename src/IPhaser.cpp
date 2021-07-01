@@ -290,10 +290,10 @@ void IPhaser::prePhase()
 //	m_scanMesh->get_close_indices();
 
 	////////////////////// test with matlab
-//	if(!rParams->objectGuess.empty())
-//		m_sample->loadGuess(rParams->objectGuess.c_str());
-//	else if(rParams->algorithm.compare("MLs")==0&&rParams->simulated==false)
-//		m_sample->initObject();
+	if(!rParams->objectGuess.empty())
+		m_sample->loadGuess(rParams->objectGuess.c_str());
+	else if(rParams->algorithm.compare("MLs")==0&&rParams->simulated==false)
+		m_sample->initObject();
     //////////////////////////
 
 
@@ -328,11 +328,15 @@ void IPhaser::prePhase()
 		{
 
 		}
+
+		m_probe->initMem(m_scanMesh);
+		m_phasingMethods[0].method->initMem(m_scanMesh, m_probe->getModes()->getDimensions());
+		m_diffractions->initMem(m_scanMesh, m_probe->getModes()->getDimensions());
 	}
 
-	m_probe->initMem(m_scanMesh);
-	m_phasingMethods[0].method->initMem(m_scanMesh, m_probe->getModes()->getDimensions());
-	m_diffractions->initMem(m_scanMesh, m_probe->getModes()->getDimensions());
+//	m_probe->initMem(m_scanMesh);
+//	m_phasingMethods[0].method->initMem(m_scanMesh, m_probe->getModes()->getDimensions());
+//	m_diffractions->initMem(m_scanMesh, m_probe->getModes()->getDimensions());
 
 //	m_scanMesh->generateMesh(this->getBounds());
 }
@@ -400,7 +404,13 @@ real_t IPhaser::phaseStep(IPhasingMethod* m, unsigned int i)
 void IPhaser::postPhase()
 {
 
-	m_probe->freeMem(m_scanMesh);
+	const ReconstructionParams* rParams = CXParams::getInstance()->getReconstructionParams();
+
+	if(rParams->algorithm.compare("MLs")==0)
+	{
+		m_probe->freeMem(m_scanMesh);
+	}
+
 
 	m_probe->endModalReconstruction();
 	m_scanMesh->clear();
@@ -522,8 +532,6 @@ void IPhaser::phaseLoopVisStep()
 			printf("Writing step reconstruction object array (%u,%u) to disk...\n", m_sample->getObjectArray()->getX(), m_sample->getObjectArray()->getY());
 			const ReconstructionParams* rParams = CXParams::getInstance()->getReconstructionParams();
 			char filename[255];
-			//sprintf(filename, "data/%s_probes_%d.%s", rParams->reconstructionID.c_str(), r, rParams->binaryOutput?"bin":"csv");
-			//m_probe->getModes()->getPtr()->save<complex_t>(filename, rParams->binaryOutput);
 			sprintf(filename, "data/%s_object_%d.%s", rParams->reconstructionID.c_str(), i, rParams->binaryOutput?"bin":"csv");
 			m_sample->getObjectArray()->save<complex_t>(filename, rParams->binaryOutput);
 

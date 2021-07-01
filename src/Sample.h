@@ -78,10 +78,22 @@ public:
 	void loadGuess(const char*);
 	void setObjectArrayShape(uint2 xy);
 	void setObjectArray(CudaSmartPtr c) {m_objectArray=c;}
-	real_t getMaxIntensity()			 const {return m_maxObjectIntensity;}
-	uint2 getObjectArrayShape() 		 const {return m_objectArrayShape;}
-	unsigned int getObjectArrayShapeX()  const {return m_objectArrayShape.x;}
-	unsigned int getObjectArrayShapeY()  const {return m_objectArrayShape.y;}
+	real_t getMaxIntensity()			 const
+	{
+		return m_maxObjectIntensity;
+	}
+	uint2 getObjectArrayShape() 		 const
+	{
+		return m_objectArrayShape;
+	}
+	unsigned int getObjectArrayShapeX()  const
+	{
+		return m_objectArrayShape.x;
+	}
+	unsigned int getObjectArrayShapeY()  const
+	{
+		return m_objectArrayShape.y;
+	}
 	CudaSmartPtr getObjectArray() 		 const {return m_objectArray;}
 	CudaSmartPtr getIntensities() 		 const {return m_objectIntensities;}
 	void clearObjectArray();

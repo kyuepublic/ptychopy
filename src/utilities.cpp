@@ -165,9 +165,9 @@ void CXUtil::iff2Mat(Cuda3DArray<complex_t>* d_psi, Cuda3DArray<complex_t>* d_ou
 		fprintf(stderr, "CUFFT error: ExecC2C Inverse failed");
 	cutilCheckMsg("CXUtil::iff2Mat() FFT execution failed!\n");
 
-	if (cudaDeviceSynchronize() != cudaSuccess){
-		fprintf(stderr, "Cuda error: Failed to synchronize\n");
-	}
+//	if (cudaDeviceSynchronize() != cudaSuccess){
+//		fprintf(stderr, "Cuda error: Failed to synchronize\n");
+//	}
 }
 
 void CXUtil::applyFFT(const Cuda3DArray<complex_t>* d_psi, Cuda3DArray<complex_t>* d_output,

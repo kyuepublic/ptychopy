@@ -56,7 +56,9 @@
 using namespace std;
 
 PartialReconstruction::~PartialReconstruction()
-{if(neighborParts_d) delete neighborParts_d;}
+{
+	if(neighborParts_d) delete neighborParts_d;
+}
 
 void PartialReconstruction::updateBuffer(const diy::Master::ProxyWithLink& cp, void* devPtr)
 {
@@ -264,7 +266,9 @@ bool MPIPhaser::init()
 real_t MPIPhaser::phaseStep(IPhasingMethod* m, unsigned int i)
 {
 	const ReconstructionParams* rParams = CXParams::getInstance()->getReconstructionParams();
+
 	real_t error = IPhaser::phaseStep(m, i);
+
 	if(rParams->shareFrequency>0 && i%rParams->shareFrequency==0 && m_procs>1)
 		sharePartialReconstruction();
 	return error;

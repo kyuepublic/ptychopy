@@ -71,7 +71,7 @@ real_t MLS::iteration(Diffractions* diffs, Probe* probe,
 						bool phaseConstraint, bool updateProbe, bool updateProbeModes, unsigned int iter, bool RMS)
 {
 
-//	object->printObject(165, 161);
+	object->printObject(165, 161);
 
 	const ReconstructionParams* rParams = CXParams::getInstance()->getReconstructionParams();
 	int diffSize=diffs->getPatterns()->getNum();
@@ -79,25 +79,23 @@ real_t MLS::iteration(Diffractions* diffs, Probe* probe,
 	fourierErrors[iterC].resize(diffSize);
 
 	if( iter==1 || (iter >= rParams->probe_pos_search) )
-	{//find_reconstruction_ROI
+	{
 		scanMesh->find_reconstruction_ROI_O();
 	}
-	//remove the ambiguity in the probe / object reconstruction => keep average object transmission around 1
+
 	uint2 objectx=scanMesh->getobject_ROIx();
 	uint2 objecty=scanMesh->getobject_ROIy();
 	probe->calc_object_norm(objectx, objecty, object->getObjectArray());
 
 //	object->printObject(165, 161);
 
-	//remove extra degree of freedom  other optimizations
 	scanMesh->updateScanPositionsDiff();
 
-	// remove freedom from the OPRP extension
 	if(rParams->variable_probe_modes && iter>rParams->probe_reconstruct)
 	{
 		probe->remove_extra_degree();
 	}
-	//updated cached illumination
+
 	probe->updated_cached_illumination(scanMesh->m_oROI1, scanMesh->m_oROI2);
 
 	int randNoIndex=rand_gen_no(1, scanMesh->m_miniter)-1;
@@ -111,21 +109,17 @@ real_t MLS::iteration(Diffractions* diffs, Probe* probe,
 
 	///////////////////////////test with matlab
 	// For testing, set randNoIndex to 23 always
-//	randNoIndex=23;
-//	char* filename="/data2/JunjingData/ind_range.csv";
-//	std::vector<int> vecFile;
-//	scanMesh->loadTestIGroup(filename, vecFile);
-//	ind_range=vecFile;
+	randNoIndex=3;
+	char* filename="/data2/JunjingData/ind_range.csv";
+	std::vector<int> vecFile;
+	scanMesh->loadTestIGroup(filename, vecFile);
+	ind_range=vecFile;
 	///////////////////////////
-
-
-	//varProbe=probe1 other probe is still just the original
 
 	uint2 probeSize=probe->getModes()->getDimensions();
 	Cuda3DArray<complex_t>* obj_proj=new Cuda3DArray<complex_t>(group_size, probeSize);
 	Cuda3DArray<complex_t>* varProbe=new Cuda3DArray<complex_t>(group_size, probeSize);
 	Cuda3DArray<complex_t>* tmpArr=new Cuda3DArray<complex_t>(group_size, probeSize);
-
 
 	std::vector < Cuda3DArray<complex_t>* > psivec;
 	Cuda3DArray<real_t>* apsi=new Cuda3DArray<real_t>(group_size, probeSize);
@@ -217,15 +211,17 @@ real_t MLS::iteration(Diffractions* diffs, Probe* probe,
 		}
 
 
-		probe->get_projections(object->getObjectArray(), obj_proj, g_ind_vec, scanMesh->m_oROI1, scanMesh->m_oROI2);
-//		if(obj_proj->getNum()==1)
-//		{
-//			probe->get_projections_cpu(object->getObjectArray(), obj_proj, g_ind_vec, scanMesh->m_oROI_vec1, scanMesh->m_oROI_vec2);
-//		}
-//		else
-//		{	// run on GPU
-//			probe->get_projections(object->getObjectArray(), obj_proj, g_ind_vec, scanMesh->m_oROI1, scanMesh->m_oROI2);
-//		}
+//		probe->get_projections(object->getObjectArray(), obj_proj, g_ind_vec, scanMesh->m_oROI1, scanMesh->m_oROI2);
+
+		if(obj_proj->getNum()==1)
+		{
+			probe->get_projections_cpu(object->getObjectArray(), obj_proj, g_ind_vec, scanMesh->m_oROI_vec1, scanMesh->m_oROI_vec2);
+
+		}
+		else
+		{	// run on GPU
+			probe->get_projections(object->getObjectArray(), obj_proj, g_ind_vec, scanMesh->m_oROI1, scanMesh->m_oROI2);
+		}
 
 //		object->printObject(165, 161);
 		probe->get_illumination_probe(g_ind_vec, scanMesh->m_sub_px_shift, varProbe, psivec, obj_proj, apsi);
@@ -259,7 +255,17 @@ real_t MLS::iteration(Diffractions* diffs, Probe* probe,
 						weight_proj->getX(), weight_proj->getY(), weight_proj->getAlignedY());
 
 				// TODO run on CPU
-				probe->get_projections(weight_proj, weight_proj_proj, g_ind_vec, scanMesh->m_oROI1, scanMesh->m_oROI2);
+//				probe->get_projections(weight_proj, weight_proj_proj, g_ind_vec, scanMesh->m_oROI1, scanMesh->m_oROI2);
+
+        		if(obj_proj->getNum()==1)
+        		{
+        			probe->get_projections_cpu(weight_proj, weight_proj_proj, g_ind_vec, scanMesh->m_oROI_vec1, scanMesh->m_oROI_vec2);
+
+        		}
+        		else
+        		{	// run on GPU
+        			probe->get_projections(weight_proj, weight_proj_proj, g_ind_vec, scanMesh->m_oROI1, scanMesh->m_oROI2);
+        		}
 
 				h_multiply(weight_proj_proj->getPtr()->getDevicePtr<real_t>(), probe_update->getPtr()->getDevicePtr<complex_t>(), tmpArr->getPtr()->getDevicePtr<complex_t>(),
 						probe_update->getPtr()->getX(), probe_update->getPtr()->getY(), probe_update->getPtr()->getAlignedY());
@@ -341,12 +347,6 @@ real_t MLS::iteration(Diffractions* diffs, Probe* probe,
 
 				if(llp==1)
 				{
-//					Cuda3DArray<complex_t>* dPO=new Cuda3DArray<complex_t>(g_ind_vec.size(), probeSize);
-//					Cuda3DArray<real_t>* AA1=new Cuda3DArray<real_t>(g_ind_vec.size(), probeSize);
-//					Cuda3DArray<complex_t>* AA2=new Cuda3DArray<complex_t>(g_ind_vec.size(), probeSize);
-//					Cuda3DArray<real_t>* AA4=new Cuda3DArray<real_t>(g_ind_vec.size(), probeSize);
-//					Cuda3DArray<real_t>* Atb1=new Cuda3DArray<real_t>(g_ind_vec.size(), probeSize);
-//					Cuda3DArray<real_t>* Atb2=new Cuda3DArray<real_t>(g_ind_vec.size(), probeSize);
 
 					CXMath::multiply<complex_t>(probe_update_m.get(), obj_proj, dPO);
 					h_get_optimal_step_lsq(psivec[ll-1]->getPtr()->getDevicePtr<complex_t>(),object_update_proj->getPtr()->getDevicePtr<complex_t>(),
@@ -409,12 +409,6 @@ real_t MLS::iteration(Diffractions* diffs, Probe* probe,
 	            				make_complex_t(std::real(LSQ_stepVec[indindex](0)), std::imag(LSQ_stepVec[indindex](0))));
 	                }
 
-//					delete dPO;
-//					delete AA1;
-//					delete AA2;
-//					delete AA4;
-//					delete Atb1;
-//					delete Atb2;
 				}
 				else
 				{

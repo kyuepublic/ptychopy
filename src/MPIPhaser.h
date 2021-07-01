@@ -77,7 +77,9 @@ struct PartialReconstruction
 	unsigned int neighborNum;
 
 	PartialReconstruction(int n=0): bufferParams(), neighborNum(n), neighborParts_d(0)
-	{}
+	{
+
+	}
 
 	~PartialReconstruction();
 
@@ -97,19 +99,21 @@ struct BlockCreator
 	diy::Master&  master;
 
 	BlockCreator(diy::Master& m): master(m)
-	{}
+	{
+
+	}
     void  operator()(int gid,                // block global id
                      const Bounds& core,     // block bounds without any ghost added
                      const Bounds& bounds,   // block bounds including any ghost region added
                      const Bounds& domain,   // global data bounds
                      const RLink& link)     // neighborhood
-        const
-        {
-    		PartialReconstruction* b = new PartialReconstruction((unsigned int)link.size());
-    		RLink* l = new RLink(link);
-            diy::Master& m = const_cast<diy::Master&>(master);
-            m.add(gid, b, l); // add block to the master (mandatory)
-        }
+	const
+	{
+		PartialReconstruction* b = new PartialReconstruction((unsigned int)link.size());
+		RLink* l = new RLink(link);
+		diy::Master& m = const_cast<diy::Master&>(master);
+		m.add(gid, b, l); // add block to the master (mandatory)
+	}
 };
 //
 

@@ -46,8 +46,8 @@
 #include <thrust/transform.h>
 #include <thrust/extrema.h>
 
-#include <cub/device/device_reduce.cuh>
-using namespace cub;
+//#include <cub/device/device_reduce.cuh>
+//using namespace cub;
 
 /* extern shared memory for dynamic allocation */
 extern __shared__ real_t shared_array[];
@@ -316,6 +316,72 @@ __global__ void d_mul_rca_mulc_rcr(complex_t* a, complex_t* b, complex_t* c, rea
 	}
 
 }
+
+// Only has one row of factor col from 1 to alignedy
+template<bool enoughThreads>
+__global__ void d_multiplyPage(const complex_t* a, complex_t* b, complex_t* result,
+								unsigned int x, unsigned int y, unsigned int alignedY, unsigned int pagex)
+{
+	unsigned int row = enoughThreads? (blockIdx.x*blockDim.y) + threadIdx.y : blockIdx.x;
+	unsigned int col = enoughThreads? threadIdx.x : (blockIdx.y*blockDim.x) + threadIdx.x;
+
+	// bcol=col
+	unsigned int brow=row%pagex;
+	unsigned int aindex = (row * alignedY) + col;
+	unsigned int bindex = (brow * alignedY) + col;
+
+
+	if(row<x && col<y)
+	{
+		result[aindex] = mul_complex_t(a[aindex], b[bindex]);
+	}
+}
+
+template<bool enoughThreads>
+__global__ void d_multiplyAbsConjuRealWhole(const complex_t* a, complex_t* b, complex_t* c, real_t* result1,
+		real_t* result2, unsigned int x, unsigned int y, unsigned int alignedY,
+		unsigned int pagex)
+{
+	unsigned int row = enoughThreads? (blockIdx.x*blockDim.y) + threadIdx.y : blockIdx.x;
+	unsigned int col = enoughThreads? threadIdx.x : (blockIdx.y*blockDim.x) + threadIdx.x;
+	unsigned int index = (row * alignedY) + col;
+
+	if(row<x && col<y)
+	{
+		complex_t img = mul_complex_t(a[index], b[index]);
+		real_t temp = abs_complex_t(img);
+		result1[index] = temp*temp;
+		img = mul_complex_t(c[index], conj_complex_t(img));
+		result2[index]=real_complex_t(img);
+	}
+}
+
+template<bool enoughThreads>
+__global__ void d_multiplyAbsConjuReal(const complex_t* a, complex_t* b, complex_t* c, real_t* result1,
+		real_t* result2, unsigned int x, unsigned int y, unsigned int alignedY,
+		unsigned int pagex)
+{
+	unsigned int row = enoughThreads? (blockIdx.x*blockDim.y) + threadIdx.y : blockIdx.x;
+	unsigned int col = enoughThreads? threadIdx.x : (blockIdx.y*blockDim.x) + threadIdx.x;
+
+	// bcol=col
+	unsigned int brow=row%pagex;
+	unsigned int aindex = (row * alignedY) + col;
+	unsigned int bindex = (brow * alignedY) + col;
+
+
+	if(row<x && col<y)
+	{
+		complex_t img = mul_complex_t(a[aindex], b[bindex]);
+		real_t temp = abs_complex_t(img);
+		result1[aindex] = temp*temp;
+
+		img = mul_complex_t(c[aindex], conj_complex_t(img));
+		result2[aindex]=real_complex_t(img);
+	}
+}
+
+
 
 // Only has one row of factor col from 1 to alignedy
 template<bool enoughThreads>
@@ -1161,9 +1227,9 @@ __host__ real_t h_realSum(real_t* a, unsigned int x, unsigned int y, unsigned in
 //	thrust::device_ptr<real_t> devPtr_a = thrust::device_pointer_cast(a);
 //	return thrust::reduce(devPtr_a, devPtr_a+(x*alignedY));
 
-//	double sum=h_realSum(a, 0, x, 0, y, alignedY);
+	double sum=h_realSum(a, 0, x, 0, y, alignedY);
 
-	real_t sum = h_realSumCUB(a, x, y, alignedY);
+//	real_t sum = h_realSumCUB(a, x, y, alignedY);
 
 	return sum;
 }
@@ -1171,9 +1237,9 @@ __host__ real_t h_realSum(real_t* a, unsigned int x, unsigned int y, unsigned in
 __host__ real_t h_mean2(real_t* a, unsigned int x, unsigned int y, unsigned int alignedY)
 {
 
-//	double sum=h_realSum(a, 0, x, 0, y, alignedY);
+	double sum=h_realSum(a, 0, x, 0, y, alignedY);
 
-	double sum=h_realSumCUB(a, x, y, alignedY);
+//	double sum=h_realSumCUB(a, x, y, alignedY);
 
 	return sum/(x*y);
 }
@@ -1186,33 +1252,33 @@ __host__ real_t h_realSum(const real_t* a, unsigned int x1, unsigned int x2, uns
 
 }
 
-__host__ real_t h_realSumCUB(real_t* d_in, unsigned int x, unsigned int y, unsigned int alignedY)
-{
-
-	real_t* d_out;
-	cudaMalloc((void **)&d_out, sizeof(real_t));
-
-    // Request and allocate temporary storage
-    void            *d_temp_storage = NULL;
-    size_t          temp_storage_bytes = 0;
-    int num_items=x*alignedY;
-
-    DeviceReduce::Sum(d_temp_storage, temp_storage_bytes, d_in, d_out, num_items);
-    cudaMalloc((void**)&d_temp_storage, temp_storage_bytes);
-    DeviceReduce::Sum(d_temp_storage, temp_storage_bytes, d_in, d_out, num_items);
-    cudaDeviceSynchronize();
-
-    real_t sum=0;
-    cudaMemcpy(&sum, d_out, sizeof(real_t), cudaMemcpyDeviceToHost);
-
-	cudaFree(d_out);
-	cudaFree(d_temp_storage);
-//    printf("sum: %15e.\n", sum);
-
-    cutilCheckMsg("h_realSumCUB() execution failed!\n");
-
-    return sum;
-}
+//__host__ real_t h_realSumCUB(real_t* d_in, unsigned int x, unsigned int y, unsigned int alignedY)
+//{
+//
+//	real_t* d_out;
+//	cudaMalloc((void **)&d_out, sizeof(real_t));
+//
+//    // Request and allocate temporary storage
+//    void            *d_temp_storage = NULL;
+//    size_t          temp_storage_bytes = 0;
+//    int num_items=x*alignedY;
+//
+//    DeviceReduce::Sum(d_temp_storage, temp_storage_bytes, d_in, d_out, num_items);
+//    cudaMalloc((void**)&d_temp_storage, temp_storage_bytes);
+//    DeviceReduce::Sum(d_temp_storage, temp_storage_bytes, d_in, d_out, num_items);
+//    cudaDeviceSynchronize();
+//
+//    real_t sum=0;
+//    cudaMemcpy(&sum, d_out, sizeof(real_t), cudaMemcpyDeviceToHost);
+//
+//	cudaFree(d_out);
+//	cudaFree(d_temp_storage);
+////    printf("sum: %15e.\n", sum);
+//
+//    cutilCheckMsg("h_realSumCUB() execution failed!\n");
+//
+//    return sum;
+//}
 
 __host__ float2 h_maxFloat2(float2* a, unsigned int x, unsigned int y, unsigned int alignedY)
 {
@@ -1436,7 +1502,7 @@ __host__ void h_multiply(real_t* a, real_t* b, real_t* result,	unsigned int x, u
 														axOffset, ayOffset, bxOffset, byOffset);
 		}
 	}
-	cutilCheckMsg("d_complexMultiply() execution failed!\n");
+	cutilCheckMsg("d_realMultiply() execution failed!\n");
 }
 
 
@@ -1447,7 +1513,7 @@ __host__ void h_multiply(const complex_t* a, const complex_t& b, complex_t* resu
 	bool enoughThreads = calcGrids(x,alignedY,grid,block);
 	if(enoughThreads)	d_complexMultiply<true> <<<grid, block>>>(a, b, result, x, y, alignedY, normalize?1.0/(real_t)(x*y):1);
 	else 				d_complexMultiply<false><<<grid, block>>>(a, b, result, x, y, alignedY, normalize?1.0/(real_t)(x*y):1);
-	cutilCheckMsg("d_complexMultiply() execution failed!\n");
+	cutilCheckMsg("h_multiply() execution failed!\n");
 }
 
 __host__ void h_multiply(const real_t* a, const real_t& b, real_t* result,
@@ -1457,7 +1523,37 @@ __host__ void h_multiply(const real_t* a, const real_t& b, real_t* result,
 	bool enoughThreads = calcGrids(x,alignedY,grid,block);
 	if(enoughThreads)	d_multiply<true> <<<grid, block>>>(a, b, result, x, y, alignedY, normalize?1.0/(real_t)(x*y):1);
 	else 				d_multiply<false><<<grid, block>>>(a, b, result, x, y, alignedY, normalize?1.0/(real_t)(x*y):1);
-	cutilCheckMsg("d_complexMultiply() execution failed!\n");
+	cutilCheckMsg("h_multiply() execution failed!\n");
+}
+
+__host__ void h_multiplyPage(complex_t* a, complex_t* b, complex_t* result, unsigned int x, unsigned int y, unsigned int alignedY,
+		unsigned int pagex, unsigned int axOffset, unsigned int ayOffset, unsigned int bxOffset, unsigned int byOffset)
+{
+	dim3 grid, block;
+	bool enoughThreads = calcGrids(x,alignedY,grid,block);
+	if(enoughThreads)	d_multiplyPage<true> <<<grid, block>>>(a, b, result, x, y, alignedY, pagex);
+	else 				d_multiplyPage<false><<<grid, block>>>(a, b, result, x, y, alignedY, pagex);
+	cutilCheckMsg("h_multiplyPage() execution failed!\n");
+}
+
+__host__ void h_multiplyAbsConjuRealWhole(complex_t* a, complex_t* b, complex_t* c, real_t* result1, real_t* result2, unsigned int x, unsigned int y, unsigned int alignedY,
+		unsigned int pagex)
+{
+	dim3 grid, block;
+	bool enoughThreads = calcGrids(x,alignedY,grid,block);
+	if(enoughThreads)	d_multiplyAbsConjuRealWhole<true> <<<grid, block>>>(a, b, c, result1, result2, x, y, alignedY, pagex);
+	else 				d_multiplyAbsConjuRealWhole<false><<<grid, block>>>(a, b, c, result1, result2, x, y, alignedY, pagex);
+	cutilCheckMsg("h_multiplyRow() execution failed!\n");
+}
+
+__host__ void h_multiplyAbsConjuReal(complex_t* a, complex_t* b, complex_t* c, real_t* result1, real_t* result2, unsigned int x, unsigned int y, unsigned int alignedY,
+		unsigned int pagex)
+{
+	dim3 grid, block;
+	bool enoughThreads = calcGrids(x,alignedY,grid,block);
+	if(enoughThreads)	d_multiplyAbsConjuReal<true> <<<grid, block>>>(a, b, c, result1, result2, x, y, alignedY, pagex);
+	else 				d_multiplyAbsConjuReal<false><<<grid, block>>>(a, b, c, result1, result2, x, y, alignedY, pagex);
+	cutilCheckMsg("h_multiplyRow() execution failed!\n");
 }
 
 __host__ void h_multiplyRow(complex_t* a, real_t* b, complex_t* result, unsigned int x, unsigned int y, unsigned int alignedY,
