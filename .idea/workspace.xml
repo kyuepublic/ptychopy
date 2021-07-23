@@ -20,20 +20,23 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5d48ff31-8f99-4299-aad7-47dbe466e20b" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/csv-plugin.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/ptychopy.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/ptychopy.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/setup.py" beforeDir="false" afterPath="$PROJECT_DIR$/setup.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/DM.cu" beforeDir="false" afterPath="$PROJECT_DIR$/src/DM.cu" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/IPhaser.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/IPhaser.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/MLS.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/MLS.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ProbeKernels.cu" beforeDir="false" afterPath="$PROJECT_DIR$/src/ProbeKernels.cu" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/SampleKernels.cu" beforeDir="false" afterPath="$PROJECT_DIR$/src/SampleKernels.cu" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ptychopy.c" beforeDir="false" afterPath="$PROJECT_DIR$/src/ptychopy.c" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utilities.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/utilities.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utilitiesKernels.cu" beforeDir="false" afterPath="$PROJECT_DIR$/src/utilitiesKernels.cu" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testPTY.py" beforeDir="false" afterPath="$PROJECT_DIR$/testPTY.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/baboon1024.pgm" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/baboon128.pgm" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/baboon256.pgm" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/baboon512.pgm" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/lena1024.pgm" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/lena128.pgm" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/lena256.pgm" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/lena512.pgm" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/example/testPTY.py" beforeDir="false" afterPath="$PROJECT_DIR$/example/testPTY.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/install.sh" beforeDir="false" afterPath="$PROJECT_DIR$/install.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ptychopy_GUI.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/readMDA.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/testNPpty.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testMpty.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testPTY.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -225,21 +228,5 @@
       <screen x="0" y="27" width="1920" height="1140" />
     </state>
     <state x="456" y="232" width="1007" height="737" key="SettingsEditor/0.27.1920.1140/1920.0.1920.1200@0.27.1920.1140" timestamp="1625788173241" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/testPTY.py</url>
-          <line>83</line>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/testPTY.py</url>
-          <line>50</line>
-          <option name="timeStamp" value="3" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
   </component>
 </project>
