@@ -71,7 +71,7 @@ real_t MLS::iteration(Diffractions* diffs, Probe* probe,
 						bool phaseConstraint, bool updateProbe, bool updateProbeModes, unsigned int iter, bool RMS)
 {
 
-	object->printObject(165, 161);
+//	object->printObject(165, 161);
 
 	const ReconstructionParams* rParams = CXParams::getInstance()->getReconstructionParams();
 	int diffSize=diffs->getPatterns()->getNum();

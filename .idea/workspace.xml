@@ -1,18 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="BranchesTreeState">
+    <expand>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </expand>
+    <select />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="5d48ff31-8f99-4299-aad7-47dbe466e20b" name="Default" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/csv-plugin.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/ptychopy.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/ptychopy.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/setup.py" beforeDir="false" afterPath="$PROJECT_DIR$/setup.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/DM.cu" beforeDir="false" afterPath="$PROJECT_DIR$/src/DM.cu" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/IPhaser.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/IPhaser.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/IPtychoScanMesh.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/IPtychoScanMesh.cpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/MLS.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/MLS.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/MPIPhaser.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/MPIPhaser.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/MPIPhaser.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/MPIPhaser.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Probe.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Probe.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Probe.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Probe.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Sample.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Sample.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Sample.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/Sample.h" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utilities.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/utilities.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ProbeKernels.cu" beforeDir="false" afterPath="$PROJECT_DIR$/src/ProbeKernels.cu" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/SampleKernels.cu" beforeDir="false" afterPath="$PROJECT_DIR$/src/SampleKernels.cu" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ptychopy.c" beforeDir="false" afterPath="$PROJECT_DIR$/src/ptychopy.c" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/utilities.h" beforeDir="false" afterPath="$PROJECT_DIR$/src/utilities.h" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/utilitiesKernels.cu" beforeDir="false" afterPath="$PROJECT_DIR$/src/utilitiesKernels.cu" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/testPTY.py" beforeDir="false" afterPath="$PROJECT_DIR$/testPTY.py" afterDir="false" />
@@ -44,11 +62,12 @@
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="full.screen.before.presentation.mode" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/../compareptychopy" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
-  <component name="RunManager" selected="Python.ptychopy_GUI">
+  <component name="RunManager" selected="Python.testPTY">
     <configuration name="ptychopy_GUI" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="ptychopy" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -62,6 +81,27 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/ptychopy_GUI.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="testNPpty" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="ptychopy" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/testNPpty.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -91,10 +131,16 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <list>
+      <item itemvalue="Python.ptychopy_GUI" />
+      <item itemvalue="Python.testNPpty" />
+      <item itemvalue="Python.testPTY" />
+    </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.ptychopy_GUI" />
         <item itemvalue="Python.testPTY" />
+        <item itemvalue="Python.testNPpty" />
+        <item itemvalue="Python.ptychopy_GUI" />
       </list>
     </recent_temporary>
   </component>
@@ -111,6 +157,17 @@
     </task>
     <servers />
   </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
   <component name="Vcs.Log.UiProperties">
     <option name="RECENTLY_FILTERED_USER_GROUPS">
       <collection />
@@ -120,46 +177,67 @@
     </option>
   </component>
   <component name="WindowStateProjectService">
+    <state x="418" y="255" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1625788326860">
+      <screen x="0" y="27" width="1920" height="1140" />
+    </state>
+    <state x="418" y="255" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.27.1920.1140/1920.0.1920.1200@0.27.1920.1140" timestamp="1625788326860" />
+    <state x="808" y="318" width="293" height="565" key="EnvironmentVariablesDialog" timestamp="1625788100154">
+      <screen x="0" y="27" width="1920" height="1140" />
+    </state>
+    <state x="808" y="318" width="293" height="565" key="EnvironmentVariablesDialog/0.27.1920.1140/1920.0.1920.1200@0.27.1920.1140" timestamp="1625788100154" />
     <state x="743" y="355" width="424" height="491" key="FileChooserDialogImpl" timestamp="1621555270198">
       <screen x="0" y="27" width="1920" height="1140" />
     </state>
     <state x="743" y="355" width="424" height="491" key="FileChooserDialogImpl/0.27.1920.1140/1920.0.1920.1200@0.27.1920.1140" timestamp="1621555270198" />
-    <state width="1896" height="303" key="GridCell.Tab.0.bottom" timestamp="1618938337769">
+    <state width="1896" height="374" key="GridCell.Tab.0.bottom" timestamp="1626403889111">
       <screen x="0" y="27" width="1920" height="1140" />
     </state>
-    <state width="1896" height="303" key="GridCell.Tab.0.bottom/0.27.1920.1140/1920.0.1920.1200@0.27.1920.1140" timestamp="1618938337769" />
-    <state width="1896" height="303" key="GridCell.Tab.0.center" timestamp="1618938337769">
+    <state width="1896" height="374" key="GridCell.Tab.0.bottom/0.27.1920.1140/1920.0.1920.1200@0.27.1920.1140" timestamp="1626403889111" />
+    <state width="1896" height="374" key="GridCell.Tab.0.center" timestamp="1626403889111">
       <screen x="0" y="27" width="1920" height="1140" />
     </state>
-    <state width="1896" height="303" key="GridCell.Tab.0.center/0.27.1920.1140/1920.0.1920.1200@0.27.1920.1140" timestamp="1618938337769" />
-    <state width="1896" height="303" key="GridCell.Tab.0.left" timestamp="1618938337769">
+    <state width="1896" height="374" key="GridCell.Tab.0.center/0.27.1920.1140/1920.0.1920.1200@0.27.1920.1140" timestamp="1626403889111" />
+    <state width="1896" height="374" key="GridCell.Tab.0.left" timestamp="1626403889111">
       <screen x="0" y="27" width="1920" height="1140" />
     </state>
-    <state width="1896" height="303" key="GridCell.Tab.0.left/0.27.1920.1140/1920.0.1920.1200@0.27.1920.1140" timestamp="1618938337769" />
-    <state width="1896" height="303" key="GridCell.Tab.0.right" timestamp="1618938337769">
+    <state width="1896" height="374" key="GridCell.Tab.0.left/0.27.1920.1140/1920.0.1920.1200@0.27.1920.1140" timestamp="1626403889111" />
+    <state width="1896" height="374" key="GridCell.Tab.0.right" timestamp="1626403889111">
       <screen x="0" y="27" width="1920" height="1140" />
     </state>
-    <state width="1896" height="303" key="GridCell.Tab.0.right/0.27.1920.1140/1920.0.1920.1200@0.27.1920.1140" timestamp="1618938337769" />
-    <state x="456" y="232" width="1007" height="737" key="SettingsEditor" timestamp="1618938335638">
+    <state width="1896" height="374" key="GridCell.Tab.0.right/0.27.1920.1140/1920.0.1920.1200@0.27.1920.1140" timestamp="1626403889111" />
+    <state width="1896" height="374" key="GridCell.Tab.1.bottom" timestamp="1626403883796">
       <screen x="0" y="27" width="1920" height="1140" />
     </state>
-    <state x="456" y="232" width="1007" height="737" key="SettingsEditor/0.27.1920.1140/1920.0.1920.1200@0.27.1920.1140" timestamp="1618938335638" />
-    <state x="655" y="174" width="929" height="846" key="find.popup" timestamp="1617059350068">
+    <state width="1896" height="374" key="GridCell.Tab.1.bottom/0.27.1920.1140/1920.0.1920.1200@0.27.1920.1140" timestamp="1626403883796" />
+    <state width="1896" height="374" key="GridCell.Tab.1.center" timestamp="1626403883796">
       <screen x="0" y="27" width="1920" height="1140" />
     </state>
-    <state x="655" y="174" width="929" height="846" key="find.popup/0.27.1920.1140/1920.0.1920.1200@0.27.1920.1140" timestamp="1617059350068" />
-    <state x="623" y="281" width="672" height="678" key="search.everywhere.popup" timestamp="1617058963967">
+    <state width="1896" height="374" key="GridCell.Tab.1.center/0.27.1920.1140/1920.0.1920.1200@0.27.1920.1140" timestamp="1626403883796" />
+    <state width="1896" height="374" key="GridCell.Tab.1.left" timestamp="1626403883796">
       <screen x="0" y="27" width="1920" height="1140" />
     </state>
-    <state x="623" y="281" width="672" height="678" key="search.everywhere.popup/0.27.1920.1140/1920.0.1920.1200@0.27.1920.1140" timestamp="1617058963967" />
+    <state width="1896" height="374" key="GridCell.Tab.1.left/0.27.1920.1140/1920.0.1920.1200@0.27.1920.1140" timestamp="1626403883796" />
+    <state width="1896" height="374" key="GridCell.Tab.1.right" timestamp="1626403883796">
+      <screen x="0" y="27" width="1920" height="1140" />
+    </state>
+    <state width="1896" height="374" key="GridCell.Tab.1.right/0.27.1920.1140/1920.0.1920.1200@0.27.1920.1140" timestamp="1626403883796" />
+    <state x="456" y="232" width="1007" height="737" key="SettingsEditor" timestamp="1625788173241">
+      <screen x="0" y="27" width="1920" height="1140" />
+    </state>
+    <state x="456" y="232" width="1007" height="737" key="SettingsEditor/0.27.1920.1140/1920.0.1920.1200@0.27.1920.1140" timestamp="1625788173241" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/testPTY.py</url>
-          <line>51</line>
+          <line>83</line>
           <option name="timeStamp" value="1" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/testPTY.py</url>
+          <line>50</line>
+          <option name="timeStamp" value="3" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

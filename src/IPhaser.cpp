@@ -262,7 +262,6 @@ void IPhaser::prePhase()
 	//Clear objects for a new phasing round
 	const ExperimentParams* eParams = CXParams::getInstance()->getExperimentParams();
 	const ReconstructionParams* rParams = CXParams::getInstance()->getReconstructionParams();
-//	double dx_recon = eParams->dx_s / rParams->desiredShape * rParams->Shape;
 	double dx_recon = eParams->dx_s;
 
 	if(rParams->algorithm.compare("MLs")==0)
@@ -409,11 +408,12 @@ void IPhaser::postPhase()
 	if(rParams->algorithm.compare("MLs")==0)
 	{
 		m_probe->freeMem(m_scanMesh);
+		m_scanMesh->clear();
 	}
 
 
 	m_probe->endModalReconstruction();
-	m_scanMesh->clear();
+
 	fprintf(stderr,"io=%f\tphase=%f\tDone!!\n", m_ioTimer.getElapsedTimeInSec(), m_phasingTimer.getElapsedTimeInSec());
 }
 

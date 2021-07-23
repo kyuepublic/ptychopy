@@ -41,6 +41,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "datatypes.h"
+#include <thrust/device_vector.h>
 
 #if CUDA_VERSION >= 5000
 	//#include <cuda_runtime.h>
@@ -466,6 +467,10 @@ __host__ void h_multiplyAbsConjuRealWhole(complex_t* a, complex_t* b, complex_t*
 __host__ void h_multiplyAbsConjuReal(complex_t* a, complex_t* b, complex_t* c, real_t* result1, real_t* result2, unsigned int x, unsigned int y, unsigned int alignedY,
 		unsigned int pagex);
 
+__host__ void h_checkCache(	thrust::device_vector<real_t>& m_factors,
+thrust::host_vector<bool>& m_cachedFlags,
+thrust::host_vector<real_t>& m_cachedFactors, thrust::device_vector<bool>& m_flags, real_t objMax, real_t probeMax,
+		bool phaseConstraint,bool updateProbe, bool updateProbeModes, bool RMS);
 
 template<typename T> class Cuda3DArray;
 template<typename T> class Cuda3DElement;

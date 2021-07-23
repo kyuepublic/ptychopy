@@ -360,23 +360,23 @@ __global__ void  d_shiftEnd(complex_t* d_probeWavefront,complex_t* d_pfValue, un
 }
 
 
-__global__ void d_check1(real_t* d_data)
-{
+//__global__ void d_check1(real_t* d_data)
+//{
+//
+//	unsigned int Index = (blockIdx.x * blockDim.x) + threadIdx.x;
+//
+//	real_t temp=d_data[Index];
+//	unsigned int sq1=1;
+//}
 
-	unsigned int Index = (blockIdx.x * blockDim.x) + threadIdx.x;
-
-	real_t temp=d_data[Index];
-	unsigned int sq1=1;
-}
-
-__global__ void d_checkcomplex1(complex_t* d_data)
-{
-
-	unsigned int Index = (blockIdx.x * blockDim.x) + threadIdx.x;
-
-	complex_t temp=d_data[Index];
-	unsigned int sq1=1;
-}
+//__global__ void d_checkcomplex1(complex_t* d_data)
+//{
+//
+//	unsigned int Index = (blockIdx.x * blockDim.x) + threadIdx.x;
+//
+//	complex_t temp=d_data[Index];
+//	unsigned int sq1=1;
+//}
 
 
 
@@ -639,10 +639,10 @@ __host__ void h_endProbeMLH(complex_t* d_probeWavefront, complex_t* d_pfValue,
 
 
 
-__host__ void check(real_t* d_array, unsigned int probeX, unsigned int probeY, unsigned int alignedProbeY)
-{
-	d_check1<<<probeX, alignedProbeY>>>(d_array);
-}
+//__host__ void check(real_t* d_array, unsigned int probeX, unsigned int probeY, unsigned int alignedProbeY)
+//{
+//	d_check1<<<probeX, alignedProbeY>>>(d_array);
+//}
 
 
 __host__ void h_normalizeDiffractionIntensities(const real_t* d_intensities, real_t* d_output, unsigned int intensitiesNum,

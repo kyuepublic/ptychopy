@@ -46,6 +46,8 @@
 #include <thrust/transform.h>
 #include <thrust/extrema.h>
 
+#define EPS 1e-3
+
 //#include <cub/device/device_reduce.cuh>
 //using namespace cub;
 
@@ -84,23 +86,23 @@ struct minFloat2
 };
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-__global__ void d_check(real_t* d_data)
-{
+//__global__ void d_check(real_t* d_data)
+//{
+//
+//	unsigned int Index = (blockIdx.x * blockDim.x) + threadIdx.x;
+//
+////	real_t temp=d_data[Index];
+////	unsigned int sq1=1;
+//}
 
-	unsigned int Index = (blockIdx.x * blockDim.x) + threadIdx.x;
-
-//	real_t temp=d_data[Index];
-//	unsigned int sq1=1;
-}
-
-__global__ void d_checkcomplex(complex_t* d_data)
-{
-
-	unsigned int Index = (blockIdx.x * blockDim.x) + threadIdx.x;
-
-//	complex_t temp=d_data[Index];
-//	unsigned int sq1=1;
-}
+//__global__ void d_checkcomplex(complex_t* d_data)
+//{
+//
+//	unsigned int Index = (blockIdx.x * blockDim.x) + threadIdx.x;
+//
+////	complex_t temp=d_data[Index];
+////	unsigned int sq1=1;
+//}
 
 template<unsigned int threadNum>
 __global__ void d_reduceToSum(const complex_t* d_u, complex_t* d_output, unsigned int x1, unsigned int y1,
@@ -1505,6 +1507,29 @@ __host__ void h_multiply(real_t* a, real_t* b, real_t* result,	unsigned int x, u
 	cutilCheckMsg("d_realMultiply() execution failed!\n");
 }
 
+__host__ void h_checkCache(	thrust::device_vector<real_t>& m_factors,
+thrust::host_vector<bool>& m_cachedFlags,
+thrust::host_vector<real_t>& m_cachedFactors, thrust::device_vector<bool>& m_flags, real_t objMax, real_t probeMax,
+		bool phaseConstraint,bool updateProbe, bool updateProbeModes, bool RMS)
+{
+	bool passedFlags[3] = {phaseConstraint, updateProbe, updateProbeModes};
+	for(size_t i=0; i<m_cachedFlags.size();++i)
+		if(m_cachedFlags[i]!=passedFlags[i])
+		{
+			m_cachedFlags[i]=passedFlags[i];
+			m_flags[i] = m_cachedFlags[i];
+		}
+	real_t passedFactors[2] = {1.0/objMax, 1.0/probeMax};
+	for(size_t i=0; i<m_cachedFactors.size();++i)
+	{
+		if(fabs(m_cachedFactors[i]-passedFactors[i])>EPS)
+		{
+			m_cachedFactors[i]=passedFactors[i];
+			m_factors[i] = m_cachedFactors[i];
+		}
+	}
+}
+
 
 __host__ void h_multiply(const complex_t* a, const complex_t& b, complex_t* result,
 	unsigned int x, unsigned int y, unsigned int alignedY, bool normalize)
@@ -1961,7 +1986,7 @@ __host__ void h_shiftFFTtmp(complex_t* d_probe, complex_t* d_tempprobe, complex_
 
 	cudaDeviceSynchronize();
 
-	d_checkcomplex<<<x, y>>>(d_probe);
+//	d_checkcomplex<<<x, y>>>(d_probe);
 
 
 }

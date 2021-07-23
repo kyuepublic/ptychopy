@@ -50,24 +50,24 @@ __global__ void d_initRandomStatesSample(curandState *state, unsigned long seed)
 	curand_init(seed, posIndex, 0, &state[posIndex]);
 }
 
-__global__ void d_check1(curandState* randStates)
-{
-	unsigned int posIndex = (blockIdx.x * blockDim.x) + threadIdx.x;
-	curandState localState;
-	localState = randStates[posIndex];
-
-
-	float sw=curand_uniform(&localState);
-
-
-	unsigned int sq1=1;
-}
+//__global__ void d_check1(curandState* randStates)
+//{
+//	unsigned int posIndex = (blockIdx.x * blockDim.x) + threadIdx.x;
+//	curandState localState;
+//	localState = randStates[posIndex];
+//
+//
+//	float sw=curand_uniform(&localState);
+//
+//
+//	unsigned int sq1=1;
+//}
 
 __host__ void h_initRandomStatesSample(unsigned int meshX, unsigned int alignedY, curandState* devStates)
 {
     d_initRandomStatesSample<<<meshX, alignedY>>>(devStates, time(NULL));
 
-    d_check1<<<meshX, alignedY>>>(devStates);
+//    d_check1<<<meshX, alignedY>>>(devStates);
 
 	cutilCheckMsg("h_initRandomStates() execution failed!\n");
 }

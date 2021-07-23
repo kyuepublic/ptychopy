@@ -34,6 +34,7 @@
 
 #include <Python.h>
 #include <numpy/arrayobject.h>
+#include <complex.h>
 //#include "SimplePhaser.h"
 #include "MPIPhaser.h"
 #include "Parameters.h"
@@ -76,6 +77,8 @@ static PyObject *ptycholib_epie(PyObject *self, PyObject *args, PyObject *keywds
 static PyObject *ptycholib_dm(PyObject *self, PyObject *args, PyObject *keywds);
 static PyObject *ptycholib_mls(PyObject *self, PyObject *args, PyObject *keywds);
 
+static PyObject *ptycholib_epienp(PyObject *self, PyObject *args, PyObject *keywds);
+
 
 static PyObject *ptycholib_epiecmdstr(PyObject *self, PyObject *args, PyObject *keywds);
 static PyObject *ptycholib_dmcmdstr(PyObject *self, PyObject *args, PyObject *keywds);
@@ -97,6 +100,7 @@ static PyMethodDef module_methods[] = {
     {"epie", (PyCFunction)ptycholib_epie, METH_VARARGS|METH_KEYWORDS, epie_docstring},
     {"dm", (PyCFunction)ptycholib_dm, METH_VARARGS|METH_KEYWORDS, dm_docstring},
     {"mls", (PyCFunction)ptycholib_mls, METH_VARARGS|METH_KEYWORDS, mls_docstring},
+    {"epienp", (PyCFunction)ptycholib_epienp, METH_VARARGS|METH_KEYWORDS, epie_docstring},
     {"epiecmdstr", (PyCFunction)ptycholib_epiecmdstr, METH_VARARGS|METH_KEYWORDS, epiecmdstr_docstring},
     {"dmcmdstr", (PyCFunction)ptycholib_dmcmdstr, METH_VARARGS|METH_KEYWORDS, dmcmdstr_docstring},
     {"mlscmdstr", (PyCFunction)ptycholib_mlscmdstr, METH_VARARGS|METH_KEYWORDS, mlscmdstr_docstring},
@@ -134,9 +138,31 @@ PyMODINIT_FUNC PyInit_ptychopy(void)
 static PyObject *ptycholib_helloworld(PyObject *self, PyObject *args)
 {
 
-    if (!PyArg_ParseTuple(args, ""))
+//    if (!PyArg_ParseTuple(args, ""))
+//        return NULL;
+//    printf("Hello, World!");
+    PyObject *list1_obj;
+    PyObject *list2_obj;
+    PyObject *list3_obj;
+    if (!PyArg_ParseTuple(args, "OOO", &list1_obj, &list2_obj, &list3_obj))
         return NULL;
-    printf("Hello, World!");
+
+    double *list1;
+    double **list2;
+    double ***list3;
+
+    //Create C arrays from numpy objects:
+    int typenum = NPY_DOUBLE;
+    PyArray_Descr *descr;
+    descr = PyArray_DescrFromType(typenum);
+    npy_intp dims[3];
+    if (PyArray_AsCArray(&list1_obj, (void *)&list1, dims, 1, descr) < 0 || PyArray_AsCArray(&list2_obj, (void **)&list2, dims, 2, descr) < 0 || PyArray_AsCArray(&list3_obj, (void ***)&list3, dims, 3, descr) < 0)
+    {
+        PyErr_SetString(PyExc_TypeError, "error converting to c array");
+        return NULL;
+    }
+    printf("1D: %f, 2D: %f, 3D: %f.\n", list1[2], list2[3][1], list3[1][0][2]);
+
 
     Py_RETURN_NONE;
 }
@@ -199,7 +225,7 @@ static void ptychopy_algorithm(PyObject *args, PyObject *keywds, char *algorithm
                 &delta_p,  &threshold, &rotate90, &sqrtData, &fftShiftData, &binaryOutput, &simulate, \
                 &phaseConstraint, &updateProbe, &updateModes, &beamstopMask, &lf, &PPS))
 
-    printf("Running ePIE.\n");
+    printf("Running algorithm %s. \n", algorithm);
 //    printf("the jobID is %s \n", jobID);
 ////    printf("the fp is %s \n", fp);
 //    printf("the beamSize is %.8e \n", beamSize);
@@ -225,26 +251,245 @@ static void ptychopy_algorithm(PyObject *args, PyObject *keywds, char *algorithm
 	delete phaser;
 }
 
+static PyObject* ptychopy_algorithmnp(PyObject *args, PyObject *keywds, char *algorithm)
+{
+    // Default value for the algorithm parameters
+    char *jobID="";
+    char *fp="";
+    int fs=0;
+    char* hdf5path="";
+    int dpf = 1;
+    double beamSize=400e-9;
+    char *probeGuess="";
+    char *objectGuess="";
+    char *lf="";
+    int size=512;
+    int qx=128;
+    int qy=128;
+    int nx=256;
+    int ny=256;
+    int scanDimsx=26;
+    int scanDimsy=26;
+    int spiralScan=0;
+    int flipScanAxis=0;
+    int mirror1stScanAxis=0;
+    int mirror2ndScanAxis=0;
+    double stepx=40e-9;
+    double stepy=40e-9;
+    int probeModes=1;
+    double lambd=2.3843e-10;
+    double dx_d=172e-6;
+    double z=2.2;
+    int iter=100;
+    int T=0;
+    int jitterRadius=0;
+    double delta_p=0.1;
+    int threshold=0;
+    int rotate90=0;
+    int sqrtData=0;
+    int fftShiftData=0;
+    int binaryOutput=0;
+    int simulate=0;
+    int phaseConstraint=1;
+    int updateProbe=10;
+    int updateModes=20;
+    int beamstopMask=0;
+    int PPS=20;
+
+    PyObject *diffractionNP_obj = NULL;
+    PyObject *positionNP_obj = NULL;
+    PyObject *objectNP_obj = NULL;
+    PyObject *probeNP_obj = NULL;
+
+    static char *kwlist[] = {"jobID", "diffractionNP", "positionNP", "objectNP", "probeNP", "fp", "fs", "hdf5path", "dpf", "beamSize", "probeGuess", "objectGuess", \
+    "size", "qx", "qy", "nx", "ny", "scanDimsx", "scanDimsy", "spiralScan", "flipScanAxis", "mirror1stScanAxis", \
+    "mirror2ndScanAxis", "stepx", "stepy", "probeModes", "lambd", "dx_d", "z", "iter", "T", "jitterRadius", \
+    "delta_p",  "threshold", "rotate90", "sqrtData", "fftShiftData", "binaryOutput", "simulate", \
+    "phaseConstraint", "updateProbe", "updateModes", "beamstopMask", "lf", "PPS", NULL};
+
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "|sOOOOsisidssiiiiiiiiiiiddidddiiidiiiiiiiiiisi", kwlist,
+                &jobID, &diffractionNP_obj, &positionNP_obj, &objectNP_obj, &probeNP_obj, &fp, &fs, &hdf5path, &dpf, &beamSize, &probeGuess, &objectGuess, \
+                &size, &qx, &qy, &nx, &ny, &scanDimsx, &scanDimsy, &spiralScan, &flipScanAxis, &mirror1stScanAxis, \
+                &mirror2ndScanAxis, &stepx, &stepy, &probeModes, &lambd, &dx_d, &z, &iter, &T, &jitterRadius, \
+                &delta_p,  &threshold, &rotate90, &sqrtData, &fftShiftData, &binaryOutput, &simulate, \
+                &phaseConstraint, &updateProbe, &updateModes, &beamstopMask, &lf, &PPS))
+
+    printf("Running algorithm %s. \n", algorithm);
+//    printf("the jobID is %s \n", jobID);
+////    printf("the fp is %s \n", fp);
+//    printf("the beamSize is %.8e \n", beamSize);
+//    printf("the iter is %d \n", iter);
+//    printf("the scanDims is %d, %d, stepx is %.8e, stepy is %.8e, size is %d, dx_d is %.8e, z is %.8e  \n", scanDimsx, scanDimsy, stepx, stepy, size, dx_d, z);
+//    printf("the lambd is %.8e \n", lambd);
+//    printf("the algorithm is %s, the simulate is %d \n", algorithm, simulate);
+
+    double ***diffractionNP_list;
+    double **positionNP_list = NULL;
+//    double **objectNP_list = NULL;
+    double **probeNP_list = NULL;
+    //Create C arrays from numpy objects:
+    int typenum = NPY_DOUBLE;
+    PyArray_Descr *descr;
+    descr = PyArray_DescrFromType(typenum);
+    npy_intp dims[3];
+
+//    npy_complex128 **objectNP_list = NULL;
+//    Py_INCREF(diffractionNP_obj);
+//    Py_INCREF(positionNP_obj);
+//    Py_INCREF(objectNP_obj);
+//    Py_INCREF(probeNP_obj);
+
+    if(diffractionNP_obj!=NULL)
+    {
+        if(PyArray_AsCArray(&diffractionNP_obj, (void **)&diffractionNP_list, dims, 3, descr) < 0)
+        {
+            PyErr_SetString(PyExc_TypeError, "error converting diffraction numpy array to c array");
+        }
+    }
+    else
+    {
+        printf("Please input a diffraction pattern numpy array\n");
+        Py_RETURN_NONE;
+    }
+
+    if(positionNP_obj!=NULL)
+    {
+        printf("Use input position numpy array\n");
+        if(PyArray_AsCArray(&positionNP_obj, (void **)&positionNP_list, dims, 2, descr) < 0)
+        {
+            PyErr_SetString(PyExc_TypeError, "error converting position numpy array to c array");
+        }
+    }
+    else
+    {
+        printf("Use default grid position\n");
+    }
+    if(objectNP_obj!=NULL)
+    {
+        PyArrayObject * yarr=NULL;
+        int DTYPE = PyArray_ObjectType(objectNP_obj, NPY_FLOAT);
+        int iscomplex = PyTypeNum_ISCOMPLEX(DTYPE);
+        yarr = (PyArrayObject *)PyArray_FROM_OTF(objectNP_obj, DTYPE, NPY_ARRAY_IN_ARRAY);
+        if (yarr != NULL)
+        {
+            if (PyArray_NDIM(yarr) != 2)
+            {
+                Py_CLEAR(yarr);
+                PyErr_SetString(PyExc_ValueError, "Expected 2 dimensional object array");
+                return NULL;
+            }
+            npy_intp * dimsObject = PyArray_DIMS(yarr);
+            npy_intp i,j;
+            double * p;
+            if (iscomplex)
+            {
+                for (i=0;i<dimsObject[0];i++)
+                    for (j=0;j<dimsObject[1];j++)
+                    {
+                        p = (double*)PyArray_GETPTR2(yarr, i,j);
+                        double real = *p;
+                        double imag = *(p+1);
+        //                printf("2D complex: %f + i%f\n", real, imag);
+                    }
+            }
+            Py_CLEAR(yarr);
+        }
+        else
+        {
+            Py_INCREF(Py_None);
+            printf("The object array passing failed\n");
+            return Py_None;
+        }
+    }
+    else
+    {
+        printf("Use default object guess\n");
+    }
+
+    if(probeNP_obj!=NULL)
+    {
+        PyArrayObject * yarr=NULL;
+        int DTYPE = PyArray_ObjectType(probeNP_obj, NPY_FLOAT);
+        int iscomplex = PyTypeNum_ISCOMPLEX(DTYPE);
+        yarr = (PyArrayObject *)PyArray_FROM_OTF(probeNP_obj, DTYPE, NPY_ARRAY_IN_ARRAY);
+        if (yarr != NULL)
+        {
+            if (PyArray_NDIM(yarr) != 2)
+            {
+                Py_CLEAR(yarr);
+                PyErr_SetString(PyExc_ValueError, "Expected 2 dimensional probe array");
+                return NULL;
+            }
+            npy_intp * dimsProbe = PyArray_DIMS(yarr);
+            npy_intp i,j;
+            double * p;
+            if (iscomplex)
+            {
+                for (i=0;i<dimsProbe[0];i++)
+                    for (j=0;j<dimsProbe[1];j++)
+                    {
+                        p = (double*)PyArray_GETPTR2(yarr, i,j);
+                        double real = *p;
+                        double imag = *(p+1);
+        //                printf("2D complex: %f + i%f\n", real, imag);
+                    }
+            }
+            Py_CLEAR(yarr);
+        }
+        else
+        {
+            Py_INCREF(Py_None);
+            printf("The probe array passing failed\n");
+            return Py_None;
+        }
+    }
+    else
+    {
+        printf("Use default probe guess\n");
+    }
+
+//    if(probeNP_obj!=NULL)
+//    {
+//        printf("Use input probe guess numpy array\n");
+//        if(PyArray_AsCArray(&probeNP_obj, (void **)&probeNP_list, dims, 2, descr) < 0)
+//        {
+//            PyErr_SetString(PyExc_TypeError, "error converting probe numpy array to c array");
+//        }
+//    }
+//    else
+//    {
+//        printf("Use default probe guess\n");
+//    }
+
+//    printf("2D complex: %f + i%f, 3D: %f.\n", crealf(objectNP_list[3][1]), cimagf(objectNP_list[3][1]), diffractionNP_list[1][0][2]);
+//    printf("3D: %f.\n", diffractionNP_list[1][0][2]);
+//    printf("2D: %f, 3D: %f.\n", positionNP_list[3][1], diffractionNP_list[1][0][2]);
+//    printf("1D: %f, 2D: %f, 3D: %f.\n", list1[2], list2[3][1], list3[1][0][2]);
+
+    CXParams::getInstance()->parseFromCPython(jobID, algorithm, fp, fs, hdf5path, dpf, beamSize, probeGuess, objectGuess, \
+                size, qx, qy, nx, ny, scanDimsx, scanDimsy, spiralScan, flipScanAxis, mirror1stScanAxis, \
+                mirror2ndScanAxis, stepx, stepy, probeModes, lambd, dx_d, z, iter, T, jitterRadius, \
+                delta_p,  threshold, rotate90, sqrtData, fftShiftData, binaryOutput, simulate, \
+                phaseConstraint, updateProbe, updateModes, beamstopMask, lf, PPS);
+
+    IPhaser* phaser = new IPhaser;
+    if(phaser->init())
+	{
+		phaser->addPhasingMethod( 	CXParams::getInstance()->getReconstructionParams()->algorithm.c_str(),
+									CXParams::getInstance()->getReconstructionParams()->iterations);
+		phaser->phase();
+		phaser->writeResultsToDisk();
+	}
+	delete phaser;
+
+	Py_RETURN_NONE;
+}
+
 static PyObject *ptycholib_epie(PyObject *self, PyObject *args, PyObject *keywds)
 {
 
     ptychopy_algorithm(args, keywds, "ePIE");
 
-//    complex_t* h_objectArray = phaser->getSample()->getObjectArray()->getHostPtr<complex_t>();
-//    delete phaser;
-//
-//    npy_intp dims[2] = {2048,2048};
-//    PyArrayObject *recon_ob = (PyArrayObject*)PyArray_SimpleNewFromData(2, dims, NPY_CFLOAT, h_objectArray);
-
-//    PyArrayObject *recon_ob = NULL;
-//
-//    if (recon_ob==NULL)
-//    {
-//        return NULL;
-//    }
-//
-//    Py_INCREF(recon_ob);
-//    return PyArray_Return(recon_ob);
     return Py_True;
 }
 static PyObject *ptycholib_dm(PyObject *self, PyObject *args, PyObject *keywds)
@@ -260,6 +505,13 @@ static PyObject *ptycholib_mls(PyObject *self, PyObject *args, PyObject *keywds)
 
     ptychopy_algorithm(args, keywds, "MLs");
 
+    return Py_True;
+}
+
+static PyObject *ptycholib_epienp(PyObject *self, PyObject *args, PyObject *keywds)
+{
+
+    ptychopy_algorithmnp(args, keywds, "ePIE");
     return Py_True;
 }
 
@@ -301,65 +553,42 @@ static size_t countargs(const char *s)
 static PyObject *ptycholib_epiecmdstr(PyObject *self, PyObject *args, PyObject *keywds)
 {
 
-    /* io */
-    int io_threads=100;
-    char *filename_pattern = "";
-    int start_file_number = 1501;
-    /* preprocessing */
-    int size = 512;
-    int threshhold = 0;
-    int rotate_90 = 0;
-    int sqrt_data = 0;
-    int fftshift_data = 0;
-    int flip_scan_axis = 0;
-    /* experiment */
-    float beam_size=400e-9;
-    float energy=5.0;
-    float lambda=1.24e-9/energy;
-    float dx=172e-6;
-    float z=1.0;
-    int simulate=1;
-    /* cartesian scan */
-    int scan_dims_0=55;
-    int scan_dims_1=75;
-    float step_0=40e-9;
-    float step_1=40e-9;
-    /* probe guess */
-    char *probeGuess = "";
-    /* phase retrieval */
-    int object_array=2048;
-    int i=10;
-    char *job_id="gentest101";
-    int qx0 = 243;
-    int qy0 = 153;
-    int probe_modes = 1;
-    int position_jitter_radius=0;
-    int share_frequency = 0;
-    int dpf = 1;
+//    char *cmdstr = "";
+//    static char *kwlist[] = {"cmdstr", NULL};
+//    if (!PyArg_ParseTupleAndKeywords(args, keywds, "|s", kwlist, &cmdstr))
+//        return NULL;
+//
+////    char str[1000];
+//    printf("the command line string is %s \n", cmdstr);
+//
+//    size_t len = countargs(cmdstr) + 1;
+//    char **r;
+//    if (!(r = (char **)malloc(len * sizeof *r)))
+//        return 0;
+//    makeargs(r, len, cmdstr);
+//    CXParams::getInstance()->parseFromCommandLine(len-1, r);
 
     char *cmdstr = "";
-//    char cmdstr[1000];
     static char *kwlist[] = {"cmdstr", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "|s", kwlist, &cmdstr))
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "|s", kwlist,&cmdstr))
         return NULL;
-    lambda = 1.24e-9/energy;
-    char str[1000];
-    printf("the command line string is %s \n", cmdstr);
-// Make the command line parameters
     size_t len = countargs(cmdstr) + 1;
     char **r;
-    if (!(r = (char **)malloc(len * sizeof *r)))
+    if (!(r = (char **)malloc((len+1) * sizeof *r)))
         return 0;
-    makeargs(r, len, cmdstr);
-
-
-    CXParams::getInstance()->parseFromCommandLine(len-1, r);
+    if (!(*r = (char *)malloc(strlen(cmdstr) + 1)))
+    {
+        free(r);
+        return 0;
+    }
+    makeargs(r+1, len, strcpy(*r, cmdstr));
+    CXParams::getInstance()->parseFromCommandLine(len-1, r+1);
     IPhaser* phaser = new IPhaser;
+
     if(phaser->init())
     {
         phaser->addPhasingMethod("ePIE", CXParams::getInstance()->getReconstructionParams()->iterations);
         phaser->phase();
-//        phaser->phaseVisStep();
     }
 
     phaser->writeResultsToDisk();
@@ -367,77 +596,36 @@ static PyObject *ptycholib_epiecmdstr(PyObject *self, PyObject *args, PyObject *
     int x = phaser->getSample()->getObjectArray()->getX();
     int y = phaser->getSample()->getObjectArray()->getY();
 
-//    delete phaser;
-
     npy_intp dims[2] = {x,y};
     PyArrayObject *recon_ob = (PyArrayObject*)PyArray_SimpleNewFromData(2, dims, NPY_CFLOAT, h_objectArray);
     Py_INCREF(recon_ob);
     return PyArray_Return(recon_ob);
-//    return Py_False;
 }
 
 static PyObject *ptycholib_dmcmdstr(PyObject *self, PyObject *args, PyObject *keywds)
 {
 
-    /* io */
-    int io_threads=100;
-    char *filename_pattern = "";
-    int start_file_number = 1501;
-    /* preprocessing */
-    int size = 512;
-    int threshhold = 0;
-    int rotate_90 = 0;
-    int sqrt_data = 0;
-    int fftshift_data = 0;
-    int flip_scan_axis = 0;
-    /* experiment */
-    float beam_size=400e-9;
-    float energy=5.0;
-    float lambda=1.24e-9/energy;
-    float dx=172e-6;
-    float z=1.0;
-    int simulate=1;
-    /* cartesian scan */
-    int scan_dims_0=55;
-    int scan_dims_1=75;
-    float step_0=40e-9;
-    float step_1=40e-9;
-    /* probe guess */
-    char *probeGuess = "";
-    /* phase retrieval */
-    int object_array=2048;
-    int i=10;
-    char *job_id="gentest101";
-    int qx0 = 243;
-    int qy0 = 153;
-    int probe_modes = 1;
-    int position_jitter_radius=0;
-    int share_frequency = 0;
-    int dpf = 1;
-
     char *cmdstr = "";
-//    char cmdstr[1000];
     static char *kwlist[] = {"cmdstr", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "|s", kwlist, &cmdstr))
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "|s", kwlist,&cmdstr))
         return NULL;
-    lambda = 1.24e-9/energy;
-    char str[1000];
-    printf("the command line string is %s \n", cmdstr);
-// Make the command line parameters
     size_t len = countargs(cmdstr) + 1;
     char **r;
-    if (!(r = (char **)malloc(len * sizeof *r)))
+    if (!(r = (char **)malloc((len+1) * sizeof *r)))
         return 0;
-    makeargs(r, len, cmdstr);
-
-
-    CXParams::getInstance()->parseFromCommandLine(len-1, r);
+    if (!(*r = (char *)malloc(strlen(cmdstr) + 1)))
+    {
+        free(r);
+        return 0;
+    }
+    makeargs(r+1, len, strcpy(*r, cmdstr));
+    CXParams::getInstance()->parseFromCommandLine(len-1, r+1);
     IPhaser* phaser = new IPhaser;
+
     if(phaser->init())
     {
         phaser->addPhasingMethod("DM", CXParams::getInstance()->getReconstructionParams()->iterations);
         phaser->phase();
-//        phaser->phaseVisStep();
     }
 
     phaser->writeResultsToDisk();
@@ -445,76 +633,38 @@ static PyObject *ptycholib_dmcmdstr(PyObject *self, PyObject *args, PyObject *ke
     int x = phaser->getSample()->getObjectArray()->getX();
     int y = phaser->getSample()->getObjectArray()->getY();
 
-//    delete phaser;
     npy_intp dims[2] = {x,y};
     PyArrayObject *recon_ob = (PyArrayObject*)PyArray_SimpleNewFromData(2, dims, NPY_CFLOAT, h_objectArray);
     Py_INCREF(recon_ob);
     return PyArray_Return(recon_ob);
-//    return Py_False;
+
 }
 
 static PyObject *ptycholib_mlscmdstr(PyObject *self, PyObject *args, PyObject *keywds)
 {
 
-    /* io */
-    int io_threads=100;
-    char *filename_pattern = "";
-    int start_file_number = 1501;
-    /* preprocessing */
-    int size = 512;
-    int threshhold = 0;
-    int rotate_90 = 0;
-    int sqrt_data = 0;
-    int fftshift_data = 0;
-    int flip_scan_axis = 0;
-    /* experiment */
-    float beam_size=400e-9;
-    float energy=5.0;
-    float lambda=1.24e-9/energy;
-    float dx=172e-6;
-    float z=1.0;
-    int simulate=1;
-    /* cartesian scan */
-    int scan_dims_0=55;
-    int scan_dims_1=75;
-    float step_0=40e-9;
-    float step_1=40e-9;
-    /* probe guess */
-    char *probeGuess = "";
-    /* phase retrieval */
-    int object_array=2048;
-    int i=10;
-    char *job_id="gentest101";
-    int qx0 = 243;
-    int qy0 = 153;
-    int probe_modes = 1;
-    int position_jitter_radius=0;
-    int share_frequency = 0;
-    int dpf = 1;
-
     char *cmdstr = "";
-//    char cmdstr[1000];
     static char *kwlist[] = {"cmdstr", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, keywds, "|s", kwlist, &cmdstr))
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "|s", kwlist,&cmdstr))
         return NULL;
-    lambda = 1.24e-9/energy;
-    char str[1000];
     printf("the command line string is %s \n", cmdstr);
-// Make the command line parameters
     size_t len = countargs(cmdstr) + 1;
     char **r;
-    if (!(r = (char **)malloc(len * sizeof *r)))
+    if (!(r = (char **)malloc((len+1) * sizeof *r)))
         return 0;
-    makeargs(r, len, cmdstr);
-
-
-    CXParams::getInstance()->parseFromCommandLine(len-1, r);
+    if (!(*r = (char *)malloc(strlen(cmdstr) + 1)))
+    {
+        free(r);
+        return 0;
+    }
+    makeargs(r+1, len, strcpy(*r, cmdstr));
+    CXParams::getInstance()->parseFromCommandLine(len-1, r+1);
     IPhaser* phaser = new IPhaser;
+
     if(phaser->init())
     {
         phaser->addPhasingMethod("MLs", CXParams::getInstance()->getReconstructionParams()->iterations);
         phaser->phase();
-//        phaser->phaseVisStep();
     }
 
     phaser->writeResultsToDisk();
@@ -522,13 +672,10 @@ static PyObject *ptycholib_mlscmdstr(PyObject *self, PyObject *args, PyObject *k
     int x = phaser->getSample()->getObjectArray()->getX();
     int y = phaser->getSample()->getObjectArray()->getY();
 
-//    delete phaser;
-
     npy_intp dims[2] = {x,y};
     PyArrayObject *recon_ob = (PyArrayObject*)PyArray_SimpleNewFromData(2, dims, NPY_CFLOAT, h_objectArray);
     Py_INCREF(recon_ob);
     return PyArray_Return(recon_ob);
-//    return Py_False;
 }
 
 static PyObject *ptycholib_epieinit(PyObject *self, PyObject *args, PyObject *keywds)
@@ -544,18 +691,6 @@ static PyObject *ptycholib_epieinit(PyObject *self, PyObject *args, PyObject *ke
     static char *kwlist[] = {"cmdstr", NULL};
     if (!PyArg_ParseTupleAndKeywords(args, keywds, "|s", kwlist,&cmdstr))
         return NULL;
-
-//    char str[1000];
-//    printf("the command line string is %s \n", cmdstr);
-
-// Make the command line parameters
-//    size_t len = countargs(cmdstr) + 1;
-//    char **r;
-//
-//    if (!(r = (char **)malloc(len * sizeof *r)))
-//        return 0;
-//
-//    makeargs(r, len, cmdstr);
 
     size_t len = countargs(cmdstr) + 1;
     char **r;

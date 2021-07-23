@@ -110,6 +110,8 @@ real_t DM::iteration(Diffractions* diffs, Probe* probe,
 	}
 
 	checkCache(object->getMaxIntensity(), probe->getMaxIntensity(), phaseConstraint, updateProbe, updateProbeModes, RMS);
+
+
 	h_forwardPropagate(m_forwardFFTPlan, m_argsDevicePtr, m_psi->getPtr()->getDevicePtr<complex_t>(), phaseConstraint);
 	h_backPropagate(m_inverseFFTPlan, m_argsDevicePtr, m_psi->getPtr()->getDevicePtr<complex_t>());
 	//h_constrainObject(objectArray->getDevicePtr<complex_t>(), phaseConstraint, objectArray->getX(), objectArray->getY(), objectArray->getAlignedY());
