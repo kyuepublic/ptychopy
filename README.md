@@ -34,15 +34,15 @@
  ./install.sh
  ```
 
-6. For testing, you can use testPTY.py or testMpty.py
+6. For testing, you can use mls.py or mls.py
 
  ```
- python testPTY.py
+ python mls.py
  ```
 7. Description
 
  ```
-This software package is implemented with ePIE, DM, MLs, reconstruction algorithm. It supports list, spiral, cartesian,
+This software package is implemented with mls, DM, MLs, reconstruction algorithm. It supports list, spiral, cartesian,
 scan position file. To load a predefined scan position file, object value files, probe value files, use the following 
 parameters to do the reconstruction.
 
@@ -63,22 +63,33 @@ pattern into the library.
 
 Whole mode API example:
 
-    ptychopy.epie(jobID="ePIEsimu1", beamSize=110e-9, scanDimsx=30, scanDimsy=30, stepx=50e-9, \
+    ptychopy.mlscmdstr(str)
+    ptychopy.dmcmdstr(str)
+    ptychopy.mlscmdstr(str)
+
+    ptychopy.mls(jobID="mlssimu1", beamSize=110e-9, scanDimsx=30, scanDimsy=30, stepx=50e-9, \
                stepy=50e-9, lambd=2.4796837508399954e-10, iter=3, size=512, dx_d=172e-6, z=1, simulate=1);
-    ptychopy.dm(jobID="ePIEsimu1", beamSize=110e-9, scanDimsx=30, scanDimsy=30, stepx=50e-9, \
+    ptychopy.dm(jobID="mlssimu1", beamSize=110e-9, scanDimsx=30, scanDimsy=30, stepx=50e-9, \
               stepy=50e-9, lambd=2.4796837508399954e-10, iter=3, size=512, dx_d=172e-6, z=1, simulate=1);
-    ptychopy.mls(jobID="ePIEsimu1", beamSize=110e-9, scanDimsx=30, scanDimsy=30, stepx=50e-9, \
+    ptychopy.mls(jobID="mlssimu1", beamSize=110e-9, scanDimsx=30, scanDimsy=30, stepx=50e-9, \
                stepy=50e-9, lambd=2.4796837508399954e-10, iter=3, size=512, dx_d=172e-6, z=1, simulate=0);
 
 Step mode API example:
 
-    str = "./ptycho -jobID=sim512 -algorithm=ePIE -beamSize=110e-9 -scanDims=30,30 -step=50e-9,50e-9 -i=3 -size=512 
+    str = "./ptycho -jobID=sim512 -algorithm=mls -beamSize=110e-9 -scanDims=30,30 -step=50e-9,50e-9 -i=3 -size=512 
     -lambda=2.4796837508399954e-10 -dx_d=172e-6 -z=1 -simulate=1"
-    epieinit(str)
-    epiestep()
-    epieresobj()
-    epieresprobe()
-    epiepost()
+    mlsinit(str)
+    mlsstep()
+    mlsresobj()
+    mlsresprobe()
+    mlspost()
+
+    mlsinit(str)
+    mlsstep()
+    mlsresobj()
+    mlsresprobe()
+    mlspost()
+
   
   For implentation example, please check testPTY.py, testMTY.py
    ```

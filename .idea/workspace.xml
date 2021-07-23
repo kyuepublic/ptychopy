@@ -21,22 +21,8 @@
   <component name="ChangeListManager">
     <list default="true" id="5d48ff31-8f99-4299-aad7-47dbe466e20b" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/baboon1024.pgm" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/baboon128.pgm" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/baboon256.pgm" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/baboon512.pgm" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/lena1024.pgm" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/lena128.pgm" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/lena256.pgm" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/lena512.pgm" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/example/testPTY.py" beforeDir="false" afterPath="$PROJECT_DIR$/example/testPTY.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/install.sh" beforeDir="false" afterPath="$PROJECT_DIR$/install.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ptychopy_GUI.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/readMDA.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/testNPpty.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/testMpty.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/testPTY.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ptychopy.c" beforeDir="false" afterPath="$PROJECT_DIR$/src/ptychopy.c" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

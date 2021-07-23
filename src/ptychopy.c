@@ -71,6 +71,12 @@ static char epiestep_docstring[] = "This function performs the step.";
 static char epieresobj_docstring[] = "This function returns the object of the reconstruction.";
 static char epieresprobe_docstring[] = "This function returns the probe of the reconstruction.";
 
+static char mlsinit_docstring[] = "This function performs the init.";
+static char mlspost_docstring[] = "This function performs the post.";
+static char mlsstep_docstring[] = "This function performs the step.";
+static char mlsresobj_docstring[] = "This function returns the object of the reconstruction.";
+static char mlsresprobe_docstring[] = "This function returns the probe of the reconstruction.";
+
 /* Define function headers */
 static PyObject *ptycholib_helloworld(PyObject *self, PyObject *args);
 static PyObject *ptycholib_epie(PyObject *self, PyObject *args, PyObject *keywds);
@@ -90,8 +96,13 @@ static PyObject *ptycholib_epiestep(PyObject *self, PyObject *args, PyObject *ke
 static PyObject *ptycholib_epieresobj(PyObject *self, PyObject *args, PyObject *keywds);
 static PyObject *ptycholib_epieresprobe(PyObject *self, PyObject *args, PyObject *keywds);
 
-static IPhaser* phaser;
+static PyObject *ptycholib_mlsinit(PyObject *self, PyObject *args, PyObject *keywds);
+static PyObject *ptycholib_mlspost(PyObject *self, PyObject *args, PyObject *keywds);
+static PyObject *ptycholib_mlsstep(PyObject *self, PyObject *args, PyObject *keywds);
+static PyObject *ptycholib_mlsresobj(PyObject *self, PyObject *args, PyObject *keywds);
+static PyObject *ptycholib_mlsresprobe(PyObject *self, PyObject *args, PyObject *keywds);
 
+static IPhaser* phaser;
 static unsigned int istep = 0;
 
 /* Define module methods */
@@ -109,6 +120,11 @@ static PyMethodDef module_methods[] = {
     {"epiestep", (PyCFunction)ptycholib_epiestep, METH_VARARGS|METH_KEYWORDS, epiestep_docstring},
     {"epieresobj", (PyCFunction)ptycholib_epieresobj, METH_VARARGS|METH_KEYWORDS, epieresobj_docstring},
     {"epieresprobe", (PyCFunction)ptycholib_epieresprobe, METH_VARARGS|METH_KEYWORDS, epieresprobe_docstring},
+    {"mlsinit", (PyCFunction)ptycholib_mlsinit, METH_VARARGS|METH_KEYWORDS, mlsinit_docstring},
+    {"mlspost", (PyCFunction)ptycholib_mlspost, METH_VARARGS|METH_KEYWORDS, mlspost_docstring},
+    {"mlsstep", (PyCFunction)ptycholib_mlsstep, METH_VARARGS|METH_KEYWORDS, mlsstep_docstring},
+    {"mlsresobj", (PyCFunction)ptycholib_mlsresobj, METH_VARARGS|METH_KEYWORDS, mlsresobj_docstring},
+    {"mlsresprobe", (PyCFunction)ptycholib_mlsresprobe, METH_VARARGS|METH_KEYWORDS, mlsresprobe_docstring},
     {NULL, NULL, 0, NULL}
 };
 
@@ -682,10 +698,6 @@ static PyObject *ptycholib_epieinit(PyObject *self, PyObject *args, PyObject *ke
 {
 
     char *cmdstr = "";
-
-//    if(phaser != NULL)
-//        delete phaser;
-//
     phaser = new IPhaser;
     istep = 0;
     static char *kwlist[] = {"cmdstr", NULL};
@@ -753,6 +765,90 @@ static PyObject *ptycholib_epieresobj(PyObject *self, PyObject *args, PyObject *
 }
 
 static PyObject *ptycholib_epieresprobe(PyObject *self, PyObject *args, PyObject *keywds)
+{
+
+    complex_t* h_probeArray = phaser->getProbe()->getModes()->getPtr()->getHostPtr<complex_t>();
+    int x = phaser->getProbe()->getModes()->getPtr()->getX();
+    int y = phaser->getProbe()->getModes()->getPtr()->getY();
+
+    npy_intp dims[2] = {x,y};
+    PyArrayObject *recon_ob = (PyArrayObject*)PyArray_SimpleNewFromData(2, dims, NPY_CFLOAT, h_probeArray);
+    Py_INCREF(recon_ob);
+    return PyArray_Return(recon_ob);
+
+}
+
+static PyObject *ptycholib_mlsinit(PyObject *self, PyObject *args, PyObject *keywds)
+{
+
+    char *cmdstr = "";
+    phaser = new IPhaser;
+    istep = 0;
+    static char *kwlist[] = {"cmdstr", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "|s", kwlist,&cmdstr))
+        return NULL;
+
+    size_t len = countargs(cmdstr) + 1;
+    char **r;
+
+    if (!(r = (char **)malloc((len+1) * sizeof *r)))
+        return 0;
+
+    if (!(*r = (char *)malloc(strlen(cmdstr) + 1)))
+    {
+        free(r);
+        return 0;
+    }
+
+    makeargs(r+1, len, strcpy(*r, cmdstr));
+    CXParams::getInstance()->parseFromCommandLine(len-1, r+1);
+    if(phaser->init())
+    {
+        phaser->addPhasingMethod("MLs", CXParams::getInstance()->getReconstructionParams()->iterations);
+        phaser->phaseinit();
+    }
+
+    free(*r);
+    free(r);
+    return Py_True;
+
+}
+
+static PyObject *ptycholib_mlspost(PyObject *self, PyObject *args, PyObject *keywds)
+{
+
+    phaser->phasepost();
+    phaser->writeResultsToDisk();
+    if(phaser != NULL)
+        delete phaser;
+    return Py_True;
+
+}
+
+static PyObject *ptycholib_mlsstep(PyObject *self, PyObject *args, PyObject *keywds)
+{
+
+    istep++;
+    phaser->phasestepvis(istep);
+    return Py_True;
+
+}
+
+static PyObject *ptycholib_mlsresobj(PyObject *self, PyObject *args, PyObject *keywds)
+{
+
+    complex_t* h_objectArray = phaser->getSample()->getObjectArray()->getHostPtr<complex_t>();
+    int x = phaser->getSample()->getObjectArray()->getX();
+    int y = phaser->getSample()->getObjectArray()->getY();
+
+    npy_intp dims[2] = {x,y};
+    PyArrayObject *recon_ob = (PyArrayObject*)PyArray_SimpleNewFromData(2, dims, NPY_CFLOAT, h_objectArray);
+    Py_INCREF(recon_ob);
+    return PyArray_Return(recon_ob);
+
+}
+
+static PyObject *ptycholib_mlsresprobe(PyObject *self, PyObject *args, PyObject *keywds)
 {
 
     complex_t* h_probeArray = phaser->getProbe()->getModes()->getPtr()->getHostPtr<complex_t>();
