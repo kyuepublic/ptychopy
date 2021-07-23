@@ -1,6 +1,6 @@
 .idea
-testPTY.py
-src/testNpty.py
+example/testPTY.py
+example/testNpty.py
 src/Makefile
 
 # Byte-compiled / optimized / DLL files
