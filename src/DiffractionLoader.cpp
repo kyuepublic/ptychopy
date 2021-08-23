@@ -49,8 +49,7 @@ DiffractionLoader::~DiffractionLoader()
 
 void DiffractionLoader::run()
 {
-//	unsigned int rows=m_params.rawFileSize.x,cols=m_params.rawFileSize.y;
-	unsigned int rows=514,cols=1030;
+	unsigned int rows=m_params.rawFileSize.x,cols=m_params.rawFileSize.y;
 
 	real_t* h_data=IO::getInstance()->readBuffer(m_fileName, m_dpIndex, rows, cols);
 	if(h_data==0)
@@ -69,7 +68,7 @@ void DiffractionLoader::run()
 	tempPattern = new Cuda2DArray<real_t>(m_params.symmetric_array_size,m_params.symmetric_array_size);
 
 	if( (m_params.rotate_90_times>0) || (m_params.flags&FFT_SHIFT))
-		tempPattern = new Cuda2DArray<real_t>(m_params.symmetric_array_size,m_params.symmetric_array_size);
+		tempPattern = new Cuda2DArray<real_t>(m_params.symmetric_array_size, m_params.symmetric_array_size);
 
 	if(rows==m_params.symmetric_array_size && cols==m_params.symmetric_array_size)
 	{
@@ -88,11 +87,9 @@ void DiffractionLoader::run()
 		int2 dataOffset, outOffset, dataSize;
 		dataSize.x = m_params.symmetric_array_center.x - (m_params.symmetric_array_size/2);
 		dataSize.y = m_params.symmetric_array_center.y - (m_params.symmetric_array_size/2);
-//		outOffset.x = (dataSize.x<0)? abs(dataSize.x): 0;
-		outOffset.x = 0;
+		outOffset.x = (dataSize.x<0)? abs(dataSize.x): 0;
 		dataOffset.x =(dataSize.x<0)? 0: dataSize.x;
-//		outOffset.y = (dataSize.y<0)? abs(dataSize.y): 0;
-		outOffset.y = 0;
+		outOffset.y = (dataSize.y<0)? abs(dataSize.y): 0;
 		dataOffset.y =(dataSize.y<0)? 0: dataSize.y;
 
 		dataSize.x = m_params.symmetric_array_center.x + (m_params.symmetric_array_size/2);

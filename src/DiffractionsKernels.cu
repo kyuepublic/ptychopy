@@ -98,10 +98,6 @@ __global__ void d_symmetrizeDiffraction(const real_t* d_intensities,real_t* d_ou
 {
 	unsigned int diffIndex	= ((dataOffsetX+blockIdx.x) * dataAlignedY) + threadIdx.x + dataOffsetY;
 	unsigned int outputIndex= ((outOffsetX+blockIdx.x) * outAlignedY) + threadIdx.x + outOffsetY;
-//	real_t temp=d_intensities[diffIndex];
-//	real_t temp1=sqrt_real_t(d_intensities[diffIndex]);
-
-//	d_output[outputIndex] = sqrt_real_t(d_intensities[diffIndex]);
 	d_output[outputIndex] = d_intensities[diffIndex];
 }
 

@@ -61,6 +61,7 @@ public:
 	~Diffractions();
 
 	void initMem(IPtychoScanMesh* scanMesh, uint2 probeSize);
+	int loadarr(double*** diffarr, const ExperimentParams* eParams, const PreprocessingParams* pParams); // Load diff from python numpy array
 
 	void clearPatterns();
 	int load(const char*, const std::vector<unsigned int>& indeces, unsigned int fStart, const PreprocessingParams* p);

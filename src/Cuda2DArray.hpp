@@ -125,8 +125,12 @@ public:
 template<typename T>
 class Cuda2DArray : public ICuda2DArray
 {
+
 public:
-	~Cuda2DArray() {freeDeviceMemory();}
+	~Cuda2DArray()
+	{
+		freeDeviceMemory();
+	}
 
 	void freeDeviceMemory()
 	{
@@ -162,7 +166,9 @@ public:
 	explicit Cuda2DArray(unsigned int x, unsigned int y) : ICuda2DArray(x,y, sizeof(T)),
 														   m_devicePtr(0)
 
-	{allocateDeviceMemory();}
+	{
+		allocateDeviceMemory();
+	}
 
 	//We don't want to call the default copy constructor
 	Cuda2DArray(const Cuda2DArray<T>& copy) : ICuda2DArray(copy.getX(), copy.getY(), copy.getUnitSize()),
@@ -189,7 +195,7 @@ public:
 			copyFromDeviceMemory(copy);
 	}
 
-    Cuda2DArray & operator = (const Cuda2DArray<T>& copy)
+    Cuda2DArray & operator= (const Cuda2DArray<T>& copy)
     {
         if (this != &copy)
         {
@@ -199,7 +205,7 @@ public:
         return *this;
     }
 
-	Cuda2DArray & operator = (const ICuda2DArray& copy)
+	Cuda2DArray & operator= (const ICuda2DArray& copy)
     {
         if (this != &copy)
         {
@@ -243,7 +249,11 @@ public:
 		copyFromDeviceMemory(copy, stream);
 	}
 
-	T* getDevicePtr() const {return m_devicePtr;}
+	T* getDevicePtr() const
+	{
+		return m_devicePtr;
+	}
+
 	T* getHostPtr(T* ptr_h=0, cudaStream_t* stream=0) const
 	{
 		T* hostPtr = ptr_h;
@@ -332,7 +342,9 @@ private:
 
 public:
 	Cuda3DArray():  m_num(0), m_dimensions(make_uint2(0,0)), m_useAll(true), m_array(0)
-	{}
+	{
+
+	}
 
 	Cuda3DArray(unsigned int n, uint2 dims) : m_useAll(true)
 	{
@@ -504,22 +516,22 @@ template<typename T>
 bool ICuda2DArray::load(const char* filename, bool binary)
 {
 	std::ifstream infile(filename, binary?std::ofstream::in|std::ofstream::binary : std::ofstream::in );
-		if(!infile.is_open())
-			return false;
-		T* h_array =  getHostPtr<T>();
-		if(binary)
-			infile.read((char*)h_array, getNum()*getUnitSize());
-		else
-		{
-			for(unsigned int x=0; x<getX(); ++x)
-				for(unsigned int y=0; y<getY(); ++y)
-					infile >> h_array[(x*getY())+y];
-		}
-		infile.close();
-		setFromHost(h_array, getX(), getY());
-		delete [] h_array;
+	if(!infile.is_open())
+		return false;
+	T* h_array =  getHostPtr<T>();
+	if(binary)
+		infile.read((char*)h_array, getNum()*getUnitSize());
+	else
+	{
+		for(unsigned int x=0; x<getX(); ++x)
+			for(unsigned int y=0; y<getY(); ++y)
+				infile >> h_array[(x*getY())+y];
+	}
+	infile.close();
+	setFromHost(h_array, getX(), getY());
+	delete [] h_array;
 
-		return true;
+	return true;
 }
 
 template<typename T>

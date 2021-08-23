@@ -109,7 +109,7 @@ bool IPhaser::initProbe()
 			if (rParams->probeGuess.empty())
 				m_probe->simulate(eParams->beamSize, eParams->dx_s);
 			else
-				m_probe->init(0, eParams->beamSize, eParams->dx_s, rParams->probeGuess.c_str());
+				m_probe->init(0, eParams->beamSize, eParams->dx_s, rParams->probearr, rParams->probeGuess.c_str());
 
 		if(rParams->algorithm.compare("MLs")==0)
 		{
@@ -182,6 +182,11 @@ bool IPhaser::initDiffractions()
 			}
 
 		}
+		else if(rParams->diffarr!=NULL)
+		{
+			m_diffractions->loadarr(rParams->diffarr, eParams, pParams);
+
+		}
 		else
 		{
 			string fpStr(pParams->dataFilePattern);
@@ -200,7 +205,7 @@ bool IPhaser::initDiffractions()
 			default: break;
 			}
 		}
-		//m_diffractions->getPatterns()->getPtr()->save<real_t>("data/diffs000.bin", true);
+
 	}
 	return true;
 }
@@ -267,7 +272,8 @@ void IPhaser::prePhase()
 	if(rParams->algorithm.compare("MLs")==0)
 	{
 		// initMLH generate the new probe value
-		if(!m_probe->initMLH(rParams->desiredShape, eParams->lambda, dx_recon, eParams->beamSize, rParams->nProbes, (rParams->probeGuess.empty())?0:rParams->probeGuess.c_str()))
+		if(!m_probe->initMLH(rParams->desiredShape, eParams->lambda, dx_recon, eParams->beamSize, rParams->nProbes, rParams->probearr, \
+				(rParams->probeGuess.empty())?0:rParams->probeGuess.c_str()))
 		{
 			fprintf(stderr,"WARNING! Failed to initialize probe\n");
 			return;
@@ -277,7 +283,8 @@ void IPhaser::prePhase()
 	}
 	else
 	{
-		if(!m_probe->init(m_diffractions->getPatterns(), eParams->beamSize, eParams->dx_s, (rParams->probeGuess.empty())?0:rParams->probeGuess.c_str()))
+		if(!m_probe->init(m_diffractions->getPatterns(), eParams->beamSize, eParams->dx_s, rParams->probearr, \
+				(rParams->probeGuess.empty())?0:rParams->probeGuess.c_str()))
 		{
 			fprintf(stderr,"WARNING! Failed to initialize probe\n");
 			return;
@@ -290,9 +297,17 @@ void IPhaser::prePhase()
 
 	////////////////////// test with matlab
 	if(!rParams->objectGuess.empty())
+	{
 		m_sample->loadGuess(rParams->objectGuess.c_str());
+	}
+	else if(rParams->samplearr!=NULL)
+	{
+		m_sample->loadarr(rParams->samplearr);
+	}
 	else if(rParams->algorithm.compare("MLs")==0&&rParams->simulated==false)
+	{
 		m_sample->initObject();
+	}
     //////////////////////////
 
 
@@ -339,33 +354,6 @@ void IPhaser::prePhase()
 
 //	m_scanMesh->generateMesh(this->getBounds());
 }
-
-//void IPhaser::phaseLoop()
-//{
-//	const ReconstructionParams* rParams = CXParams::getInstance()->getReconstructionParams();
-//
-//	for(size_t mIndex=0; mIndex<m_phasingMethods.size(); ++mIndex)
-//		for(unsigned int i=1; i<=m_phasingMethods[mIndex].iterations; ++i)
-//		{
-//			m_errors[i-1] += phaseStep(m_phasingMethods[mIndex].method, i);
-////			if(i%rParams->updateVis==0 && m_renderer)
-////				m_renderer->renderResources();
-//			#ifdef DEBUG_MSGS
-//			fprintf(stderr,"%s Iteration [%05d] --- RMS= %e\n", m_phasingMethods[mIndex].name.c_str(), i, m_errors[i-1]);
-//			#endif
-//			if(i%rParams->save == 0)
-//				writeResultsToDisk(i/rParams->save);
-//			if(rParams->time>=0 && m_phasingTimer.getElapsedTimeInSec()>=rParams->time)
-//				break;
-//		}
-//}
-//
-//real_t IPhaser::phaseStep(IPhasingMethod* m, unsigned int i)
-//{
-//	const ReconstructionParams* rParams = CXParams::getInstance()->getReconstructionParams();
-//	return m->iteration(m_diffractions, m_probe, m_sample, m_scanMesh->getScanPositions(), i<=rParams->phaseConstraint,
-//						i>=rParams->updateProbe, i>=rParams->updateProbeModes, rParams->calculateRMS);
-//}
 
 void IPhaser::phaseLoop()
 {

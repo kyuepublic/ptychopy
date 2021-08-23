@@ -151,6 +151,34 @@ void Diffractions::simulateMLs(const vector<float2>& scanPositions, uint2 offset
 	}
 }
 
+int Diffractions::loadarr(double*** diffarr, const ExperimentParams* eParams, const PreprocessingParams* pParams)
+{
+	unsigned int diffractionsNum=eParams->scanDims.x*eParams->scanDims.y;
+	unsigned int diffSize=pParams->symmetric_array_size;
+	if( (unsigned long long)(diffractionsNum*diffSize*diffSize) * sizeof(real_t) >=
+		GPUQuery::getInstance()->getGPUAvailableMemory())
+		return -1;
+	m_patterns= new Cuda3DArray<real_t>(diffractionsNum, make_uint2(diffSize, diffSize));
+
+	real_t* patternsHost=m_patterns->getPtr()->getHostPtr<real_t>();
+	for(int i=0; i<diffractionsNum; ++i)
+	{
+		for(int j=0; j<diffSize; j++)
+		{
+			for(int k=0; k<diffSize; k++)
+			{
+				patternsHost[k+j*diffSize+i*diffSize*diffSize]=(real_t)diffarr[i][j][k];
+//				printf("%d %.10e ", (k+j*4+i*8), patternsHost[k+j*4+i*8]);
+			}
+		}
+//		printf("\n");
+	}
+
+	m_patterns->getPtr()->setFromHost<real_t>(patternsHost, diffractionsNum*diffSize, diffSize);
+	delete[] patternsHost;
+
+	return 0;
+}
 
 int Diffractions::load(const char* filePattern, const vector<unsigned int>& indeces, unsigned int fStart, const PreprocessingParams* params)
 {
@@ -187,7 +215,6 @@ int Diffractions::load(const char* filePattern, const vector<unsigned int>& inde
 	IO::getInstance()->loadData();
 
 //	const real_t* h_diffData = m_patterns->getPtr()->getHostPtr<real_t>();
-//
 //	for(unsigned int i=0; i<20; ++i)
 //		printf("the %d data is %f \n", i, h_diffData[i]);
 

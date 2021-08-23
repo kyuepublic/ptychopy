@@ -74,6 +74,8 @@ public:
 	void initObject();
 	CudaSmartPtr generatepureRandKernel(unsigned int x, unsigned int y);
 
+	void loadarr(complex_t* samplearr);
+
 	bool loadFromFile(const char*, const char* p=0, real_t normalize=1.0);
 	void loadGuess(const char*);
 	void setObjectArrayShape(uint2 xy);

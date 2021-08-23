@@ -53,16 +53,14 @@ Sample::Sample(unsigned int arrayShapeX, unsigned int arrayShapeY) : m_maxObject
 //	m_randStates = new Cuda2DArray<curandState>(arrayShapeX, arrayShapeY);
 //	h_initRandomStatesSample(arrayShapeX, m_randStates->getAlignedY(), m_randStates->getDevicePtr<curandState>());
 	setObjectArrayShape(make_uint2(arrayShapeX, arrayShapeY));
-
 	tmpArr=new Cuda2DArray<complex_t>(arrayShapeX, arrayShapeY);
 }
 
 Sample::~Sample()
 {
 	h_unbindObjArrayTex();
-
-if(m_randomGenerator)
-	curandDestroyGenerator(m_randomGenerator);
+	if(m_randomGenerator)
+		curandDestroyGenerator(m_randomGenerator);
 }
 
 CudaSmartPtr Sample::generatepureRandKernel(unsigned int x, unsigned int y)
@@ -176,6 +174,22 @@ void Sample::loadGuess(const char* filename)
 	h_setObjectArray(m_objectArray->getDevicePtr<complex_t>(), guess->getDevicePtr<complex_t>(), guess->getX(),
 						guess->getY(), guess->getAlignedY(), m_objectArray->getX(), m_objectArray->getY(),
 						m_objectArray->getAlignedY());
+}
+
+void Sample::loadarr(complex_t* samplearr)
+{
+
+	m_objectArray->setFromHost(samplearr, m_objectArray->getX(), m_objectArray->getY());
+	delete[] samplearr;
+
+//	complex_t* hostObject=m_objectArray->getHostPtr<complex_t>();
+//	for (int i=0;i<m_objectArray->getX();i++)
+//		for (int j=0;j<m_objectArray->getX();j++)
+//		{
+//			if(j+i*m_objectArray->getX() < 20)
+//				printf("2D complex: %f + %fi\n", hostObject[j+i*m_objectArray->getX()].x, hostObject[j+i*m_objectArray->getX()].y);
+//		}
+//	delete[] hostObject;
 }
 
 void Sample::initObject()

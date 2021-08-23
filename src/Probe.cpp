@@ -334,7 +334,7 @@ void Probe::simulate(real_t beamSize, real_t dx_s, bool addNoise)
 	updateIntensities();
 }
 
-bool Probe::init(const Cuda3DArray<real_t>* diffractions, real_t beamSize, real_t dx_s, const char* filename)
+bool Probe::init(const Cuda3DArray<real_t>* diffractions, real_t beamSize, real_t dx_s, complex_t *probearr, const char* filename)
 {
 	if(filename)
 	{
@@ -346,6 +346,11 @@ bool Probe::init(const Cuda3DArray<real_t>* diffractions, real_t beamSize, real_
 		}
 		m_modes->getAt(0).setFromDevice(d_probeGuess->getDevicePtr<complex_t>(), d_probeGuess->getX(), d_probeGuess->getY());
 		updateIntensities();
+	}else if(probearr!=NULL)
+	{
+		printf("here \n");
+		m_modes->getAt(0).setFromHost(probearr, m_modes->getDimensions().x, m_modes->getDimensions().y);
+//		delete[] probearr;
 	}
 	else
 	{
@@ -363,7 +368,7 @@ bool Probe::init(const Cuda3DArray<real_t>* diffractions, real_t beamSize, real_
 	return true;
 }
 
-bool Probe::initMLH(unsigned int desiredShape, double lambda, double dx_recon, double beamSize, unsigned int nProbes, const char* filename)
+bool Probe::initMLH(unsigned int desiredShape, double lambda, double dx_recon, double beamSize, unsigned int nProbes, complex_t *probearr, const char* filename)
 {
 	double Rn = 90e-6;
 	double dRn = 50e-9;
@@ -386,6 +391,11 @@ bool Probe::initMLH(unsigned int desiredShape, double lambda, double dx_recon, d
 		}
 		m_modes->getAt(0).setFromDevice(d_probeGuess->getDevicePtr<complex_t>(), d_probeGuess->getX(), d_probeGuess->getY());
 
+	}else if(probearr!=NULL)
+	{
+		printf("here \n");
+		m_modes->getAt(0).setFromHost(probearr, m_modes->getDimensions().x, m_modes->getDimensions().y);
+//		delete[] probearr;
 	}
 	else
 	{

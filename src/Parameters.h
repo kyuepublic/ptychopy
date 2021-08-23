@@ -100,6 +100,10 @@ struct ExperimentParams
 
 struct ReconstructionParams
 {
+	double ***diffarr;
+	complex_t *samplearr;
+	complex_t *probearr;
+
 	std::string reconstructionID;
 	std::string algorithm;
 	unsigned int iterations;
@@ -151,7 +155,7 @@ struct ReconstructionParams
 		blind(true), simulated(false), flipScanAxis(false), mirrorX(false), mirrorY(false), calculateRMS(false), binaryOutput(false), nProbes(1),
 		Niter(100), variable_probe_modes(1), beta_LSQ(0.9),beta_object(1), beta_probe(1), probe_pos_search(5), variable_intensity(1),
 		variable_probe(1), apply_subpix_shift(1), apply_multimodal_update(0), object_reconstruct(1), probe_reconstruct(1), Nobjects(1), delta_p(0.1),
-		Nrec(1)
+		Nrec(1), diffarr(NULL), samplearr(NULL), probearr(NULL)
 	{}
 };
 
@@ -168,6 +172,7 @@ private:
 		return (m_eParams.lambda*m_eParams.z_d)/(m_rParams.desiredShape*m_eParams.dx_d);
 	}
 public:
+
 	Parameters();
 	virtual ~Parameters();
 
@@ -179,13 +184,14 @@ public:
 	const ReconstructionParams* getReconstructionParams()const {return &m_rParams;}
 	bool renderResults() const {return !m_rParams.blind;}
 
-	/////ptychpy function
+	/////ptychopy function
 
 	void parseFromCPython(char *jobID, char *algorithm, char *fp, int fs, char *hdf5path, int dpf, double beamSize, char *probeGuess, char *objectGuess, \
                 int size, int qx, int qy, int nx, int ny, int scanDimsx, int scanDimsy, int spiralScan, int flipScanAxis, int mirror1stScanAxis, \
                 int mirror2ndScanAxis, double stepx, double stepy, int probeModes, double lambda, double dx_d, double z, int iter, int T, int jitterRadius, \
                 double delta_p,  int threshold, int rotate90, int sqrtData, int fftShiftData, int binaryOutput, int simulate, \
-                int phaseConstraint, int updateProbe, int updateModes, int beamstopMask, char *lf, int PPS);
+                int phaseConstraint, int updateProbe, int updateModes, int beamstopMask, char *lf, int PPS, double ***diffarr=NULL, complex_t *samplearr=NULL, \
+                complex_t *probearr=NULL);
 };
 
 typedef Singleton<Parameters> CXParams;

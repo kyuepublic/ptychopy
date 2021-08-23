@@ -125,13 +125,13 @@ public:
 	~Probe();
 
 	void clear();
-	bool init(const Cuda3DArray<real_t>* diffractions, real_t beamSize, real_t dx_s, const char* filename=0);
+	bool init(const Cuda3DArray<real_t>* diffractions, real_t beamSize, real_t dx_s, complex_t *probearr, const char* filename=0);
 	bool initVarModes();
 
 	void initMem(IPtychoScanMesh*);
 	void freeMem(IPtychoScanMesh*);
 
-	bool initMLH(unsigned int desiredShape, double lambda, double dx_recon, double beamSize, unsigned int nProbes, const char* filename=0);
+	bool initMLH(unsigned int desiredShape, double lambda, double dx_recon, double beamSize, unsigned int nProbes, complex_t *probearr, const char* filename=0);
 
 	bool initEvo(int Npos, int variable_probe_modes, std::vector <uint2> oROI1, std::vector <uint2> oROI2, uint2 Np_o,
 			CudaSmartPtr objectArray, const Cuda3DArray<real_t>* diffractions, std::vector<real_t> diffSquareRoot);

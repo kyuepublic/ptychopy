@@ -242,7 +242,7 @@ extptychopy = Extension(name='ptychopy',
         runtime_library_dirs=[CUDA['lib']],
         extra_link_args = ['-lcudart', '-lcurand', '-lcufft', '-lcublas', '-lhdf5', '-lhdf5_cpp', '-lpthread'],
         extra_compile_args={
-            'nvcc': ['-Xcompiler', '-fpic', '--x cu', '-O3', '-gencode=arch=compute_{:s},code=sm_{:s}'.format(CUDA['compute'],CUDA['sm'])],
+            'nvcc': ['-Xcompiler', '-fpic', '-O3', '-gencode=arch=compute_{:s},code=sm_{:s}'.format(CUDA['compute'],CUDA['sm'])],
             'gcc': ['-DEPIE_HDF5',  '-fpic', '-DHAVE_HDF5'],
             'g++': ['-DEPIE_HDF5',  '-fpic', '-DHAVE_HDF5']
             })

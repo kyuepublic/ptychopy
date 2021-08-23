@@ -37,10 +37,14 @@
 using namespace std;
 
 Parameters::Parameters(): m_eParams(), m_pParams(0), m_rParams()
-{}
+{
+
+}
 
 Parameters::~Parameters()
-{}
+{
+
+}
 
 void Parameters::updatePixelSaturation()
 {
@@ -372,11 +376,35 @@ void Parameters::parseFromCPython(char *jobID, char *algorithm, char *fp, int fs
                 int size, int qx, int qy, int nx, int ny, int scanDimsx, int scanDimsy, int spiralScan, int flipScanAxis, int mirror1stScanAxis, \
                 int mirror2ndScanAxis, double stepx, double stepy, int probeModes, double lambda, double dx_d, double z, int iter, int T, int jitterRadius, \
                 double delta_p,  int threshold, int rotate90, int sqrtData, int fftShiftData, int binaryOutput, int simulate, \
-                int phaseConstraint, int updateProbe, int updateModes, int beamstopMask, char *lf, int PPS)
+                int phaseConstraint, int updateProbe, int updateModes, int beamstopMask, char *lf, int PPS, double ***diffarr, complex_t *samplearr, \
+                complex_t *probearr)
 {
 	int value;
 	char* strValue;
 	string temp;
+
+	if(diffarr!=NULL)
+	{
+		m_rParams.diffarr=diffarr;
+//		printf("Inside ptycho param 3D: %f 1D: .\n", m_rParams.diffarr[0][0][2]);
+	}
+
+	if(samplearr!=NULL)
+	{
+		m_rParams.samplearr=samplearr;
+//        for (int i=0;i<scanDimsx;i++)
+//            for (int j=0;j<scanDimsx;j++)
+//            {
+//            	if(j+i*scanDimsx < 20)
+//            		printf("2D complex: %f + %fi\n", samplearr[j+i*scanDimsx].x, samplearr[j+i*scanDimsx].y);
+//            }
+	}
+
+	if(probearr!=NULL)
+	{
+		m_rParams.probearr=probearr;
+	}
+
 	if (sqrtData==1)
 	{
 		m_pParams.flags |= SQUARE_ROOT;
