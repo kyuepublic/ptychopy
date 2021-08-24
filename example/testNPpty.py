@@ -78,11 +78,16 @@ l3 = np.array([[[2, 7, 1, 11], [6, 3, 9, 12]],
 l4 = np.array([[1.0+1.1j,2.0+1.6j,3.0+1.j], [4.0+1.j,5.0+1.j,6.0+1.j], [7.0+1.j,8.0+1.j,9.0+1.j], [3.0+1.j, 5.1+1.j, 0.0+1.j]])
 #
 #
-# # Whole mode key work, with numpy array as input objectNP=l2, probeNP=l2,objectNP=ob,
+# Whole mode key work, with numpy array as input objectNP=l2, probeNP=l2,objectNP=ob,
 ptychopy.epienp(jobID="ePIEIOTestr256", diffractionNP=dp, fp="/home/beams/USER2IDD/ptychography/p2/ptycholib/scan152/scan152_data_#06d.h5", \
              fs=1, hdf5path="/entry/data/data", beamSize=110e-6, qx=276, qy=616, scanDimsx=51, scanDimsy=51, stepx=100e-9, \
               stepy=100e-9, lambd=1.408911284090909e-10, iter=10, size=256, dx_d=75e-6, z=1.92, dpf=51, \
               probeModes=2)
+
+# ptychopy.dmnp(jobID="dmIOTestr256", diffractionNP=dp, fp="/home/beams/USER2IDD/ptychography/p2/ptycholib/scan152/scan152_data_#06d.h5", \
+#              fs=1, hdf5path="/entry/data/data", beamSize=110e-6, qx=276, qy=616, scanDimsx=51, scanDimsy=51, stepx=100e-9, \
+#               stepy=100e-9, lambd=1.408911284090909e-10, iter=10, size=256, dx_d=75e-6, z=1.92, dpf=51, \
+#               probeModes=2)
 
 # ptychopy.mlsnp(jobID="mlsIOTestr256", diffractionNP=dp, objectNP=l4,fp="/home/beams/USER2IDD/ptychography/p2/ptycholib/scan152/scan152_data_#06d.h5", \
 #              fs=1, hdf5path="/entry/data/data", beamSize=110e-6, qx=276, qy=616, scanDimsx=51, scanDimsy=51, stepx=100e-9, \

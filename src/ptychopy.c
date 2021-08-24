@@ -84,10 +84,8 @@ static PyObject *ptycholib_dm(PyObject *self, PyObject *args, PyObject *keywds);
 static PyObject *ptycholib_mls(PyObject *self, PyObject *args, PyObject *keywds);
 
 static PyObject *ptycholib_epienp(PyObject *self, PyObject *args, PyObject *keywds);
+static PyObject *ptycholib_dmnp(PyObject *self, PyObject *args, PyObject *keywds);
 static PyObject *ptycholib_mlsnp(PyObject *self, PyObject *args, PyObject *keywds);
-
-
-
 
 static PyObject *ptycholib_epiecmdstr(PyObject *self, PyObject *args, PyObject *keywds);
 static PyObject *ptycholib_dmcmdstr(PyObject *self, PyObject *args, PyObject *keywds);
@@ -115,6 +113,7 @@ static PyMethodDef module_methods[] = {
     {"dm", (PyCFunction)ptycholib_dm, METH_VARARGS|METH_KEYWORDS, dm_docstring},
     {"mls", (PyCFunction)ptycholib_mls, METH_VARARGS|METH_KEYWORDS, mls_docstring},
     {"epienp", (PyCFunction)ptycholib_epienp, METH_VARARGS|METH_KEYWORDS, epie_docstring},
+    {"dmnp", (PyCFunction)ptycholib_dmnp, METH_VARARGS|METH_KEYWORDS, dm_docstring},
     {"mlsnp", (PyCFunction)ptycholib_mlsnp, METH_VARARGS|METH_KEYWORDS, mls_docstring},
     {"epiecmdstr", (PyCFunction)ptycholib_epiecmdstr, METH_VARARGS|METH_KEYWORDS, epiecmdstr_docstring},
     {"dmcmdstr", (PyCFunction)ptycholib_dmcmdstr, METH_VARARGS|METH_KEYWORDS, dmcmdstr_docstring},
@@ -526,6 +525,13 @@ static PyObject *ptycholib_epienp(PyObject *self, PyObject *args, PyObject *keyw
 {
 
     ptychopy_algorithmnp(args, keywds, "ePIE");
+    return Py_True;
+}
+
+static PyObject *ptycholib_dmnp(PyObject *self, PyObject *args, PyObject *keywds)
+{
+
+    ptychopy_algorithmnp(args, keywds, "DM");
     return Py_True;
 }
 
