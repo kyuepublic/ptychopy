@@ -84,20 +84,23 @@ Whole mode API example:
                stepy=50e-9, lambd=2.4796837508399954e-10, iter=3, size=512, dx_d=172e-6, z=1, simulate=0);
 ```
 
-    ptychopy.epienp(jobID="ePIEIOTestr256", diffractionNP=dp, fp="/home/scan152/scan152_data_#06d.h5", \
-                 fs=1, hdf5path="/entry/data/data", beamSize=110e-6, qx=276, qy=616, scanDimsx=51, scanDimsy=51, stepx=100e-9, \
+Pass diffraction pattern as a 3D numpy array, diffractionNP, objectNP, probeNP
+```
+    ptychopy.epienp(jobID="ePIEIOTestr256", diffractionNP=dp,\
+                 fs=1, beamSize=110e-6, qx=276, qy=616, scanDimsx=51, scanDimsy=51, stepx=100e-9, \
                   stepy=100e-9, lambd=1.408911284090909e-10, iter=10, size=256, dx_d=75e-6, z=1.92, dpf=51, \
                   probeModes=2)
     
-    ptychopy.dmnp(jobID="dmIOTestr256", diffractionNP=dp, fp="/home/scan152/scan152_data_#06d.h5", \
-                 fs=1, hdf5path="/entry/data/data", beamSize=110e-6, qx=276, qy=616, scanDimsx=51, scanDimsy=51, stepx=100e-9, \
+    ptychopy.dmnp(jobID="dmIOTestr256", diffractionNP=dp,\
+                 fs=1, beamSize=110e-6, qx=276, qy=616, scanDimsx=51, scanDimsy=51, stepx=100e-9, \
                   stepy=100e-9, lambd=1.408911284090909e-10, iter=10, size=256, dx_d=75e-6, z=1.92, dpf=51, \
                   probeModes=2)
     
-    ptychopy.mlsnp(jobID="mlsIOTestr256", diffractionNP=dp, objectNP=l4,fp="/home/scan152/scan152_data_#06d.h5", \
-                 fs=1, hdf5path="/entry/data/data", beamSize=110e-6, qx=276, qy=616, scanDimsx=51, scanDimsy=51, stepx=100e-9, \
+    ptychopy.mlsnp(jobID="mlsIOTestr256", diffractionNP=dp,\
+                 fs=1, beamSize=110e-6, qx=276, qy=616, scanDimsx=51, scanDimsy=51, stepx=100e-9, \
                   stepy=100e-9, lambd=1.408911284090909e-10, iter=10, size=256, dx_d=75e-6, z=1.92, dpf=51, \
               probeModes=2)
+```
 
 Step mode API example:
 
