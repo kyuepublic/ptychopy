@@ -68,14 +68,10 @@ parameter has to be specified. The file format must be a bunch of HDF5 files
 and the file path would be like filename_data_#06d.h5. The library will go
 though all the HDF5 files and load the diffraction pattern into the library.
 
-Whole mode API example:
+Whole mode API example with simulation images:
     
 =======
 ```
-    ptychopy.epiecmdstr(str)
-    ptychopy.dmcmdstr(str)
-    ptychopy.mlscmdstr(str)
-
     ptychopy.epie(jobID="mlssimu1", beamSize=110e-9, scanDimsx=30, scanDimsy=30, stepx=50e-9, \
                stepy=50e-9, lambd=2.4796837508399954e-10, iter=3, size=512, dx_d=172e-6, z=1, simulate=1);
     ptychopy.dm(jobID="mlssimu1", beamSize=110e-9, scanDimsx=30, scanDimsy=30, stepx=50e-9, \
@@ -120,7 +116,7 @@ Step mode API example:
     mlspost()
 ```
 
-For implentation example, please check testPTY.py, testMTY.py
+For implentation example, please check example folder.
 
 ## Parameters
 
