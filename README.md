@@ -63,26 +63,41 @@ pattern into the library.
 
 Whole mode API example:
 
-    ptychopy.mlscmdstr(str)
+    ptychopy.epiecmdstr(str)
     ptychopy.dmcmdstr(str)
     ptychopy.mlscmdstr(str)
 
-    ptychopy.mls(jobID="mlssimu1", beamSize=110e-9, scanDimsx=30, scanDimsy=30, stepx=50e-9, \
+    ptychopy.epie(jobID="mlssimu1", beamSize=110e-9, scanDimsx=30, scanDimsy=30, stepx=50e-9, \
                stepy=50e-9, lambd=2.4796837508399954e-10, iter=3, size=512, dx_d=172e-6, z=1, simulate=1);
     ptychopy.dm(jobID="mlssimu1", beamSize=110e-9, scanDimsx=30, scanDimsy=30, stepx=50e-9, \
               stepy=50e-9, lambd=2.4796837508399954e-10, iter=3, size=512, dx_d=172e-6, z=1, simulate=1);
     ptychopy.mls(jobID="mlssimu1", beamSize=110e-9, scanDimsx=30, scanDimsy=30, stepx=50e-9, \
                stepy=50e-9, lambd=2.4796837508399954e-10, iter=3, size=512, dx_d=172e-6, z=1, simulate=0);
 
+    ptychopy.epienp(jobID="ePIEIOTestr256", diffractionNP=dp, fp="/home/scan152/scan152_data_#06d.h5", \
+                 fs=1, hdf5path="/entry/data/data", beamSize=110e-6, qx=276, qy=616, scanDimsx=51, scanDimsy=51, stepx=100e-9, \
+                  stepy=100e-9, lambd=1.408911284090909e-10, iter=10, size=256, dx_d=75e-6, z=1.92, dpf=51, \
+                  probeModes=2)
+    
+    ptychopy.dmnp(jobID="dmIOTestr256", diffractionNP=dp, fp="/home/scan152/scan152_data_#06d.h5", \
+                 fs=1, hdf5path="/entry/data/data", beamSize=110e-6, qx=276, qy=616, scanDimsx=51, scanDimsy=51, stepx=100e-9, \
+                  stepy=100e-9, lambd=1.408911284090909e-10, iter=10, size=256, dx_d=75e-6, z=1.92, dpf=51, \
+                  probeModes=2)
+    
+    ptychopy.mlsnp(jobID="mlsIOTestr256", diffractionNP=dp, objectNP=l4,fp="/home/scan152/scan152_data_#06d.h5", \
+                 fs=1, hdf5path="/entry/data/data", beamSize=110e-6, qx=276, qy=616, scanDimsx=51, scanDimsy=51, stepx=100e-9, \
+                  stepy=100e-9, lambd=1.408911284090909e-10, iter=10, size=256, dx_d=75e-6, z=1.92, dpf=51, \
+              probeModes=2)
+
 Step mode API example:
 
     str = "./ptycho -jobID=sim512 -algorithm=mls -beamSize=110e-9 -scanDims=30,30 -step=50e-9,50e-9 -i=3 -size=512 
     -lambda=2.4796837508399954e-10 -dx_d=172e-6 -z=1 -simulate=1"
-    mlsinit(str)
-    mlsstep()
-    mlsresobj()
-    mlsresprobe()
-    mlspost()
+    epieinit(str)
+    epiestep()
+    episresobj()
+    epiresprobe()
+    epipost()
 
     mlsinit(str)
     mlsstep()
