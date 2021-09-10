@@ -97,6 +97,8 @@ static PyObject *ptycholib_epiestep(PyObject *self, PyObject *args, PyObject *ke
 static PyObject *ptycholib_epieresobj(PyObject *self, PyObject *args, PyObject *keywds);
 static PyObject *ptycholib_epieresprobe(PyObject *self, PyObject *args, PyObject *keywds);
 
+static PyObject *ptycholib_epienpinit(PyObject *self, PyObject *args, PyObject *keywds);
+
 static PyObject *ptycholib_mlsinit(PyObject *self, PyObject *args, PyObject *keywds);
 static PyObject *ptycholib_mlspost(PyObject *self, PyObject *args, PyObject *keywds);
 static PyObject *ptycholib_mlsstep(PyObject *self, PyObject *args, PyObject *keywds);
@@ -123,6 +125,7 @@ static PyMethodDef module_methods[] = {
     {"epiestep", (PyCFunction)ptycholib_epiestep, METH_VARARGS|METH_KEYWORDS, epiestep_docstring},
     {"epieresobj", (PyCFunction)ptycholib_epieresobj, METH_VARARGS|METH_KEYWORDS, epieresobj_docstring},
     {"epieresprobe", (PyCFunction)ptycholib_epieresprobe, METH_VARARGS|METH_KEYWORDS, epieresprobe_docstring},
+    {"epienpinit", (PyCFunction)ptycholib_epienpinit, METH_VARARGS|METH_KEYWORDS, epieinit_docstring},
     {"mlsinit", (PyCFunction)ptycholib_mlsinit, METH_VARARGS|METH_KEYWORDS, mlsinit_docstring},
     {"mlspost", (PyCFunction)ptycholib_mlspost, METH_VARARGS|METH_KEYWORDS, mlspost_docstring},
     {"mlsstep", (PyCFunction)ptycholib_mlsstep, METH_VARARGS|METH_KEYWORDS, mlsstep_docstring},
@@ -690,6 +693,215 @@ static PyObject *ptycholib_mlscmdstr(PyObject *self, PyObject *args, PyObject *k
     return PyArray_Return(recon_ob);
 }
 
+static PyObject* ptychopy_algorithmnpinit(PyObject *args, PyObject *keywds, char *algorithm)
+{
+    // Default value for the algorithm parameters
+    char *jobID="";
+    char *fp="";
+    int fs=0;
+    char* hdf5path="";
+    int dpf = 1;
+    double beamSize=400e-9;
+    char *probeGuess="";
+    char *objectGuess="";
+    char *lf="";
+    int size=512;
+    int qx=128;
+    int qy=128;
+    int nx=256;
+    int ny=256;
+    int scanDimsx=26;
+    int scanDimsy=26;
+    int spiralScan=0;
+    int flipScanAxis=0;
+    int mirror1stScanAxis=0;
+    int mirror2ndScanAxis=0;
+    double stepx=40e-9;
+    double stepy=40e-9;
+    int probeModes=1;
+    double lambd=2.3843e-10;
+    double dx_d=172e-6;
+    double z=2.2;
+    int iter=100;
+    int T=0;
+    int jitterRadius=0;
+    double delta_p=0.1;
+    int threshold=0;
+    int rotate90=0;
+    int sqrtData=0;
+    int fftShiftData=0;
+    int binaryOutput=0;
+    int simulate=0;
+    int phaseConstraint=1;
+    int updateProbe=10;
+    int updateModes=20;
+    int beamstopMask=0;
+    int PPS=20;
+
+    PyObject *diffractionNP_obj = NULL;
+    PyObject *positionNP_obj = NULL;
+    PyObject *objectNP_obj = NULL;
+    PyObject *probeNP_obj = NULL;
+
+    static char *kwlist[] = {"jobID", "diffractionNP", "positionNP", "objectNP", "probeNP", "fp", "fs", "hdf5path", "dpf", "beamSize", "probeGuess", "objectGuess", \
+    "size", "qx", "qy", "nx", "ny", "scanDimsx", "scanDimsy", "spiralScan", "flipScanAxis", "mirror1stScanAxis", \
+    "mirror2ndScanAxis", "stepx", "stepy", "probeModes", "lambd", "dx_d", "z", "iter", "T", "jitterRadius", \
+    "delta_p",  "threshold", "rotate90", "sqrtData", "fftShiftData", "binaryOutput", "simulate", \
+    "phaseConstraint", "updateProbe", "updateModes", "beamstopMask", "lf", "PPS", NULL};
+
+    if (!PyArg_ParseTupleAndKeywords(args, keywds, "|sOOOOsisidssiiiiiiiiiiiddidddiiidiiiiiiiiiisi", kwlist,
+                &jobID, &diffractionNP_obj, &positionNP_obj, &objectNP_obj, &probeNP_obj, &fp, &fs, &hdf5path, &dpf, &beamSize, &probeGuess, &objectGuess, \
+                &size, &qx, &qy, &nx, &ny, &scanDimsx, &scanDimsy, &spiralScan, &flipScanAxis, &mirror1stScanAxis, \
+                &mirror2ndScanAxis, &stepx, &stepy, &probeModes, &lambd, &dx_d, &z, &iter, &T, &jitterRadius, \
+                &delta_p,  &threshold, &rotate90, &sqrtData, &fftShiftData, &binaryOutput, &simulate, \
+                &phaseConstraint, &updateProbe, &updateModes, &beamstopMask, &lf, &PPS))
+
+    printf("Running algorithm %s. \n", algorithm);
+
+    double ***diffractionNP_list;
+    double **positionNP_list = NULL;
+    complex_t *objectNP_list = NULL;
+//    complex_t *objectNP_list = new complex_t[scanDimsx*scanDimsy];
+    complex_t *probeNP_list = NULL;
+
+    int typenum = NPY_DOUBLE;
+    PyArray_Descr *descr;
+    descr = PyArray_DescrFromType(typenum);
+    npy_intp dims[3];
+
+    if(diffractionNP_obj!=NULL)
+    {
+        if(PyArray_AsCArray(&diffractionNP_obj, (void **)&diffractionNP_list, dims, 3, descr) < 0)
+        {
+            PyErr_SetString(PyExc_TypeError, "error converting diffraction numpy array to c array");
+        }
+    }
+    else
+    {
+        printf("Please input a diffraction pattern numpy array\n");
+        Py_RETURN_NONE;
+    }
+
+    if(positionNP_obj!=NULL)
+    {
+        printf("Use input position numpy array\n");
+        if(PyArray_AsCArray(&positionNP_obj, (void **)&positionNP_list, dims, 2, descr) < 0)
+        {
+            PyErr_SetString(PyExc_TypeError, "error converting position numpy array to c array");
+        }
+    }
+    else
+    {
+        printf("Use default grid position\n");
+    }
+
+    if(objectNP_obj!=NULL)
+    {
+        PyArrayObject * yarr=NULL;
+        int DTYPE = PyArray_ObjectType(objectNP_obj, NPY_FLOAT);
+        int iscomplex = PyTypeNum_ISCOMPLEX(DTYPE);
+        yarr = (PyArrayObject *)PyArray_FROM_OTF(objectNP_obj, DTYPE, NPY_ARRAY_IN_ARRAY);
+        if (yarr != NULL)
+        {
+            if (PyArray_NDIM(yarr) != 2)
+            {
+                Py_CLEAR(yarr);
+                PyErr_SetString(PyExc_ValueError, "Expected 2 dimensional object array");
+                return NULL;
+            }
+            npy_intp * dimsObject = PyArray_DIMS(yarr);
+            npy_intp i,j;
+            double * p;
+            if (iscomplex)
+            {
+            	objectNP_list = new complex_t[scanDimsx*scanDimsy];
+                for (i=0;i<dimsObject[0];i++)
+                    for (j=0;j<dimsObject[1];j++)
+                    {
+                        p = (double*)PyArray_GETPTR2(yarr, i,j);
+                        real_t real = (real_t)*p;
+                        real_t imag = (real_t)(*(p+1));
+                        objectNP_list[j+i*dimsObject[1]].x= real;
+                        objectNP_list[j+i*dimsObject[1]].y= imag;
+//                        printf("2D complex: %f + %fi\n", objectNP_list[j+i*dimsObject[1]].x, objectNP_list[j+i*dimsObject[1]].y);
+                    }
+            }
+            Py_CLEAR(yarr);
+        }
+        else
+        {
+            Py_INCREF(Py_None);
+            printf("The object array passing failed\n");
+            return Py_None;
+        }
+    }
+    else
+    {
+        printf("Use default object guess\n");
+    }
+
+    if(probeNP_obj!=NULL)
+    {
+        PyArrayObject * yarr=NULL;
+        int DTYPE = PyArray_ObjectType(probeNP_obj, NPY_FLOAT);
+        int iscomplex = PyTypeNum_ISCOMPLEX(DTYPE);
+        yarr = (PyArrayObject *)PyArray_FROM_OTF(probeNP_obj, DTYPE, NPY_ARRAY_IN_ARRAY);
+        if (yarr != NULL)
+        {
+            if (PyArray_NDIM(yarr) != 2)
+            {
+                Py_CLEAR(yarr);
+                PyErr_SetString(PyExc_ValueError, "Expected 2 dimensional probe array");
+                return NULL;
+            }
+            npy_intp * dimsProbe = PyArray_DIMS(yarr);
+            npy_intp i,j;
+            double * p;
+            if (iscomplex)
+            {
+            	probeNP_list = new complex_t[size*size];
+                for (i=0;i<dimsProbe[0];i++)
+                    for (j=0;j<dimsProbe[1];j++)
+                    {
+                        p = (double*)PyArray_GETPTR2(yarr, i,j);
+                        real_t real = (real_t)*p;
+                        real_t imag = (real_t)(*(p+1));
+                        probeNP_list[j+i*dimsProbe[1]].x= real;
+                        probeNP_list[j+i*dimsProbe[1]].y= imag;
+        //                printf("2D complex: %f + i%f\n", real, imag);
+                    }
+            }
+            Py_CLEAR(yarr);
+        }
+        else
+        {
+            Py_INCREF(Py_None);
+            printf("The probe array passing failed\n");
+            return Py_None;
+        }
+    }
+    else
+    {
+        printf("Use default probe guess\n");
+    }
+
+    CXParams::getInstance()->parseFromCPython(jobID, algorithm, fp, fs, hdf5path, dpf, beamSize, probeGuess, objectGuess, \
+                size, qx, qy, nx, ny, scanDimsx, scanDimsy, spiralScan, flipScanAxis, mirror1stScanAxis, \
+                mirror2ndScanAxis, stepx, stepy, probeModes, lambd, dx_d, z, iter, T, jitterRadius, \
+                delta_p,  threshold, rotate90, sqrtData, fftShiftData, binaryOutput, simulate, \
+                phaseConstraint, updateProbe, updateModes, beamstopMask, lf, PPS, diffractionNP_list, objectNP_list, probeNP_list);
+
+    phaser = new IPhaser;
+    if(phaser->init())
+	{
+		phaser->addPhasingMethod( 	CXParams::getInstance()->getReconstructionParams()->algorithm.c_str(),
+									CXParams::getInstance()->getReconstructionParams()->iterations);
+        phaser->phaseinit();
+	}
+
+	Py_RETURN_NONE;
+}
+
 static PyObject *ptycholib_epieinit(PyObject *self, PyObject *args, PyObject *keywds)
 {
 
@@ -724,6 +936,12 @@ static PyObject *ptycholib_epieinit(PyObject *self, PyObject *args, PyObject *ke
     free(r);
     return Py_True;
 
+}
+
+static PyObject *ptycholib_epienpinit(PyObject *self, PyObject *args, PyObject *keywds)
+{
+    ptychopy_algorithmnpinit(args, keywds, "ePIE");
+    return Py_True;
 }
 
 static PyObject *ptycholib_epiepost(PyObject *self, PyObject *args, PyObject *keywds)

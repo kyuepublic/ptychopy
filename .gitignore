@@ -1,7 +1,7 @@
 .idea
-example/testPTY.py
-example/testNpty.py
 src/Makefile
+example/*.csv
+dependLib/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

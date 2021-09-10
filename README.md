@@ -122,19 +122,16 @@ Pass diffraction pattern as a 3D numpy array, diffractionNP, objectNP, probeNP
 Step mode API example:
 
 ```
-    str = "./ptycho -jobID=sim512 -algorithm=mls -beamSize=110e-9 -scanDims=30,30 -step=50e-9,50e-9 -i=3 -size=512
-    -lambda=2.4796837508399954e-10 -dx_d=172e-6 -z=1 -simulate=1"
-    epieinit(str)
+
+    epienpinit(jobID="ePIEIOTestr256", diffractionNP=dp,\
+                 fs=1, beamSize=110e-6, qx=276, qy=616, scanDimsx=51, scanDimsy=51, stepx=100e-9, \
+                  stepy=100e-9, lambd=1.408911284090909e-10, iter=10, size=256, dx_d=75e-6, z=1.92,\
+                  probeModes=2)
     epiestep()
     episresobj()
     epiresprobe()
     epipost()
 
-    mlsinit(str)
-    mlsstep()
-    mlsresobj()
-    mlsresprobe()
-    mlspost()
 ```
 
 For implentation example, please check example folder.
@@ -144,7 +141,7 @@ For implentation example, please check example folder.
   Name | Type | Description | Default
 :------------: | :-------------: | :------------: | :------------:
 jobID | string  | An identifying tag to the reconstruction run | ``
-algorithm | string  | The algorithm to use for reconstruction. Accepted values ( `ePIE,DM, MLS` ) | `ePIE`
+algorithm | string  | The algorithm to use for reconstruction. Accepted values ( `ePIE,DM, MLs` ) | `ePIE`
 fp | path  | A c-style formatted string for the location of the HDF5 files. For file name string substitution starting at `fs` . Example: `-fp=/data/diff_#03d.h5` for files in the form `diff_000.h5, diff_001.h5, ...` | `N/A`
 fs | integer  | The file index of the file containing the first diffraction pattern (top left corner for Cartesian scans) | `0`
 hdf5path | string | Diffraction data HDF5 dataset name | `/entry/data/data`
@@ -165,7 +162,7 @@ probeModes | integer  | Number of orthogonal probe modes to simulate partial inc
 lambda | real  | Wavelength of the incident beam in meters (calculated from the energy used) | `2.3843e-10`
 dx_d | real  | Detector pixel size in meters | `172e-6`
 z | real  | Distance between sample and detector in meters | `2.2`
-i | integer  | Number of reconstruction iterations | `100`
+iter | integer  | Number of reconstruction iterations | `100`
 T | integer  | Maximum allowed reconstruction time (in sec). Overrides iterations. | `N/A`
 jitterRadius | integer  | Radius in pixels for random displacement of raster scan positions | `0`
 delta_p | real | LSQ damping constant, used only for MLs method | 0.1
@@ -185,3 +182,10 @@ updateVis | integer  | The number of iterations after which to start updating th
 beamstopMask | (0, 1)  | Determine whether the beamstop area (0 values, set by a binary array "beamstopMask.h5" which is put in the data directory) is applied with Fourier modulus constraint or not  | `0`
 lf | path  | The location of a CSV complex valued file for positions (The file can be saved with python using np.savetxt(numpyProbe, delimiter=', ') and it has to be arranged with position y, x in each row, the unit is m  | `N/A`
 PPS | integer  | The number of iterations after which to start probe position search, only work for MLs method | `20`
+
+
+  Name | Type | Description | Default
+:------------: | :-------------: | :------------: | :------------:
+diffractionNP | real  | numpy array for diffraction | `numpy array for diffraction`
+objectNP | complex  | numpy array for object array | `numpy array for object array`
+probeNP | complex  | numpy array for probe array | `numpy array for probe array`
