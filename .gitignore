@@ -1,7 +1,7 @@
 .idea
 src/Makefile
 example/*.csv
-dependLib/*
+#dependLib/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
