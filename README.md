@@ -189,3 +189,13 @@ PPS | integer  | The number of iterations after which to start probe position se
 diffractionNP | real  | numpy array for diffraction | `numpy array for diffraction`
 objectNP | complex  | numpy array for object array | `numpy array for object array`
 probeNP | complex  | numpy array for probe array | `numpy array for probe array`
+
+Reference Paper
+
+```
+@inproceedings{yue2021ptychopy,
+  title={Ptychopy: GPU framework for ptychographic data analysis},
+  author={Yue, Ke and Deng, Junjing and Jiang, Yi and Nashed, Youssef and Vine, David}
+}
+
+```
