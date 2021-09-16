@@ -1,10 +1,19 @@
 .idea
 src/Makefile
+src/build.sh
+src/*.o
+src/*.a
+src/ptycho
 example/*.csv
 dependLib/*
 build/*
 dist/*
 data/*
+ptychopy.cpython-36m-x86_64-linux-gnu.so
+ptychopy.egg-info/*
+
+
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

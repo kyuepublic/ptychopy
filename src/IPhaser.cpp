@@ -127,20 +127,26 @@ bool IPhaser::initScanMesh()
 
         const ExperimentParams* eParams = CXParams::getInstance()->getExperimentParams();
         const ReconstructionParams* rParams = CXParams::getInstance()->getReconstructionParams();
-//        printf("the scanDims is %d, %d, stepx is %.8e, stepy is %.8e, the beamSize is %.8e, size is %d, \
-//        dx_d is %.8e, z is %.8e \n", eParams->scanDims.x, \
-//        eParams->scanDims.y, eParams->stepSize.x, eParams->stepSize.y, eParams->beamSize, rParams->desiredShape, \
-//        eParams->dx_d, eParams->z_d);
 
-		if(!rParams->positionsFilename.empty())
-			m_scanMesh = new ListScanMesh(rParams->positionsFilename.c_str(), eParams->scanDims.x*eParams->scanDims.y,
+        if(rParams->posarr==NULL)
+        {
+    		if(!rParams->positionsFilename.empty())
+    			m_scanMesh = new ListScanMesh(rParams->positionsFilename.c_str(), eParams->scanDims.x*eParams->scanDims.y,
+    											eParams->stepSize.x, rParams->jitterRadius);
+    		else if(eParams->spiralScan)
+    			m_scanMesh = new SpiralScanMesh(eParams->scanDims.x*eParams->scanDims.y, eParams->stepSize.x,
+    											eParams->stepSize.y, rParams->jitterRadius);
+    		else
+    			m_scanMesh = new CartesianScanMesh(eParams->scanDims.x, eParams->scanDims.y, eParams->stepSize.x,
+    											eParams->stepSize.y, rParams->jitterRadius);
+        }
+        else
+        {
+			m_scanMesh = new ListScanMesh(rParams->posarr, eParams->scanDims.x*eParams->scanDims.y,
 											eParams->stepSize.x, rParams->jitterRadius);
-		else if(eParams->spiralScan)
-			m_scanMesh = new SpiralScanMesh(eParams->scanDims.x*eParams->scanDims.y, eParams->stepSize.x,
-											eParams->stepSize.y, rParams->jitterRadius);
-		else
-			m_scanMesh = new CartesianScanMesh(eParams->scanDims.x, eParams->scanDims.y, eParams->stepSize.x,
-											eParams->stepSize.y, rParams->jitterRadius);
+        }
+
+
 
 		if(rParams->algorithm.compare("MLs")==0)
 		{
@@ -309,8 +315,6 @@ void IPhaser::prePhase()
 		m_sample->initObject();
 	}
     //////////////////////////
-
-
 
 	//	if(rParams->calculateRMS)
 	//		m_diffractions->fillSquaredSums();

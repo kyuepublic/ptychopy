@@ -104,8 +104,8 @@ void DiffractionLoader::run()
 	}
 
 	// MXL do a shift
-	h_shiftFFT(m_pattern.getDevicePtr(), tempPattern->getDevicePtr<real_t>(), tempPattern->getX(),
-			tempPattern->getY(), tempPattern->getAlignedY(), &cudaStream);
+//	h_shiftFFT(m_pattern.getDevicePtr(), tempPattern->getDevicePtr<real_t>(), tempPattern->getX(),
+//			tempPattern->getY(), tempPattern->getAlignedY(), &cudaStream);
 
 	//2- Rotate/Transpose the matrix n times
 	if(m_params.rotate_90_times > 0)

@@ -377,7 +377,7 @@ void Parameters::parseFromCPython(char *jobID, char *algorithm, char *fp, int fs
                 int mirror2ndScanAxis, double stepx, double stepy, int probeModes, double lambda, double dx_d, double z, int iter, int T, int jitterRadius, \
                 double delta_p,  int threshold, int rotate90, int sqrtData, int fftShiftData, int binaryOutput, int simulate, \
                 int phaseConstraint, int updateProbe, int updateModes, int beamstopMask, char *lf, int PPS, double ***diffarr, complex_t *samplearr, \
-                complex_t *probearr)
+                complex_t *probearr, double **posarr)
 {
 	int value;
 	char* strValue;
@@ -403,6 +403,12 @@ void Parameters::parseFromCPython(char *jobID, char *algorithm, char *fp, int fs
 	if(probearr!=NULL)
 	{
 		m_rParams.probearr=probearr;
+	}
+
+	if(posarr!=NULL)
+	{
+		m_rParams.posarr=posarr;
+//		printf("Inside ptycho param 1D: %f .\n", m_rParams.posarr[1][1]);
 	}
 
 	if (sqrtData==1)

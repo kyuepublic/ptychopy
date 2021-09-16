@@ -84,9 +84,6 @@ void IPtychoScanMesh::calculateMeshDimensions(unsigned int probeSize)
 //	float2 Np_o= make_float2(1e5f, 1e5f);
 //	int Npos=m_scanPositions->getX()*m_scanPositions->getY();
 //	float Np_p = probeSize;
-
-
-
 	m_maxima = h_maxFloat2(m_scanPositions->getDevicePtr<float2>(), m_scanPositions->getX(),
 							m_scanPositions->getY(), m_scanPositions->getAlignedY());
 	m_minima = h_minFloat2(m_scanPositions->getDevicePtr<float2>(), m_scanPositions->getX(),

@@ -341,28 +341,17 @@ static PyObject* ptychopy_algorithmnp(PyObject *args, PyObject *keywds, char *al
     double ***diffractionNP_list;
     double **positionNP_list = NULL;
     complex_t *objectNP_list = NULL;
-//    complex_t *objectNP_list = new complex_t[scanDimsx*scanDimsy];
     complex_t *probeNP_list = NULL;
     //Create C arrays from numpy objects:
-
-//    int typenumfloat = NPY_FLOAT32;
-//    PyArray_Descr *descrfloat;
-//    descrfloat = PyArray_DescrFromType(NPY_FLOAT);
 
     int typenum = NPY_DOUBLE;
     PyArray_Descr *descr;
     descr = PyArray_DescrFromType(typenum);
     npy_intp dims[3];
 
-//    npy_complex128 **objectNP_list = NULL;
-//    Py_INCREF(diffractionNP_obj);
-//    Py_INCREF(positionNP_obj);
-//    Py_INCREF(objectNP_obj);
-//    Py_INCREF(probeNP_obj);
-
     if(diffractionNP_obj!=NULL)
     {
-        if(PyArray_AsCArray(&diffractionNP_obj, (void **)&diffractionNP_list, dims, 3, descr) < 0)
+        if(PyArray_AsCArray(&diffractionNP_obj, (void ***)&diffractionNP_list, dims, 3, descr) < 0)
         {
             PyErr_SetString(PyExc_TypeError, "error converting diffraction numpy array to c array");
         }
@@ -486,7 +475,8 @@ static PyObject* ptychopy_algorithmnp(PyObject *args, PyObject *keywds, char *al
                 size, qx, qy, nx, ny, scanDimsx, scanDimsy, spiralScan, flipScanAxis, mirror1stScanAxis, \
                 mirror2ndScanAxis, stepx, stepy, probeModes, lambd, dx_d, z, iter, T, jitterRadius, \
                 delta_p,  threshold, rotate90, sqrtData, fftShiftData, binaryOutput, simulate, \
-                phaseConstraint, updateProbe, updateModes, beamstopMask, lf, PPS, diffractionNP_list, objectNP_list, probeNP_list);
+                phaseConstraint, updateProbe, updateModes, beamstopMask, lf, PPS, diffractionNP_list, objectNP_list, probeNP_list, \
+                positionNP_list);
 
     IPhaser* phaser = new IPhaser;
     if(phaser->init())
@@ -761,8 +751,8 @@ static PyObject* ptychopy_algorithmnpinit(PyObject *args, PyObject *keywds, char
     double ***diffractionNP_list;
     double **positionNP_list = NULL;
     complex_t *objectNP_list = NULL;
-//    complex_t *objectNP_list = new complex_t[scanDimsx*scanDimsy];
     complex_t *probeNP_list = NULL;
+    //Create C arrays from numpy objects:
 
     int typenum = NPY_DOUBLE;
     PyArray_Descr *descr;
@@ -771,7 +761,7 @@ static PyObject* ptychopy_algorithmnpinit(PyObject *args, PyObject *keywds, char
 
     if(diffractionNP_obj!=NULL)
     {
-        if(PyArray_AsCArray(&diffractionNP_obj, (void **)&diffractionNP_list, dims, 3, descr) < 0)
+        if(PyArray_AsCArray(&diffractionNP_obj, (void ***)&diffractionNP_list, dims, 3, descr) < 0)
         {
             PyErr_SetString(PyExc_TypeError, "error converting diffraction numpy array to c array");
         }
@@ -889,7 +879,9 @@ static PyObject* ptychopy_algorithmnpinit(PyObject *args, PyObject *keywds, char
                 size, qx, qy, nx, ny, scanDimsx, scanDimsy, spiralScan, flipScanAxis, mirror1stScanAxis, \
                 mirror2ndScanAxis, stepx, stepy, probeModes, lambd, dx_d, z, iter, T, jitterRadius, \
                 delta_p,  threshold, rotate90, sqrtData, fftShiftData, binaryOutput, simulate, \
-                phaseConstraint, updateProbe, updateModes, beamstopMask, lf, PPS, diffractionNP_list, objectNP_list, probeNP_list);
+                phaseConstraint, updateProbe, updateModes, beamstopMask, lf, PPS, diffractionNP_list, objectNP_list, probeNP_list, \
+                positionNP_list);
+
 
     phaser = new IPhaser;
     if(phaser->init())

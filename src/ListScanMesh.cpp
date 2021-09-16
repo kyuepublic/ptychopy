@@ -38,12 +38,23 @@
 
 using namespace std;
 
-ListScanMesh::ListScanMesh(const char* fname,unsigned int length, real_t sZ, unsigned int jitterRadius) :
+ListScanMesh::ListScanMesh(const char* fname, unsigned int length, real_t sZ, unsigned int jitterRadius) :
 			IPtychoScanMesh(new Cuda2DArray<float2>( gh_iDivUp(length, GPUQuery::getInstance()->getGPUMaxThreads()),
 													GPUQuery::getInstance()->getGPUMaxThreads()),
 							sZ, sZ, jitterRadius),
 			m_length(length)
-{loadList(fname);}
+{
+	loadList(fname);
+}
+
+ListScanMesh::ListScanMesh(double** posarr, unsigned int length, real_t sZ, unsigned int jitterRadius) :
+			IPtychoScanMesh(new Cuda2DArray<float2>( gh_iDivUp(length, GPUQuery::getInstance()->getGPUMaxThreads()),
+													GPUQuery::getInstance()->getGPUMaxThreads()),
+							sZ, sZ, jitterRadius),
+			m_length(length)
+{
+	loadarr(posarr);
+}
 
 void ListScanMesh::loadList(const char* fname)
 {
@@ -70,6 +81,20 @@ void ListScanMesh::loadList(const char* fname)
 	infile.close();
 	m_scanPositions->setFromHost<float2>(h_array, m_scanPositions->getX(), m_scanPositions->getY());
 	delete [] h_array;
+}
+
+void ListScanMesh::loadarr(double** posarr)
+{
+
+	float2* h_array =  m_scanPositions->getHostPtr<float2>();
+	for(unsigned int i=0; i<m_length; ++i)
+	{
+		h_array[i].x=(real_t)posarr[i][0];
+		h_array[i].y=(real_t)posarr[i][1];
+	}
+	m_scanPositions->setFromHost<float2>(h_array, m_scanPositions->getX(), m_scanPositions->getY());
+	delete [] h_array;
+
 }
 
 void ListScanMesh::generateMesh(const int* bounds)

@@ -190,7 +190,7 @@ diffractionNP | real  | numpy array for diffraction | `numpy array for diffracti
 objectNP | complex  | numpy array for object array | `numpy array for object array`
 probeNP | complex  | numpy array for probe array | `numpy array for probe array`
 
-Reference Paper
+## Reference Paper
 
 ```
 @inproceedings{yue2021ptychopy,

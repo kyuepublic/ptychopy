@@ -43,7 +43,12 @@ private:
 
 public:
 	ListScanMesh(const char* fname, unsigned int length, real_t sZ, unsigned int jitterRadius=0);
+
+	ListScanMesh(double** posarr, unsigned int length, real_t sZ, unsigned int jitterRadius=0);
+
 	~ListScanMesh(){}
+
+	void loadarr(double** posarr);
 
 	void loadList(const char* fname);
 	void generateMesh(const int* bounds=0);

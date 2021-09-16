@@ -103,6 +103,7 @@ struct ReconstructionParams
 	double ***diffarr;
 	complex_t *samplearr;
 	complex_t *probearr;
+	double **posarr;
 
 	std::string reconstructionID;
 	std::string algorithm;
@@ -155,7 +156,7 @@ struct ReconstructionParams
 		blind(true), simulated(false), flipScanAxis(false), mirrorX(false), mirrorY(false), calculateRMS(false), binaryOutput(false), nProbes(1),
 		Niter(100), variable_probe_modes(1), beta_LSQ(0.9),beta_object(1), beta_probe(1), probe_pos_search(5), variable_intensity(1),
 		variable_probe(1), apply_subpix_shift(1), apply_multimodal_update(0), object_reconstruct(1), probe_reconstruct(1), Nobjects(1), delta_p(0.1),
-		Nrec(1), diffarr(NULL), samplearr(NULL), probearr(NULL)
+		Nrec(1), diffarr(NULL), samplearr(NULL), probearr(NULL), posarr(NULL)
 	{}
 };
 
@@ -191,7 +192,7 @@ public:
                 int mirror2ndScanAxis, double stepx, double stepy, int probeModes, double lambda, double dx_d, double z, int iter, int T, int jitterRadius, \
                 double delta_p,  int threshold, int rotate90, int sqrtData, int fftShiftData, int binaryOutput, int simulate, \
                 int phaseConstraint, int updateProbe, int updateModes, int beamstopMask, char *lf, int PPS, double ***diffarr=NULL, complex_t *samplearr=NULL, \
-                complex_t *probearr=NULL);
+                complex_t *probearr=NULL, double **posarr=NULL);
 };
 
 typedef Singleton<Parameters> CXParams;

@@ -348,7 +348,7 @@ bool Probe::init(const Cuda3DArray<real_t>* diffractions, real_t beamSize, real_
 		updateIntensities();
 	}else if(probearr!=NULL)
 	{
-		printf("here \n");
+
 		m_modes->getAt(0).setFromHost(probearr, m_modes->getDimensions().x, m_modes->getDimensions().y);
 //		delete[] probearr;
 	}
