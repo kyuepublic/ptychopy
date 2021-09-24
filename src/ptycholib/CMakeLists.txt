@@ -1,18 +1,13 @@
 cmake_minimum_required (VERSION 3.1.0)
 
-#set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -L/local/kyue/program/glibc232/lib -I/local/kyue/program/glibc232/include -Wl,-rpath=/local/kyue/program/glibc232/lib -Wl,--dynamic-linker=/local/kyue/program/glibc232/lib/ld-linux-x86-64.so.2")
+project (ptychoLib LANGUAGES CXX CUDA VERSION 1.0)
 
-project (ptychoLib)
-set (ptychoLib_VERSION_MAJOR 1)
-set (ptychoLib_VERSION_MINOR 0)
-
-SET(INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/")
-SET(LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lib/")
 SET(CMAKE_DEBUG_POSTFIX D)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 option (debug "Build ptychoLib with debugging on" OFF)
 option (optimize "Build ptychoLib with optimization" ON)
+
+FIND_PACKAGE(Threads REQUIRED)
 
 ############################################# CUDA #############################################
 find_package (CUDA REQUIRED)
@@ -32,9 +27,9 @@ endif (debug)
 #set (CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -gencode;arch=compute_20,code=sm_20;-gencode;arch=compute_30,code=sm_30;-gencode;arch=compute_35,code=sm_35")
 set( CUDA_ARCHITECTURE_MINIMUM "2.0" CACHE STRING "Minimum required CUDA compute capability" )
 try_run( RUN_RESULT_VAR COMPILE_RESULT_VAR
-       ${CMAKE_BINARY_DIR} 
+       ${CMAKE_BINARY_DIR}
        ${CMAKE_CURRENT_SOURCE_DIR}/tools/cudaComputeCapability.cpp
-       CMAKE_FLAGS 
+       CMAKE_FLAGS
        -DINCLUDE_DIRECTORIES:STRING=${CUDA_TOOLKIT_INCLUDE}
        -DLINK_LIBRARIES:STRING=${CUDA_CUDART_LIBRARY}
        COMPILE_OUTPUT_VARIABLE COMPILE_OUTPUT_VAR
@@ -122,7 +117,7 @@ else()
 
 	find_package(GLEW REQUIRED)
     include_directories(${GLEW_INCLUDE_DIRS})
-    
+
 	add_definitions(-DHAVE_SDL2)
 	include_directories(${SDL2_PATH}/include/SDL2)
 	set(LIBS ${LIBS} ${SDL2_LIBRARIES} ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES})
@@ -145,64 +140,94 @@ else()
 endif()
 ################################################################################################
 
-function(add_cuda_lib name files libraries)
-    set(lib_list)
-    foreach(library_name ${libraries})
-        string(FIND "${library_name}" "-l" out)
-        if(NOT "${out}" EQUAL 0)
-            string(FIND "${library_name}" "/" out)
-            if(NOT "${out}" EQUAL 0)
-                set(library_name "-l${library_name}")
-            endif()
-        endif()
-        LIST(APPEND lib_list ${library_name})
-    endforeach()
-    
-    cuda_compile(DEVICE_OBJS ${files} "-I${CUDA_INCLUDE_DIRS}")
-    add_custom_command(
-		OUTPUT  ${CMAKE_BINARY_DIR}/${name}.dlink.o
-	    COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --red "Linking CUDA separable kernels library ${name}"
-	    COMMAND ${CUDA_NVCC_EXECUTABLE} ${CUDA_NVCC_FLAGS} -ccbin ${CMAKE_C_COMPILER} -m64 -dlink  
-	    		${DEVICE_OBJS} -o ${CMAKE_BINARY_DIR}/${name}.dlink.o
-	    		-L${CUDA_TOOLKIT_ROOT_DIR}/lib64 ${lib_list}
-	    DEPENDS ${DEVICE_OBJS}
-	    COMMENT "Linking ${name}"
-	    VERBATIM)
+set(ptycholib_sources
+    CartesianScanMesh.cpp
+    DiffractionLoader.cpp
+    GLResourceManager.cpp
+    MLS.cpp
+    RenderServer.cpp
+    Timer.cpp
+    Cuda2DArray.cpp
+    Diffractions.cpp
+    IPhaser.cpp
+    MPIPhaser.cpp
+    Sample.cpp
+    utilities.cpp
+    CudaFFTPlan.cpp
+    ePIE.cpp
+    IPtychoScanMesh.cpp
+    Parameters.cpp
+    SpiralScanMesh.cpp
+    CudaSmartPtr.cpp
+    FileManager.cpp
+    ListScanMesh.cpp
+    Probe.cpp
+    ThreadPool.cpp)
 
-	add_custom_target(${name}_target ALL 
-    	COMMAND ${CMAKE_COMMAND} -E cmake_echo_color --red "Generating CUDA separable kernels library ${name}"
-    	COMMAND ${CUDA_NVCC_EXECUTABLE}  ${CUDA_NVCC_FLAGS} -ccbin ${CMAKE_C_COMPILER} -m64
-    	         -lib ${CMAKE_BINARY_DIR}/${name}.dlink.o ${DEVICE_OBJS}
-    	         -o ${CMAKE_BINARY_DIR}/${name}.a
-    	DEPENDS ${CMAKE_BINARY_DIR}/${name}.dlink.o ${DEVICE_OBJS}
-    	COMMENT "Generating CUDA static library ${name}"
-	)
-	add_library(${name} STATIC IMPORTED GLOBAL)
-	add_dependencies(${name} ${name}_target)
-	set_target_properties(${name}
-    PROPERTIES
-    IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/${name}.a)
-endfunction()
+set(ptycholib_kernels
+	DiffractionsKernels.cu
+	DM.cu ProbeKernels.cu
+    SampleKernels.cu
+	ScanMeshKernels.cu
+	utilitiesKernels.cu)
 
-FILE(GLOB ptycholib_sources "*.cpp")
-FILE(GLOB ptycholib_kernels "*.cu")
-list(REMOVE_ITEM ptycholib_kernels ${CMAKE_CURRENT_SOURCE_DIR}/reductions.cu)
-FILE(GLOB ptycholib_headers "*.hpp" "*.h" "*.cuh")
+set(ptycholib_headers
+    CartesianScanMesh.h
+    datatypes.h
+    FileManager.h
+    IRenderer.h
+    Probe.cuh
+    Singleton.h
+    Cuda2DArray.hpp
+    DiffractionLoader.h
+    GLResourceManager.h
+    IRunnable.h
+    Probe.h
+    SpiralScanMesh.h
+    CudaFFTPlan.h
+    Diffractions.cuh
+    IPhaser.h
+    ListScanMesh.h
+    RenderServer.h
+    ThreadPool.h
+    CudaSmartPtr.h
+    Diffractions.h
+    IPhasingMethod.h
+    MLS.h
+    Sample.cuh
+    Timer.h
+    CudaSmartPtr.hpp
+    DM.h
+    IPtychoScanMesh.h
+    MPIPhaser.h
+    Sample.h
+    utilities.h
+    CXMath.h
+    ePIE.h
+    IRenderable.h
+    Parameters.h
+    ScanMesh.cuh)
 
-add_cuda_lib(kernelsLib "${ptycholib_kernels}" "${CUDA_LIBS}")
+set(ptychoLib_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}
+    CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE)
 
-add_library (ptychoLib STATIC "datatypes.h" ${ptycholib_sources})
-add_dependencies(ptychoLib kernelsLib)
+add_library(ptychoLib STATIC ${ptycholib_sources} ${ptycholib_kernels})
+target_include_directories(
+  ptychoLib PUBLIC ${ptychoLib_INCLUDE_DIRS}
+                    "${CMAKE_CURRENT_SOURCE_DIR}/include")
+target_link_libraries(
+  ptychoLib PUBLIC ${CUDA_LIBS} ${LIBS} ${DIYLIBS} ${CMAKE_THREAD_LIBS_INIT}
+                   ${CMAKE_DL_LIBS})
+set_target_properties(ptychoLib PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-FIND_PACKAGE(Threads REQUIRED)
+if (NOT SKBUILD)
 
-target_link_libraries(ptychoLib kernelsLib ${CUDA_LIBS}
-								${LIBS} ${DIYLIBS} 
-								${CMAKE_THREAD_LIBS_INIT} ${CMAKE_DL_LIBS})
-INSTALL(FILES ${ptycholib_headers}	DESTINATION ${INCLUDE_DIR})	
-INSTALL(TARGETS ptychoLib ARCHIVE DESTINATION ${LIB_DIR})
+  add_executable(ptycho ${CMAKE_CURRENT_SOURCE_DIR}/examples/testEPIE.cpp)
+  target_include_directories(ptycho PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+  target_link_libraries(ptycho ptychoLib)
+  set_target_properties(ptycho PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE
+                        CUDA_RESOLVE_DEVICE_SYMBOLS ON
+                        POSITION_INDEPENDENT_CODE ON)
+  install(TARGETS ptycho RUNTIME)
 
-add_executable (ptycho ${CMAKE_CURRENT_SOURCE_DIR}/examples/testEPIE.cpp)
-target_link_libraries(ptycho ptychoLib)
-set_property(TARGET ptycho PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
-install(TARGETS ptycho RUNTIME DESTINATION ${CMAKE_CURRENT_SOURCE_DIR})
+endif()
