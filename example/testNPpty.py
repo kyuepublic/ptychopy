@@ -80,8 +80,8 @@ l1 = np.array([[2.0, 3.0], [4.0, 6.0], [7.0, 9.0], [3.0, 0.0]])
 # print(dp[0][0][2])
 # Whole mode key work, with numpy array as input objectNP=l2, probeNP=l2,objectNP=ob, positionNP=l1
 ptychopy.epienp(jobID="ePIEIOTestr256", diffractionNP=dp, \
-             fs=1, beamSize=110e-6, qx=276, qy=616, scanDimsx=51, scanDimsy=51, stepx=100e-9, \
-              stepy=100e-9, lambd=1.408911284090909e-10, iter=10, size=256, dx_d=75e-6, z=1.92, dpf=51, \
+             beamSize=110e-6, qx=276, qy=616, scanDimsx=51, scanDimsy=51, stepx=100e-9, \
+              stepy=100e-9, lambd=1.408911284090909e-10, iter=10, size=256, dx_d=75e-6, z=1.92,\
               probeModes=5)
 
 # ptychopy.dmnp(jobID="dmIOTestr256", diffractionNP=dp, fp="/home/beams/USER2IDD/ptychography/p2/ptycholib/scan152/scan152_data_#06d.h5", \
