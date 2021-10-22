@@ -1,4 +1,8 @@
 # ptychopy
+This software package has a backend implemented with CUDA C++ and MPI, a frontend implemented with CPython numpy
+interface to have a high performance python interface for ptychography image reconstruction. The CUDA C++ backend provides
+a faster solution compared to python implementation in terms of reconstruction speed. It could be run on either single GPU, 
+or multiple GPUs on supercomputer. It could be used as either a C++ binarary or python package.
 
 ## Quickstart
 

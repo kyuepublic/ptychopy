@@ -8,6 +8,11 @@
 //By: Argonne National Laboratory
 //
 //OPEN SOURCE LICENSE
+//Any publication using the package should cite for
+//Yue K, Deng J, Jiang Y, Nashed Y, Vine D, Vogt S.
+//Ptychopy: GPU framework for ptychographic data analysis.
+//X-Ray Nanoimaging: Instruments and Methods V 2021 .
+//International Society for Optics and Photonics.
 //
 //Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 //following conditions are met:

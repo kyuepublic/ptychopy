@@ -6,6 +6,7 @@ src/*.a
 src/ptycho
 example/*.csv
 example/localtest.py
+#example/diffConvert.py
 dependLib/*
 build/*
 dist/*
