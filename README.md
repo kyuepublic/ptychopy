@@ -26,7 +26,12 @@ source activate py36
 
 4. To install and build the python package, set environment variables HDF5_BASE
    and CUDAHOME, which point to the installed path of the HDF5 and CUDA
-   libraries. Also, set the cuda computing based on your GPU. For example the
+   libraries. Also, set the cuda computing based on your GPU. 
+   
+   Recommend CUDA version <=10. For latest cuda version, you might run into some
+   compiliation issue and need to do some tricks to link to other libraryes.
+   
+   For example the
    2080 Ti has compute capability 7.5. The GPU computing capability number can
    be found on the [NVidia website](https://developer.nvidia.com/cuda-gpus)
 
