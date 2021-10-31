@@ -29,7 +29,7 @@ source activate py36
    libraries. Also, set the cuda computing based on your GPU. 
    
    Recommend CUDA version <=10. For latest cuda version, you might run into some
-   compiliation issue and need to do some tricks to link to other libraries.
+   compilation issue and need to do some tricks to link to other libraries.
    
    For example the
    2080 Ti has compute capability 7.5. The GPU computing capability number can
