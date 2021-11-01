@@ -47,6 +47,7 @@
 #include <unistd.h>
 #include "datatypes.h"
 #include <thrust/device_vector.h>
+#include <thrust/host_vector.h>
 
 #if CUDA_VERSION >= 5000
 	//#include <cuda_runtime.h>
@@ -101,7 +102,7 @@
 	#define _SAVE_PGMF cutSavePGMf
 	#define _SAVE_PGMUB cutSavePGMub
 	#define _SAVE_PPMUB cutSavePPMub
-	
+
 	#define _CHECK_CMDLINE cutCheckCmdLineFlag
 
 	#define TIMER_TYPE unsigned int
@@ -419,7 +420,7 @@ __host__ complex_t h_innerProductOne(const complex_t* d_u, const complex_t* d_v,
 __host__ void h_innerProductModes( complex_t* d_u,  complex_t* d_v, complex_t* d_factor, unsigned int index,
 		unsigned int modesNum, unsigned int x, unsigned int y, unsigned int alignedY);
 
-__host__ void h_realModalSum(const real_t* d_modes, real_t* d_output, unsigned int modesNum, unsigned int x, unsigned int y, 
+__host__ void h_realModalSum(const real_t* d_modes, real_t* d_output, unsigned int modesNum, unsigned int x, unsigned int y,
 								unsigned int alignedY, bool sqaureRoot=false);
 __host__ void h_realModalSum(const complex_t* d_modes, complex_t* d_output, unsigned int modesNum, unsigned int x, unsigned int y,
 								unsigned int alignedY, bool sqaureRoot=false);
