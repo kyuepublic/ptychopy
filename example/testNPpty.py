@@ -8,7 +8,7 @@ import scipy.ndimage
 
 
 scanNo = 152
-data_dir = '/data2/JunjingData/mlhcode/scan' + '%03d' %  (scanNo) + 'test/'
+data_dir = '/data2/JunjingData/mlhcode/scan' + '%3d' %  (scanNo) + '/'
 result_dir = '/data2/JunjingData/mlhcode/results/scan' + '%03d' %  (scanNo) + '/'
 
 det_Npixel = 256
