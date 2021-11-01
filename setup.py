@@ -1,5 +1,4 @@
 from skbuild import setup
-from setuptools import Extension
 
 with open('./requirements.txt', 'r') as f_requirements:
     requirements = f_requirements.readlines()
