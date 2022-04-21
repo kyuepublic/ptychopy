@@ -1,52 +1,29 @@
 # ptychopy
 This software package has a backend implemented with CUDA C++ and MPI, a frontend implemented with CPython numpy
 interface to have a high performance python interface for ptychography image reconstruction. The CUDA C++ backend provides
-a faster solution compared to python implementation in terms of reconstruction speed. It could be run on either single GPU, 
+a faster solution compared to python implementation in terms of reconstruction speed. It could be run on either single GPU,
 or multiple GPUs on supercomputer. It could be used as either a C++ binarary or python package.
 
-## Quickstart
+## Installation from source via CMake/scikit-build
 
-1. Need to install python3 to run the GUI and ptychopy, other needed library is
-   in requirement.txt.(Tested OS RHEL 6.0, 7.0). This library could also be
-   compiled as a CUDA-C library. Inside src folder, change build.sh with your
-   HDF library path.
+1. The CUDAtoolkit (with examples!) must be installed. This install has only been tested with CUDAtoolkit=10.1,11.0
 
-2. Recommend conda virtual environment, for example
+2. Create a conda environment with the following packages
 
 ```
-conda create -n py36 python=3.6 hdf5-external-filter-plugins-lz4
+conda create -n ptychopy scikit-build "cmake>=3.11" "python>=3.6" hdf5-external-filter-plugins-lz4 ninja numpy
 ```
 
-3. Activate the virtual environment
+3. Activate the conda environment
 
 ```
-source activate py36
-
+conda activate ptychopy
 ```
 
-4. To install and build the python package, set environment variables HDF5_BASE
-   and CUDAHOME, which point to the installed path of the HDF5 and CUDA
-   libraries. Also, set the cuda computing based on your GPU. 
-   
-   Recommend CUDA version <=10. For latest cuda version, you might run into some
-   compilation issue and need to do some tricks to link to other libraries.
-   
-   For example the
-   2080 Ti has compute capability 7.5. The GPU computing capability number can
-   be found on the [NVidia website](https://developer.nvidia.com/cuda-gpus)
+4. Build/install using pip. Set CUDACXX to the NVCC compiler path and CXX to the c++ compiler path.
 
 ```
-export CUDACOMPUTE=7.5
-export CUDAHOME=/user/local/cuda-8.0
-export HDF5_BASE=$CONDA_PREFIX
-
-```
-
-5. Then just call the following
-
-```
-./install.sh
-
+CUDACXX=/usr/local/cuda/bin/nvcc CXX=/bin/g++ pip install . -v --no-deps
 ```
 
 6. For testing, you can use epie.py or mls.py
@@ -78,7 +55,7 @@ and the file path would be like filename_data_#06d.h5. The library will go
 though all the HDF5 files and load the diffraction pattern into the library.
 
 Whole mode API example with simulation images:
-    
+
 =======
 ```
 Use simulation image as the example input
@@ -101,7 +78,7 @@ Use real data as the example input
                  fs=1, hdf5path="/entry/data/data", beamSize=110e-6, qx=276, qy=616, scanDimsx=51, scanDimsy=51, stepx=100e-9, \
                   stepy=100e-9, lambd=1.408911284090909e-10, iter=100, size=256, dx_d=75e-6, z=1.92, dpf=51, \
                   probeModes=1)
-    
+
     ptychopy.mls(jobID="MLSIOTestr256", fp="/home/scan152/scan152_data_#06d.h5", \
                  fs=1, hdf5path="/entry/data/data", beamSize=110e-6, qx=276, qy=616, scanDimsx=51, scanDimsy=51, stepx=100e-9, \
                   stepy=100e-9, lambd=1.408911284090909e-10, iter=100, size=256, dx_d=75e-6, z=1.92, dpf=51, \
@@ -115,12 +92,12 @@ Pass diffraction pattern as a 3D numpy array, diffractionNP, objectNP, probeNP
                  fs=1, beamSize=110e-6, qx=276, qy=616, scanDimsx=51, scanDimsy=51, stepx=100e-9, \
                   stepy=100e-9, lambd=1.408911284090909e-10, iter=10, size=256, dx_d=75e-6, z=1.92,\
                   probeModes=2)
-    
+
     ptychopy.dmnp(jobID="dmIOTestr256", diffractionNP=dp,\
                  fs=1, beamSize=110e-6, qx=276, qy=616, scanDimsx=51, scanDimsy=51, stepx=100e-9, \
                   stepy=100e-9, lambd=1.408911284090909e-10, iter=10, size=256, dx_d=75e-6, z=1.92,\
                   probeModes=2)
-    
+
     ptychopy.mlsnp(jobID="mlsIOTestr256", diffractionNP=dp,\
                  fs=1, beamSize=110e-6, qx=276, qy=616, scanDimsx=51, scanDimsy=51, stepx=100e-9, \
                   stepy=100e-9, lambd=1.408911284090909e-10, iter=10, size=256, dx_d=75e-6, z=1.92, \
@@ -145,12 +122,12 @@ Step mode API example:
 
 For implentation example, please check example folder.
 
-## C++ binary 
+## C++ binary
 To use it as C++ binary, first go to src folder and change the correspondnig hdf5 path,
 after compiling, use the following example command for a test simulation image:
 
 ```
-./ptycho -jobID=sim512ePIE -algorithm=ePIE -beamSize=110e-9 -scanDims=30,30 
+./ptycho -jobID=sim512ePIE -algorithm=ePIE -beamSize=110e-9 -scanDims=30,30
 -step=50e-9,50e-9 -i=100 -size=512 -lambda=2.4796837508399954e-10 -dx_d=172e-6 -z=1 -simulate=1
 ```
 
@@ -159,17 +136,17 @@ the diffraction pattern datas. For the real example, -hdf5path=/entry/data/data 
 diffraction pattern data is saved under /entry/data/data, and each file has -dpf=51 or 51 diffraction patterns.
 
 ```
-./ptycho -jobID=IOTest512ePIE -algorithm=ePIE -fp=/data2/scan152/scan152_data_#06d.h5 -fs=1 
--hdf5path=/entry/data/data -beamSize=100e-6  -qxy=276,616 -scanDims=51,51 -step=100e-9,100e-9 
+./ptycho -jobID=IOTest512ePIE -algorithm=ePIE -fp=/data2/scan152/scan152_data_#06d.h5 -fs=1
+-hdf5path=/entry/data/data -beamSize=100e-6  -qxy=276,616 -scanDims=51,51 -step=100e-9,100e-9
 -i=100 -size=512 -lambda=1.408911284090909e-10 -dx_d=75e-6 -z=1.92 -dpf=51 -probeModes=2
 ```
 
 To use it on super computer, the DIY path has to be set, the DIY library is included in the code.
-The MPI library has to installed and set. Currently only ePIE and DM algorithm is supported. 
+The MPI library has to installed and set. Currently only ePIE and DM algorithm is supported.
 A example to launch 2 MPI processes:
 
 ```
-mpiexec -n 2 ./ptycho -jobID=sim512c -beamSize=110e-9 -scanDims=30,30 -step=50e-9,50e-9 -i=20 
+mpiexec -n 2 ./ptycho -jobID=sim512c -beamSize=110e-9 -scanDims=30,30 -step=50e-9,50e-9 -i=20
 -size=512  -lambda=2.4796837508399954e-10 -dx_d=172e-6 -z=1 -simulate=1
 ```
 
